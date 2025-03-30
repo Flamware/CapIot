@@ -3,42 +3,9 @@ import { NavLink } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
 const Header: React.FC = () => {
-    const { loginWithRedirect, logout, isAuthenticated, user,getAccessTokenSilently } = useAuth0();
+    const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    useEffect(() => {
-        const sendUserToBackend = async () => {
-            if (isAuthenticated && user) {
-                try {
-                    // Get the access token (not the ID token)
-                    const accessToken = await getAccessTokenSilently({
-                        audience: 'http://localhost:8080/api/',  // Your backend API's audience
-                    });
-                    // Send the POST request to your backend API
-                    const response = await fetch('http://localhost:8080/api/callback', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`, // Send the correct access token here
-                        },
-                    });
-
-                    if (!response.ok) {
-                        const errorMessage = await response.text();
-                        throw new Error(`Failed to send user data to backend: ${errorMessage}`);
-                    }
-
-                    console.log('User data sent to backend successfully');
-                } catch (error) {
-                    console.error('Error sending user to backend:', error);
-                }
-            }
-        };
-
-
-
-        // Send user data to backend after login
-        sendUserToBackend();
-    }, [isAuthenticated, getAccessTokenSilently]); // Removed user from the dependency array
 
     return (
         <header className="bg-gradient-to-r from-mint-500 to-mint-600 px-6 py-4 shadow-md sticky top-0 z-10">
