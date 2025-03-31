@@ -1,74 +1,156 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { useState } from 'react';
+import axios from 'axios';
 
 const Login: React.FC = () => {
-    const { loginWithRedirect, logout, isAuthenticated, user, getIdTokenClaims } = useAuth0();
-    const [isRegister, setIsRegister] = useState(false);
-    console.log('User authenticated:', user);
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false); // To switch between login and register
+    const [confirmPassword, setConfirmPassword] = useState('');
 
-    // Handle login success and send POST request to backend
-    const handleLogin = async () => {
-        if (isAuthenticated && user) {
-            console.log('User authenticated:', user);
-            try {
-                const token = await getIdTokenClaims(); // Get the JWT token from Auth0
-                const response = await fetch('http://localhost:8080/callback', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`, // Include the JWT token in the Authorization header
-                    },
-                    body: JSON.stringify({ userId: user.sub, email: user.email, name: user.name }), // Optionally send user data
-                });
-
-                if (!response.ok) {
-                    // Handle failed response, e.g., user creation failure
-                    console.error('Failed to log in or create user');
-                } else {
-                    const responseData = await response.json();
-                    console.log('User logged in or created successfully:', responseData);
-                }
-            } catch (error) {
-                console.error('Error during login request:', error);
-            }
+    const handleLoginSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+        try {
+            const response = await axios.post('http://localhost:8080/login', { email, password });
+            const customJwt = response.data.jwtToken;
+            localStorage.setItem('customJwt', customJwt);
+            // Redirect to home or dashboard after login
+            window.location.href = '/dashboard'; // Or use React Router
+        } catch (error) {
+            setError('Login error. Please check your credentials and try again.');
+            console.error('Login error', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            handleLogin(); // Automatically send the login request when the user is authenticated
+    const handleRegisterSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+        if (password !== confirmPassword) {
+            setError("Passwords don't match!");
+            setLoading(false);
+            return;
         }
-    }, [isAuthenticated]); // Only runs when the user is authenticated
+
+        try {
+            const response = await axios.post('http://localhost:8080/register', { username, email, password });
+            const customJwt = response.data.jwtToken;
+            localStorage.setItem('customJwt', customJwt);
+            // Redirect to home or dashboard after registration
+            window.location.href = '/dashboard'; // Or use React Router
+        } catch (error) {
+            setError('Registration error. Please try again.');
+            console.error('Registration error', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="flex justify-center items-center h-screen bg-gray-100">
-            <div className="bg-white p-6 rounded shadow-md w-full max-w-sm">
-                <div className="flex justify-between mb-4">
-                    <button
-                        className={`px-4 py-2 ${!isRegister ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                        onClick={() => setIsRegister(false)}
-                    >
-                        Login
-                    </button>
-                    <button
-                        className={`px-4 py-2 ${isRegister ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                        onClick={() => setIsRegister(true)}
-                    >
-                        Register
-                    </button>
-                </div>
-                {isAuthenticated ? (
-                    <div className="text-center">
-                        <p className="mb-4">Welcome, {user?.name}!</p>
-                        <button onClick={() => logout({ returnTo: window.location.origin })} className="w-full bg-red-500 text-white p-2 rounded">
-                            Logout
-                        </button>
+        <div style={{ maxWidth: '400px', margin: '0 auto', padding: '2em', border: '1px solid #ccc', borderRadius: '5px' }}>
+            <h2>{isRegistering ? 'Create an Account' : 'Login'}</h2>
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+
+            {/* Toggle between login and register forms */}
+            {isRegistering ? (
+                <form onSubmit={handleRegisterSubmit}>
+                    <div style={{ marginBottom: '1em' }}>
+                        <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5em' }}>Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            style={{ width: '100%', padding: '0.5em', borderRadius: '4px', border: '1px solid #ccc' }}
+                            required
+                        />
                     </div>
-                ) : (
-                    <button onClick={() => loginWithRedirect()} className="w-full bg-blue-500 text-white p-2 rounded">
-                        {isRegister ? 'Register with Auth0' : 'Login with Auth0'}
+                    <div style={{ marginBottom: '1em' }}>
+                        <label htmlFor="username" style={{ display: 'block', marginBottom: '0.5em' }}>Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            placeholder="Username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            style={{ width: '100%', padding: '0.5em', borderRadius: '4px', border: '1px solid #ccc' }}
+                            required
+                        />
+                    </div>
+                    <div style={{ marginBottom: '1em' }}>
+                        <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5em' }}>Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            style={{ width: '100%', padding: '0.5em', borderRadius: '4px', border: '1px solid #ccc' }}
+                            required
+                        />
+                    </div>
+                    <div style={{ marginBottom: '1em' }}>
+                        <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5em' }}>Confirm Password</label>
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            placeholder="Confirm Password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            style={{ width: '100%', padding: '0.5em', borderRadius: '4px', border: '1px solid #ccc' }}
+                            required
+                        />
+                    </div>
+                    <button type="submit" style={{ width: '100%', padding: '0.75em', borderRadius: '4px', border: 'none', backgroundColor: '#007bff', color: 'white', cursor: 'pointer' }} disabled={loading}>
+                        {loading ? 'Creating account...' : 'Create Account'}
                     </button>
-                )}
+                </form>
+            ) : (
+                <form onSubmit={handleLoginSubmit}>
+                    <div style={{ marginBottom: '1em' }}>
+                        <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5em' }}>Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            style={{ width: '100%', padding: '0.5em', borderRadius: '4px', border: '1px solid #ccc' }}
+                            required
+                        />
+                    </div>
+                    <div style={{ marginBottom: '1em' }}>
+                        <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5em' }}>Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            style={{ width: '100%', padding: '0.5em', borderRadius: '4px', border: '1px solid #ccc' }}
+                            required
+                        />
+                    </div>
+                    <button type="submit" style={{ width: '100%', padding: '0.75em', borderRadius: '4px', border: 'none', backgroundColor: '#007bff', color: 'white', cursor: 'pointer' }} disabled={loading}>
+                        {loading ? 'Logging in...' : 'Log in'}
+                    </button>
+                </form>
+            )}
+
+            <div style={{ marginTop: '1em', textAlign: 'center' }}>
+                <button
+                    onClick={() => setIsRegistering(!isRegistering)}
+                    style={{ padding: '0.5em', border: 'none', backgroundColor: 'transparent', color: '#007bff', cursor: 'pointer' }}
+                >
+                    {isRegistering ? 'Already have an account? Log in' : 'Need an account? Register'}
+                </button>
             </div>
         </div>
     );
