@@ -10,7 +10,6 @@ const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(false);
 
     // Get the Auth0 ID (for example, from the logged-in user token)
-    const auth0Id = "user-auth0-id"; // This should come from your authentication token
 
     const fetchDeviceList = async () => {
         setLoading(true);
@@ -19,7 +18,6 @@ const Dashboard: React.FC = () => {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${auth0Id}`,  // Assuming you have a JWT token
                 },
             });
 

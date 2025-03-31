@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 
 interface Location {
@@ -13,7 +12,6 @@ interface Device {
 }
 
 const Admin: React.FC = () => {
-    const { isAuthenticated, getAccessTokenSilently } = useAuth0();
     const [locations, setLocations] = useState<Location[]>([]);
     const [devices, setDevices] = useState<Device[]>([]);
     const [selectedLocation, setSelectedLocation] = useState('');
@@ -24,18 +22,8 @@ const Admin: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const tokenApi1 = await getAccessTokenSilently({
-                    authorizationParams: {
-                        audience: 'http://localhost:8081/',
-                        scope: 'openid profile email offline_access read:influx',
-                    },
-                });
-                const authHeader = {
-                    headers: {
-                        Authorization: `Bearer ${tokenApi1}`,
-                    },
-                };
-                const locationsResponse = await axios.get(`${apiUrl}/locations`, authHeader);
+
+                const locationsResponse = await axios.get(`${apiUrl}/locations`);
 
                 const transformedLocations: Location[] = locationsResponse.data.map((locationId: string) => ({
                     id: locationId,
@@ -56,19 +44,7 @@ const Admin: React.FC = () => {
     useEffect(() => {
         const fetchDevices = async () => {
             if (selectedLocation) {
-                try {
-                    const tokenApi1 = await getAccessTokenSilently({
-                        authorizationParams: {
-                            audience: 'http://localhost:8081/',
-                            scope: 'openid profile email offline_access read:influx',
-                        },
-                    });
-                    const authHeader = {
-                        headers: {
-                            Authorization: `Bearer ${tokenApi1}`,
-                        },
-                    };
-                    const devicesResponse = await axios.get(`${apiUrl}/devices/${selectedLocation}`, authHeader);
+                    const devicesResponse = await axios.get(`${apiUrl}/devices/${selectedLocation}`);
                     setDevices(
                         Array.isArray(devicesResponse.data)
                             ? devicesResponse.data.map((deviceId: string) => ({
@@ -77,17 +53,14 @@ const Admin: React.FC = () => {
                             }))
                             : []
                     );
-                } catch (error) {
-                    console.error('Error fetching devices:', error);
+                    } else {
                     setDevices([]);
                 }
-            } else {
-                setDevices([]);
-            }
-        };
+            };
+
 
         fetchDevices();
-    }, [selectedLocation, getAccessTokenSilently, apiUrl]);
+    }, [selectedLocation, apiUrl]);
 
     const handleBindDevice = async () => {
         try {
@@ -100,9 +73,6 @@ const Admin: React.FC = () => {
         }
     };
 
-    if (!isAuthenticated) {
-        return <p>Please log in to access the admin panel.</p>;
-    }
 
     if (loading) {
         return <p>Loading...</p>;

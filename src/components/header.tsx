@@ -8,7 +8,7 @@ const Header: React.FC = () => {
 
 
     return (
-        <header className="bg-gradient-to-r from-mint-500 to-mint-600 px-6 py-4 shadow-md sticky top-0 z-10">
+        <header className=" bg-mint-500  px-6 py-4 shadow-md sticky top-0 z-10">
             <div className="container mx-auto flex justify-between items-center">
                 <div className="flex items-center space-x-4">
                     <img
