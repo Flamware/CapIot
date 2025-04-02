@@ -1,13 +1,12 @@
 import axios, { AxiosInstance } from 'axios';
 
-// Create a function to return the axios instance
+// Create an Axios instance
 const createApi = (): AxiosInstance => {
-    // Create an Axios instance with an Authorization header if the JWT is in localStorage
     const api = axios.create({
         baseURL: 'http://localhost:8080', // Replace with your backend API base URL
     });
 
-    // Interceptor to add JWT to the Authorization header for all requests
+    // Request Interceptor: Add JWT token to headers
     api.interceptors.request.use(
         (config) => {
             const token = localStorage.getItem('customJwt');
@@ -16,7 +15,18 @@ const createApi = (): AxiosInstance => {
             }
             return config;
         },
+        (error) => Promise.reject(error)
+    );
+
+    // Response Interceptor: Handle Unauthorized Errors
+    api.interceptors.response.use(
+        (response) => response,
         (error) => {
+            if (error.response && error.response.status === 401) {
+                console.warn("Unauthorized access, redirecting to login...");
+                localStorage.removeItem('customJwt'); // Remove invalid token
+                window.location.href = '/login'; // Redirect to login page
+            }
             return Promise.reject(error);
         }
     );

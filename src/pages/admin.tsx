@@ -1,149 +1,205 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+import createApi from '../../axios/api';
 
-interface Location {
+type Location = {
     id: string;
-    name: string;
-}
+    location_name: string;
+    location_description: string;
+};
 
-interface Device {
-    id: string;
+type User = {
     name: string;
-}
+};
+
+type Device = {
+    device_id: string;
+};
 
 const Admin: React.FC = () => {
     const [locations, setLocations] = useState<Location[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [devices, setDevices] = useState<Device[]>([]);
+    const [newLocation, setNewLocation] = useState({ location_name: '', location_description: '' });
     const [selectedLocation, setSelectedLocation] = useState('');
+    const [selectedUser, setSelectedUser] = useState('');
     const [selectedDevice, setSelectedDevice] = useState('');
-    const [loading, setLoading] = useState(true);
-    const apiUrl = import.meta.env.VITE_INFLUXDB_API;
+    const api = createApi();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-
-                const locationsResponse = await axios.get(`${apiUrl}/locations`);
-
-                const transformedLocations: Location[] = locationsResponse.data.map((locationId: string) => ({
-                    id: locationId,
-                    name: locationId, // Use the ID as the name for now
-                }));
-
-                setLocations(transformedLocations);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        const fetchDevices = async () => {
-            if (selectedLocation) {
-                    const devicesResponse = await axios.get(`${apiUrl}/devices/${selectedLocation}`);
-                    setDevices(
-                        Array.isArray(devicesResponse.data)
-                            ? devicesResponse.data.map((deviceId: string) => ({
-                                id: deviceId,
-                                name: deviceId, // Use the device ID as the name
-                            }))
-                            : []
-                    );
-                    } else {
-                    setDevices([]);
-                }
-            };
-
-
-        fetchDevices();
-    }, [selectedLocation, apiUrl]);
-
-    const handleBindDevice = async () => {
+    // Function to fetch locations
+    const fetchLocations = async () => {
         try {
-            // Implement your binding logic here
-            console.log(`Binding device ${selectedDevice} to location ${selectedLocation}`);
-            alert('Device bound successfully!');
+            const response = await api.get('/locations');
+            setLocations(response.data);
         } catch (error) {
-            console.error('Error binding device:', error);
-            alert('Failed to bind device.');
+            console.error('Error fetching locations:', error);
         }
     };
 
+    // Function to fetch users
+    const fetchUsers = async () => {
+        try {
+            const response = await api.get('/users');
+            setUsers(response.data);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
 
-    if (loading) {
-        return <p>Loading...</p>;
-    }
+    // Function to fetch devices
+    const fetchDevices = async () => {
+        try {
+            const response = await api.get('/devices');
+            setDevices(response.data);
+        } catch (error) {
+            console.error('Error fetching devices:', error);
+        }
+    };
+
+    const createLocation = async () => {
+        const { location_name, location_description } = newLocation;
+        try {
+            await api.post('/location/create', { location_name, location_description });
+            setNewLocation({ location_name: '', location_description: '' }); // Reset fields
+        } catch (error) {
+            console.error('Error creating location:', error);
+        }
+    };
+
+    const assignUserToLocation = async () => {
+        if (selectedUser && selectedLocation) {
+            await api.post('/assign-user', { userName: selectedUser, locationName: selectedLocation });
+        }
+    };
+
+    const assignDeviceToLocation = async () => {
+        if (selectedDevice && selectedLocation) {
+            const location = locations.find(loc => loc.location_name === selectedLocation);
+            if (location) {
+                await api.post('/assign-device', { device_id: selectedDevice, location_id: location.id });
+            }
+        }
+    };
 
     return (
-        <div className="font-sans p-6">
-            <h1 className="text-center text-3xl font-semibold mb-8">Admin Panel</h1>
-
-            <div className="mb-6 p-6 border border-gray-300 rounded-md">
-                <h2 className="text-xl font-semibold mb-4">Bind Device to Location</h2>
-                <div className="flex flex-col gap-4">
-                    <select
-                        value={selectedLocation}
-                        onChange={(e) => setSelectedLocation(e.target.value)}
-                        className="p-3 border border-gray-300 rounded-md"
-                    >
-                        <option value="">Select Location</option>
-                        {locations.map((location) => (
-                            <option key={location.id} value={location.id}>
-                                {location.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    <select
-                        value={selectedDevice}
-                        onChange={(e) => setSelectedDevice(e.target.value)}
-                        className="p-3 border border-gray-300 rounded-md"
-                        disabled={!selectedLocation}
-                    >
-                        <option value="">Select Device</option>
-                        {devices.map((device) => (
-                            <option key={device.id} value={device.id}>
-                                {device.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    <button
-                        onClick={handleBindDevice}
-                        disabled={!selectedLocation || !selectedDevice}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
-                    >
-                        Bind Device
-                    </button>
-                </div>
+        <div className="grid grid-cols-3 gap-4 p-6">
+            {/* Localisation Panel */}
+            <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
+                <h2 className="text-xl font-semibold mb-4">Créer une Localisation</h2>
+                <input
+                    type="text"
+                    placeholder="Nom"
+                    value={newLocation.location_name}
+                    onChange={(e) =>
+                        setNewLocation({ ...newLocation, location_name: e.target.value })
+                    }
+                    className="p-2 border rounded-md w-full mb-2"
+                />
+                <input
+                    type="text"
+                    placeholder="Description"
+                    value={newLocation.location_description}
+                    onChange={(e) =>
+                        setNewLocation({ ...newLocation, location_description: e.target.value })
+                    }
+                    className="p-2 border rounded-md w-full mb-2"
+                />
+                <button
+                    onClick={createLocation}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                >
+                    Créer
+                </button>
+                {/* Refresh Button */}
+                <button
+                    onClick={fetchLocations}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
+                >
+                    Refresh Locations
+                </button>
             </div>
 
-            <div className="flex justify-between">
-                <div className="flex-1 p-6 border border-gray-300 rounded-md mr-4">
-                    <h2 className="text-xl font-semibold mb-4">Location List</h2>
-                    <ul className="list-none p-0">
-                        {locations.map((location) => (
-                            <li key={location.id} className="p-3 border-b border-gray-200">
-                                {location.name} (ID: {location.id})
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+            {/* Utilisateur Panel */}
+            <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
+                <h2 className="text-xl font-semibold mb-4">Assigner un Utilisateur</h2>
+                <select
+                    value={selectedUser}
+                    onChange={(e) => setSelectedUser(e.target.value)}
+                    className="p-2 border rounded-md w-full mb-2"
+                >
+                    <option value="">Sélectionner un utilisateur</option>
+                    {users.map((user) => (
+                        <option key={user.name} value={user.name}>
+                            {user.name}
+                        </option>
+                    ))}
+                </select>
+                <select
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    className="p-2 border rounded-md w-full mb-2"
+                >
+                    <option value="">Sélectionner une localisation</option>
+                    {locations.map((loc) => (
+                        <option key={loc.location_name} value={loc.location_name}>
+                            {loc.location_name}
+                        </option>
+                    ))}
+                </select>
+                <button
+                    onClick={assignUserToLocation}
+                    className="px-4 py-2 bg-green-500 text-white rounded-md"
+                >
+                    Assigner
+                </button>
+                {/* Refresh Button */}
+                <button
+                    onClick={fetchUsers}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
+                >
+                    Refresh Users
+                </button>
+            </div>
 
-                <div className="flex-1 p-6 border border-gray-300 rounded-md">
-                    <h2 className="text-xl font-semibold mb-4">Device List</h2>
-                    <ul className="list-none p-0">
-                        {devices.map((device) => (
-                            <li key={device.id} className="p-3 border-b border-gray-200">
-                                {device.name} (ID: {device.id})
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+            {/* Device Panel */}
+            <div className="p-6 border border-gray-300 bg-mint-500 rounded-md">
+                <h2 className="text-xl font-semibold mb-4">Assigner un Appareil</h2>
+                <select
+                    value={selectedDevice}
+                    onChange={(e) => setSelectedDevice(e.target.value)}
+                    className="p-2 border rounded-md w-full mb-2"
+                >
+                    <option value="">Sélectionner un appareil</option>
+                    {devices.map((dev) => (
+                        <option key={dev.device_id} value={dev.device_id}>
+                            {dev.device_id}
+                        </option>
+                    ))}
+                </select>
+                <select
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    className="p-2 border rounded-md w-full mb-2"
+                >
+                    <option value="">Sélectionner une localisation</option>
+                    {locations.map((loc) => (
+                        <option key={loc.location_name} value={loc.location_name}>
+                            {loc.location_name}
+                        </option>
+                    ))}
+                </select>
+                <button
+                    onClick={assignDeviceToLocation}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md"
+                >
+                    Assigner
+                </button>
+                {/* Refresh Button */}
+                <button
+                    onClick={fetchDevices}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
+                >
+                    Refresh Devices
+                </button>
             </div>
         </div>
     );
