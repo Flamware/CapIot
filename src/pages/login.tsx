@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import createApi from '../../axios/api'; // Import the function that creates the API instance
-
+import createApi from '../axios/api'; // Import the function that creates the API instance
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
@@ -93,8 +93,7 @@ const Header: React.FC = () => {
 
                 {/* Login/Logout Button */}
                 {isAuthenticated ? (
-                    <button onClick={() => logout({ returnTo: window.location.origin })} className="bg-red-500 text-white px-4 py-2 rounded">
-                        Logout
+                    <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })} className="bg-red-500 text-white px-4 py-2 rounded">                        Logout
                     </button>
                 ) : (
                     <button onClick={() => loginWithRedirect()} className="bg-blue-500 text-white px-4 py-2 rounded">

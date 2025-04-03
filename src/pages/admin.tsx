@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import createApi from '../../axios/api';
+import createApi from '../axios/api';
 
 type Location = {
     id: string;

@@ -1,9 +1,11 @@
 import axios, { AxiosInstance } from 'axios';
+const apiUrl = import.meta.env.VITE_API_URL;
+console.log("API URL : ", apiUrl);
 
 // Create an Axios instance
 const createApi = (): AxiosInstance => {
     const api = axios.create({
-        baseURL: 'http://localhost:8080', // Replace with your backend API base URL
+        baseURL: apiUrl,
     });
 
     // Request Interceptor: Add JWT token to headers
