@@ -63,4 +63,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update frontend image to ${{ steps.docker_build.outputs.image_tag }}"
-          file_pattern: front-deployment.yaml
+          file_pattern: frontend-deployment.yaml
