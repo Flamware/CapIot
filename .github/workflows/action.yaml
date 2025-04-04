@@ -32,7 +32,7 @@ jobs:
         id: docker_build
         run: |
           IMAGE_TAG=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::8}
-          docker buildx build --push \
+          docker build --push --no-cache \
             --tag flamware/capiot:$IMAGE_TAG \
             .
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
