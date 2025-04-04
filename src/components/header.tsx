@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png'; // Adjust the path based on your file structure
 
 const Header: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -20,7 +21,7 @@ const Header: React.FC = () => {
             <div className="container mx-auto flex justify-between items-center">
                 <div className="flex items-center space-x-4">
                     <img
-                        src="/src/assets/logo.png"
+                        src={logo}
                         alt="Cap.Iot"
                         className="h-10 w-auto object-contain transition-transform duration-300 hover:scale-105"
                     />
