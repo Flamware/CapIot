@@ -5,6 +5,7 @@ import Login from "./pages/login.tsx";
 import Profile from "./pages/profile.tsx";
 import Dashboard from "./pages/dashboard.tsx";
 import Admin from "./pages/admin.tsx";
+import About from "./pages/about.tsx";
 
 
 const App: React.FC = () => {
@@ -18,6 +19,7 @@ const App: React.FC = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/admin" element={<Admin/>}/>
                     <Route path="/profile" element={<Profile/>} />
+                    <Route path="/about" element={<About/>} />
                 </Routes>
             </main>
         </BrowserRouter>
