@@ -101,12 +101,6 @@ const Admin: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        fetchLocations();
-        fetchUsers();
-        fetchDevices();
-    }, []);
-
     return (
         <div className="grid grid-cols-3 gap-4 p-6">
             {/* Localisation Panel */}
