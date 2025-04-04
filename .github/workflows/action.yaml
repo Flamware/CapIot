@@ -44,10 +44,10 @@ jobs:
 
       - name: Set GKE context
         run: |
-          gcloud container clusters get-credentials  capiot-eu-cluster  --region europe-west9 --project awesome-vigil-454917-q7
+          gcloud container clusters get-credentials capiot-eu-cluster --region europe-west9 --project awesome-vigil-454917-q7
 
       - name: Update Kubernetes deployment
         run: |
-          sed -i "s|image:.*|image: flamware/capiot:${{ steps.docker_build.outputs.image_tag }}|g" ~/CapIot/front-deployment.yaml
-          kubectl apply -f ~/CapIot/front-deployment.yaml -n capiot-app
+          sed -i "s|image:.*|image: flamware/capiot:${{ steps.docker_build.outputs.image_tag }}|g" ./front-deployment.yaml # Corrected path
+          kubectl apply -f ./front-deployment.yaml -n capiot-app # Corrected path
           kubectl rollout status deployment/frontend-deployment -n capiot-app --timeout=60s
