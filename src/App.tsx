@@ -14,6 +14,7 @@ const App: React.FC = () => {
             <main className="container mx-auto p-4">
                 <Routes>
                     <Route path="/" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/admin" element={<Admin/>}/>
                     <Route path="/profile" element={<Profile/>} />
