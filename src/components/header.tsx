@@ -1,11 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png'; // Adjust the path based on your file structure
+import { jwtDecode } from 'jwt-decode'; // You'll need to install this: npm install jwt-decode
+
+interface JwtPayload {
+    role?: string[]; // Change 'roles' to 'role'
+    // ... other claims if you have them
+}
 
 const Header: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [userRoles, setUserRoles] = useState<string[]>([]);
     const navigate = useNavigate();
-    const isAuthenticated = localStorage.getItem('customJwt') !== null; // Simple check for JWT presence
+    const isAuthenticated = localStorage.getItem('customJwt') !== null;
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            try {
+                const token = localStorage.getItem('customJwt')!;
+                const decodedToken = jwtDecode<JwtPayload>(token);
+                console.log("Decoded JWT:", decodedToken);
+                setUserRoles(decodedToken?.role || []); // Extract roles from the decoded JWT
+            } catch (error) {
+                console.error("Error decoding JWT:", error);
+                setUserRoles([]);
+            }
+        } else {
+            setUserRoles([]);
+        }
+    }, [isAuthenticated]);
 
     const handleLoginClick = () => {
         navigate('/login');
@@ -13,8 +36,10 @@ const Header: React.FC = () => {
 
     const handleLogoutClick = () => {
         localStorage.removeItem('customJwt');
-        navigate('/'); // Or wherever you want to redirect after logout
+        navigate('/');
     };
+
+    const isAdmin = userRoles.includes('admin'); // Check if the user has the 'admin' role
 
     return (
         <header className="bg-mint-500 px-6 py-5 shadow-md sticky top-0 z-10">
@@ -65,17 +90,19 @@ const Header: React.FC = () => {
                                 History
                             </NavLink>
                         </li>
-                        <li>
-                            <NavLink
-                                to="/settings"
-                                className={({ isActive }) =>
-                                    `text-lg font-medium transition-colors duration-200 ${isActive ? 'text-mint-200 underline underline-offset-4' : 'text-white hover:text-mint-200'} py-2 md:py-0 block`
-                                }
-                                aria-label="Settings"
-                            >
-                                Settings
-                            </NavLink>
-                        </li>
+                        {isAdmin && (
+                            <li>
+                                <NavLink
+                                    to="/admin"
+                                    className={({ isActive }) =>
+                                        `text-lg font-medium transition-colors duration-200 ${isActive ? 'text-mint-200 underline underline-offset-4' : 'text-white hover:text-mint-200'} py-2 md:py-0 block`
+                                    }
+                                    aria-label="Settings"
+                                >
+                                    Admin
+                                </NavLink>
+                            </li>
+                        )}
                         <li>
                             <NavLink
                                 to="/profile"

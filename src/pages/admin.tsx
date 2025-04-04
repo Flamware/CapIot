@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import createApi from '../axios/api';
 
 type Location = {
@@ -8,7 +8,9 @@ type Location = {
 };
 
 type User = {
+    id: string;
     name: string;
+    role: string;
 };
 
 type Device = {
@@ -20,11 +22,40 @@ const Admin: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [devices, setDevices] = useState<Device[]>([]);
     const [newLocation, setNewLocation] = useState({ location_name: '', location_description: '' });
-    const [selectedLocation, setSelectedLocation] = useState('');
-    const [selectedUser, setSelectedUser] = useState('');
+    const [selectedLocationForAssignment, setSelectedLocationForAssignment] = useState('');
+    const [selectedUserForAssignment, setSelectedUserForAssignment] = useState('');
     const [selectedDevice, setSelectedDevice] = useState('');
-    const [loading, setLoading] = useState(false); // Added loading state
+    const [selectedUserForRole, setSelectedUserForRole] = useState('');
+    const [newUserRole, setNewUserRole] = useState('');
+    const [loading, setLoading] = useState(false);
     const api = createApi();
+
+    useEffect(() => {
+        fetchAdminData(); // Call the new function to fetch admin-protected data
+        fetchLocations();
+        fetchUsers();
+        fetchDevices();
+    }, []);
+
+    // New function to specifically call an admin-protected route
+    const fetchAdminData = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/admin/test'); // Assuming '/admin' is your protected route
+            console.log('Admin route response:', response.data);
+            // You might want to do something with this response,
+            // like setting a state variable to indicate admin access is confirmed.
+        } catch (error: any) {
+            console.error('Error accessing admin route:', error);
+            // Handle unauthorized access or other errors
+            if (error.response && error.response.status === 403) {
+                console.error('Unauthorized access to /admin route.');
+                // Optionally redirect or display an error
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Function to fetch locations
     const fetchLocations = async () => {
@@ -67,105 +98,140 @@ const Admin: React.FC = () => {
 
     const createLocation = async () => {
         const { location_name, location_description } = newLocation;
+        setLoading(true);
         try {
             await api.post('/location/create', { location_name, location_description });
-            setNewLocation({ location_name: '', location_description: '' }); // Reset fields
-            fetchLocations(); // Refresh locations after creation
+            setNewLocation({ location_name: '', location_description: '' });
+            fetchLocations();
         } catch (error) {
             console.error('Error creating location:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     const assignUserToLocation = async () => {
-        if (selectedUser && selectedLocation) {
+        if (selectedUserForAssignment && selectedLocationForAssignment) {
+            setLoading(true);
             try {
-                await api.post('/assign-user', { userName: selectedUser, locationName: selectedLocation });
-                fetchUsers(); // Refresh users after assignment
+                await api.post('/assign-user', { userName: selectedUserForAssignment, locationName: selectedLocationForAssignment });
+                fetchUsers();
             } catch (error) {
                 console.error('Error assigning user:', error);
+            } finally {
+                setLoading(false);
             }
         }
     };
 
     const assignDeviceToLocation = async () => {
-        if (selectedDevice && selectedLocation) {
-            const location = locations.find(loc => loc.location_name === selectedLocation);
+        if (selectedDevice && selectedLocationForAssignment) {
+            const location = locations.find(loc => loc.location_name === selectedLocationForAssignment);
             if (location) {
+                setLoading(true);
                 try {
                     await api.post('/assign-device', { device_id: selectedDevice, location_id: location.id });
-                    fetchDevices(); // Refresh devices after assignment
+                    fetchDevices();
                 } catch (error) {
                     console.error('Error assigning device:', error);
+                } finally {
+                    setLoading(false);
                 }
             }
         }
     };
 
+    const updateUserRole = async () => {
+        if (selectedUserForRole && newUserRole) {
+            setLoading(true);
+            try {
+                await api.post('/users/role', { userId: selectedUserForRole, role: newUserRole });
+                fetchUsers(); // Refresh users to see updated role
+                setNewUserRole(''); // Clear role input
+                setSelectedUserForRole(''); // Clear selected user
+            } catch (error) {
+                console.error('Error updating user role:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
     return (
-        <div className="grid grid-cols-3 gap-4 p-6">
-            {/* Localisation Panel */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+            {/* Location Management Panel */}
             <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
-                <h2 className="text-xl font-semibold mb-4">Créer une Localisation</h2>
-                <input
-                    type="text"
-                    placeholder="Nom"
-                    value={newLocation.location_name}
-                    onChange={(e) =>
-                        setNewLocation({ ...newLocation, location_name: e.target.value })
-                    }
-                    className="p-2 border rounded-md w-full mb-2"
-                />
-                <input
-                    type="text"
-                    placeholder="Description"
-                    value={newLocation.location_description}
-                    onChange={(e) =>
-                        setNewLocation({ ...newLocation, location_description: e.target.value })
-                    }
-                    className="p-2 border rounded-md w-full mb-2"
-                />
-                <button
-                    onClick={createLocation}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md"
-                    disabled={loading}
-                >
-                    {loading ? 'Création...' : 'Créer'}
-                </button>
-                {/* Refresh Button */}
-                <button
-                    onClick={fetchLocations}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
-                    disabled={loading}
-                >
-                    {loading ? 'Chargement...' : 'Refresh Locations'}
-                </button>
+                <h2 className="text-xl font-semibold mb-4">Gestion des Localisations</h2>
+                <div className="mb-4">
+                    <h3 className="text-lg font-semibold mb-2">Créer une Localisation</h3>
+                    <input
+                        type="text"
+                        placeholder="Nom"
+                        value={newLocation.location_name}
+                        onChange={(e) =>
+                            setNewLocation({ ...newLocation, location_name: e.target.value })
+                        }
+                        className="p-2 border rounded-md w-full mb-2"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Description"
+                        value={newLocation.location_description}
+                        onChange={(e) =>
+                            setNewLocation({ ...newLocation, location_description: e.target.value })
+                        }
+                        className="p-2 border rounded-md w-full mb-2"
+                    />
+                    <button
+                        onClick={createLocation}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                        disabled={loading}
+                    >
+                        {loading ? 'Création...' : 'Créer'}
+                    </button>
+                </div>
+                <div>
+                    <h3 className="text-lg font-semibold mb-2">Liste des Localisations</h3>
+                    <ul className="list-disc list-inside">
+                        {locations.map((loc) => (
+                            <li key={loc.id}>{loc.location_name}</li>
+                        ))}
+                    </ul>
+                    <button
+                        onClick={fetchLocations}
+                        className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
+                        disabled={loading}
+                    >
+                        {loading ? 'Chargement...' : 'Rafraîchir les Localisations'}
+                    </button>
+                </div>
             </div>
 
-            {/* Utilisateur Panel */}
+            {/* User Assignment Panel */}
             <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
-                <h2 className="text-xl font-semibold mb-4">Assigner un Utilisateur</h2>
+                <h2 className="text-xl font-semibold mb-4">Assigner un Utilisateur à une Localisation</h2>
                 <select
-                    value={selectedUser}
-                    onChange={(e) => setSelectedUser(e.target.value)}
+                    value={selectedUserForAssignment}
+                    onChange={(e) => setSelectedUserForAssignment(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
                     <option value="">Sélectionner un utilisateur</option>
                     {users.map((user) => (
-                        <option key={user.name} value={user.name}>
+                        <option key={user.id} value={user.name}>
                             {user.name}
                         </option>
                     ))}
                 </select>
                 <select
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    value={selectedLocationForAssignment}
+                    onChange={(e) => setSelectedLocationForAssignment(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
                     <option value="">Sélectionner une localisation</option>
                     {locations.map((loc) => (
-                        <option key={loc.location_name} value={loc.location_name}>
+                        <option key={loc.id} value={loc.location_name}>
                             {loc.location_name}
                         </option>
                     ))}
@@ -177,19 +243,18 @@ const Admin: React.FC = () => {
                 >
                     {loading ? 'Chargement...' : 'Assigner'}
                 </button>
-                {/* Refresh Button */}
                 <button
                     onClick={fetchUsers}
                     className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
                     disabled={loading}
                 >
-                    {loading ? 'Chargement...' : 'Refresh Users'}
+                    {loading ? 'Chargement...' : 'Rafraîchir les Utilisateurs'}
                 </button>
             </div>
 
-            {/* Device Panel */}
-            <div className="p-6 border border-gray-300 bg-mint-500 rounded-md">
-                <h2 className="text-xl font-semibold mb-4">Assigner un Appareil</h2>
+            {/* Device Assignment Panel */}
+            <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
+                <h2 className="text-xl font-semibold mb-4">Assigner un Appareil à une Localisation</h2>
                 <select
                     value={selectedDevice}
                     onChange={(e) => setSelectedDevice(e.target.value)}
@@ -204,14 +269,14 @@ const Admin: React.FC = () => {
                     ))}
                 </select>
                 <select
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    value={selectedLocationForAssignment}
+                    onChange={(e) => setSelectedLocationForAssignment(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
                     <option value="">Sélectionner une localisation</option>
                     {locations.map((loc) => (
-                        <option key={loc.location_name} value={loc.location_name}>
+                        <option key={loc.id} value={loc.location_name}>
                             {loc.location_name}
                         </option>
                     ))}
@@ -223,13 +288,55 @@ const Admin: React.FC = () => {
                 >
                     {loading ? 'Chargement...' : 'Assigner'}
                 </button>
-                {/* Refresh Button */}
                 <button
                     onClick={fetchDevices}
                     className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
                     disabled={loading}
                 >
-                    {loading ? 'Chargement...' : 'Refresh Devices'}
+                    {loading ? 'Chargement...' : 'Rafraîchir les Appareils'}
+                </button>
+            </div>
+
+            {/* User Role Management Panel */}
+            <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
+                <h2 className="text-xl font-semibold mb-4">Gestion des Rôles Utilisateur</h2>
+                <select
+                    value={selectedUserForRole}
+                    onChange={(e) => setSelectedUserForRole(e.target.value)}
+                    className="p-2 border rounded-md w-full mb-2"
+                    disabled={loading}
+                >
+                    <option value="">Sélectionner un utilisateur</option>
+                    {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                            {user.name} (Rôle actuel: {user.role || 'Non défini'})
+                        </option>
+                    ))}
+                </select>
+                <select
+                    value={newUserRole}
+                    onChange={(e) => setNewUserRole(e.target.value)}
+                    className="p-2 border rounded-md w-full mb-2"
+                    disabled={loading}
+                >
+                    <option value="">Sélectionner un rôle</option>
+                    <option value="administrateur">Administrateur</option>
+                    <option value="gestionnaire de site">Gestionnaire de site</option>
+                    <option value="installateur">Installateur</option>
+                </select>
+                <button
+                    onClick={updateUserRole}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-md"
+                    disabled={loading || !selectedUserForRole || !newUserRole}
+                >
+                    {loading ? 'Mise à jour...' : 'Mettre à jour le Rôle'}
+                </button>
+                <button
+                    onClick={fetchUsers}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
+                    disabled={loading}
+                >
+                    {loading ? 'Chargement...' : 'Rafraîchir les Utilisateurs'}
                 </button>
             </div>
         </div>

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import createApi from '../axios/api';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../slices/authSlice'; // Import your login success action
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
     const [isRegistering, setIsRegistering] = useState(false);
@@ -15,6 +18,9 @@ const Login: React.FC = () => {
     const [registerLoading, setRegisterLoading] = useState(false);
     const [passwordStrengthErrors, setPasswordStrengthErrors] = useState<string[]>([]);
 
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoginError(null);
@@ -26,7 +32,14 @@ const Login: React.FC = () => {
             const response = await api.post('/login', { email: loginEmail, password: loginPassword });
             const customJwt = response.data.jwtToken;
             localStorage.setItem('customJwt', customJwt);
-            window.location.href = '/dashboard';
+            // Decode the JWT to get user roles (assuming your backend includes roles in the token)
+            const decodedToken = JSON.parse(atob(customJwt.split('.')[1]));
+            const roles = decodedToken?.role || []; // Adjust the key based on your JWT payload
+
+            // Dispatch the login success action to update Redux state
+            dispatch(loginSuccess({ roles }));
+
+            navigate('/dashboard');
         } catch (error: any) {
             setLoginError('Login error. Please check your credentials and try again.');
             console.error('Login error', error);
