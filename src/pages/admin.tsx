@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import createApi from '../axios/api';
 
 type Location = {
@@ -23,35 +23,45 @@ const Admin: React.FC = () => {
     const [selectedLocation, setSelectedLocation] = useState('');
     const [selectedUser, setSelectedUser] = useState('');
     const [selectedDevice, setSelectedDevice] = useState('');
+    const [loading, setLoading] = useState(false); // Added loading state
     const api = createApi();
 
     // Function to fetch locations
     const fetchLocations = async () => {
+        setLoading(true);
         try {
             const response = await api.get('/locations');
             setLocations(response.data);
         } catch (error) {
             console.error('Error fetching locations:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     // Function to fetch users
     const fetchUsers = async () => {
+        setLoading(true);
         try {
             const response = await api.get('/users');
             setUsers(response.data);
         } catch (error) {
             console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     // Function to fetch devices
     const fetchDevices = async () => {
+        setLoading(true);
         try {
             const response = await api.get('/devices');
             setDevices(response.data);
         } catch (error) {
             console.error('Error fetching devices:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -60,6 +70,7 @@ const Admin: React.FC = () => {
         try {
             await api.post('/location/create', { location_name, location_description });
             setNewLocation({ location_name: '', location_description: '' }); // Reset fields
+            fetchLocations(); // Refresh locations after creation
         } catch (error) {
             console.error('Error creating location:', error);
         }
@@ -67,7 +78,12 @@ const Admin: React.FC = () => {
 
     const assignUserToLocation = async () => {
         if (selectedUser && selectedLocation) {
-            await api.post('/assign-user', { userName: selectedUser, locationName: selectedLocation });
+            try {
+                await api.post('/assign-user', { userName: selectedUser, locationName: selectedLocation });
+                fetchUsers(); // Refresh users after assignment
+            } catch (error) {
+                console.error('Error assigning user:', error);
+            }
         }
     };
 
@@ -75,10 +91,21 @@ const Admin: React.FC = () => {
         if (selectedDevice && selectedLocation) {
             const location = locations.find(loc => loc.location_name === selectedLocation);
             if (location) {
-                await api.post('/assign-device', { device_id: selectedDevice, location_id: location.id });
+                try {
+                    await api.post('/assign-device', { device_id: selectedDevice, location_id: location.id });
+                    fetchDevices(); // Refresh devices after assignment
+                } catch (error) {
+                    console.error('Error assigning device:', error);
+                }
             }
         }
     };
+
+    useEffect(() => {
+        fetchLocations();
+        fetchUsers();
+        fetchDevices();
+    }, []);
 
     return (
         <div className="grid grid-cols-3 gap-4 p-6">
@@ -106,15 +133,17 @@ const Admin: React.FC = () => {
                 <button
                     onClick={createLocation}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                    disabled={loading}
                 >
-                    Créer
+                    {loading ? 'Création...' : 'Créer'}
                 </button>
                 {/* Refresh Button */}
                 <button
                     onClick={fetchLocations}
                     className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
+                    disabled={loading}
                 >
-                    Refresh Locations
+                    {loading ? 'Chargement...' : 'Refresh Locations'}
                 </button>
             </div>
 
@@ -125,6 +154,7 @@ const Admin: React.FC = () => {
                     value={selectedUser}
                     onChange={(e) => setSelectedUser(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
+                    disabled={loading}
                 >
                     <option value="">Sélectionner un utilisateur</option>
                     {users.map((user) => (
@@ -137,6 +167,7 @@ const Admin: React.FC = () => {
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
+                    disabled={loading}
                 >
                     <option value="">Sélectionner une localisation</option>
                     {locations.map((loc) => (
@@ -148,15 +179,17 @@ const Admin: React.FC = () => {
                 <button
                     onClick={assignUserToLocation}
                     className="px-4 py-2 bg-green-500 text-white rounded-md"
+                    disabled={loading}
                 >
-                    Assigner
+                    {loading ? 'Chargement...' : 'Assigner'}
                 </button>
                 {/* Refresh Button */}
                 <button
                     onClick={fetchUsers}
                     className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
+                    disabled={loading}
                 >
-                    Refresh Users
+                    {loading ? 'Chargement...' : 'Refresh Users'}
                 </button>
             </div>
 
@@ -167,6 +200,7 @@ const Admin: React.FC = () => {
                     value={selectedDevice}
                     onChange={(e) => setSelectedDevice(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
+                    disabled={loading}
                 >
                     <option value="">Sélectionner un appareil</option>
                     {devices.map((dev) => (
@@ -179,6 +213,7 @@ const Admin: React.FC = () => {
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
+                    disabled={loading}
                 >
                     <option value="">Sélectionner une localisation</option>
                     {locations.map((loc) => (
@@ -190,15 +225,17 @@ const Admin: React.FC = () => {
                 <button
                     onClick={assignDeviceToLocation}
                     className="px-4 py-2 bg-red-500 text-white rounded-md"
+                    disabled={loading}
                 >
-                    Assigner
+                    {loading ? 'Chargement...' : 'Assigner'}
                 </button>
                 {/* Refresh Button */}
                 <button
                     onClick={fetchDevices}
                     className="px-4 py-2 bg-gray-500 text-white rounded-md mt-2"
+                    disabled={loading}
                 >
-                    Refresh Devices
+                    {loading ? 'Chargement...' : 'Refresh Devices'}
                 </button>
             </div>
         </div>
