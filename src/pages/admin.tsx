@@ -262,7 +262,7 @@ const Admin: React.FC = () => {
                     disabled={loading}
                 >
                     <option value="">Sélectionner un appareil</option>
-                    {devices.map((dev) => (
+                    {devices?.map((dev) => (
                         <option key={dev.device_id} value={dev.device_id}>
                             {dev.device_id}
                         </option>
