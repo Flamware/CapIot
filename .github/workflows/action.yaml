@@ -8,19 +8,16 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-22.04  # ✅ Pin to Ubuntu 22.04 for apt compatibility
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Google Cloud SDK and gke-gcloud-auth-plugin
-        run: |
-          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/cloud.google.gpg > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
-          gcloud version
+      - name: Install Google Cloud SDK and gke-gcloud-auth-plugin (using google-github-actions)
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: gke-gcloud-auth-plugin
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -45,14 +42,17 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Configure GCP credentials
-        uses: google-github-actions/auth@v1
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GKE_CREDENTIALS }}'
 
-      - name: Set GKE context
-        run: |
-          gcloud container clusters get-credentials capiot-eu-cluster --region europe-west9 --project awesome-vigil-454917-q7
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: capiot-eu-cluster
+          location: europe-west9
+          project_id: awesome-vigil-454917-q7
 
       - name: Update Kubernetes deployment
         run: |
