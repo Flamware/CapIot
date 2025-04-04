@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-const apiUrl = "http://flamware.work/api"
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 console.log("API URL : ", apiUrl);
 
 // Create an Axios instance
