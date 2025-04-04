@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: vite-config
-  namespace: capiot-app
-data:
-  apiUrl: "http://192.168.49.2:30080"

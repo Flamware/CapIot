@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: flamware/capiot-client:latest
+          image: flamware/capiot:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
