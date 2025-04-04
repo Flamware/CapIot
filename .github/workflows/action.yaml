@@ -1,4 +1,4 @@
-name: Deploy Frontend to Kubernetes
+name: Deploy Frontend to GCloud
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Google Cloud SDK and gke-gcloud-auth-plugin (using google-github-actions)
+      - name: Install Google Cloud SDK and gke-gcloud-auth-plugin
         uses: google-github-actions/setup-gcloud@v2
         with:
           install_components: gke-gcloud-auth-plugin
@@ -54,7 +54,13 @@ jobs:
           location: europe-west9
           project_id: awesome-vigil-454917-q7
 
-      - name: Update Kubernetes deployment
+      - name: Update Kubernetes deployment and YAML
         run: |
-          kubectl set image deployment/frontend-deployment frontend=flamware/capiot:${{ steps.docker_build.outputs.image_tag }} -n capiot-app
-          kubectl rollout status deployment/frontend-deployment -n capiot-app --timeout=60s
+          kubectl set image deployment/front-deployment frontend=flamware/capiot:${{ steps.docker_build.outputs.image_tag }} -n capiot-app
+          kubectl rollout status deployment/front-deployment -n capiot-app --timeout=60s
+          kubectl get deployment front-deployment -n capiot-app -o yaml > front-deployment.yaml
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update frontend image to ${{ steps.docker_build.outputs.image_tag }}"
+          file_pattern: front-deployment.yaml
