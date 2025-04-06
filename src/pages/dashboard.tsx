@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="p-5 ">
+        <div className="p-5 bg-gray-300 rounded-lg shadow-md max-w-2xl mx-auto">
             <button
                 className="bg-teal-500 text-white py-2 px-4 rounded hover:bg-teal-600"
                 onClick={fetchDeviceList}
