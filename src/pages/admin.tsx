@@ -18,46 +18,40 @@ type Device = {
 };
 
 const Admin: React.FC = () => {
-    const [locations, setLocations] = useState<Location[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
-    const [devices, setDevices] = useState<Device[]>([]);
+    const [locations, setLocations] = useState<Location[] | null>([]); // Allow null
+    const [users, setUsers] = useState<User[] | null>([]); // Allow null
+    const [devices, setDevices] = useState<Device[] | null>([]); // Allow null
     const [newLocation, setNewLocation] = useState({ location_name: '', location_description: '' });
-    const [selectedLocationForAssignment, setSelectedLocationForAssignment] = useState(-1);
-    const [selectedUserForAssignment, setSelectedUserForAssignment] = useState('');
-    const [selectedDevice, setSelectedDevice] = useState('');
-    const [selectedUserForRole, setSelectedUserForRole] = useState('');
+    const [selectedLocationForAssignment, setSelectedLocationForAssignment] = useState<number | null>(-1); // Allow null
+    const [selectedUserForAssignment, setSelectedUserForAssignment] = useState<string | null>(''); // Allow null
+    const [selectedDevice, setSelectedDevice] = useState<string | null>(''); // Allow null
+    const [selectedUserForRole, setSelectedUserForRole] = useState<string | null>(''); // Allow null
     const [newUserRole, setNewUserRole] = useState('');
     const [loading, setLoading] = useState(false);
     const api = createApi();
 
     useEffect(() => {
-        fetchAdminData(); // Call the new function to fetch admin-protected data
+        fetchAdminData();
         fetchLocations();
         fetchUsers();
         fetchDevices();
     }, []);
 
-    // New function to specifically call an admin-protected route
     const fetchAdminData = async () => {
         setLoading(true);
         try {
-            const response = await api.get('/admin/test'); // Assuming '/admin' is your protected route
+            const response = await api.get('/admin/test');
             console.log('Admin route response:', response.data);
-            // You might want to do something with this response,
-            // like setting a state variable to indicate admin access is confirmed.
         } catch (error: any) {
             console.error('Error accessing admin route:', error);
-            // Handle unauthorized access or other errors
             if (error.response && error.response.status === 403) {
                 console.error('Unauthorized access to /admin route.');
-                // Optionally redirect or display an error
             }
         } finally {
             setLoading(false);
         }
     };
 
-    // Function to fetch locations
     const fetchLocations = async () => {
         setLoading(true);
         try {
@@ -65,12 +59,12 @@ const Admin: React.FC = () => {
             setLocations(response.data);
         } catch (error) {
             console.error('Error fetching locations:', error);
+            setLocations(null); // Set to null on error
         } finally {
             setLoading(false);
         }
     };
 
-    // Function to fetch users
     const fetchUsers = async () => {
         setLoading(true);
         try {
@@ -78,12 +72,12 @@ const Admin: React.FC = () => {
             setUsers(response.data);
         } catch (error) {
             console.error('Error fetching users:', error);
+            setUsers(null); // Set to null on error
         } finally {
             setLoading(false);
         }
     };
 
-    // Function to fetch devices
     const fetchDevices = async () => {
         setLoading(true);
         try {
@@ -91,6 +85,7 @@ const Admin: React.FC = () => {
             setDevices(response.data);
         } catch (error) {
             console.error('Error fetching devices:', error);
+            setDevices(null); // Set to null on error
         } finally {
             setLoading(false);
         }
@@ -111,7 +106,7 @@ const Admin: React.FC = () => {
     };
 
     const assignUserToLocation = async () => {
-        if (selectedUserForAssignment && selectedLocationForAssignment) {
+        if (selectedUserForAssignment && selectedLocationForAssignment !== null && selectedLocationForAssignment !== -1) {
             setLoading(true);
             try {
                 await api.post('/assign-user/'+selectedUserForAssignment, { locationID: selectedLocationForAssignment });
@@ -125,8 +120,8 @@ const Admin: React.FC = () => {
     };
 
     const assignDeviceToLocation = async () => {
-        if (selectedDevice && selectedLocationForAssignment) {
-            const location = locations.find(loc => loc.id === selectedLocationForAssignment); // Compare with the numeric ID
+        if (selectedDevice && selectedLocationForAssignment !== null && selectedLocationForAssignment !== -1 && locations) {
+            const location = locations.find(loc => loc.id === selectedLocationForAssignment);
             if (location) {
                 setLoading(true);
                 try {
@@ -146,9 +141,9 @@ const Admin: React.FC = () => {
             setLoading(true);
             try {
                 await api.post('/users/role', { userId: selectedUserForRole, role: newUserRole });
-                fetchUsers(); // Refresh users to see updated role
-                setNewUserRole(''); // Clear role input
-                setSelectedUserForRole(''); // Clear selected user
+                fetchUsers();
+                setNewUserRole('');
+                setSelectedUserForRole('');
             } catch (error) {
                 console.error('Error updating user role:', error);
             } finally {
@@ -193,7 +188,7 @@ const Admin: React.FC = () => {
                 <div>
                     <h3 className="text-lg font-semibold mb-2">Liste des Localisations</h3>
                     <ul className="list-disc list-inside">
-                        {locations.map((loc) => (
+                        {locations?.map((loc) => (
                             <li key={loc.id}>{loc.location_name}</li>
                         ))}
                     </ul>
@@ -211,27 +206,27 @@ const Admin: React.FC = () => {
             <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
                 <h2 className="text-xl font-semibold mb-4">Assigner un Utilisateur à une Localisation</h2>
                 <select
-                    value={selectedUserForAssignment}
+                    value={selectedUserForAssignment ?? ''}
                     onChange={(e) => setSelectedUserForAssignment(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
                     <option value="">Sélectionner un utilisateur</option>
-                    {users.map((user) => (
-                        <option key={user.id} value={user.id}> {/* Use user.id as the value */}
+                    {users?.map((user) => (
+                        <option key={user.id} value={user.id}>
                             {user.name}
                         </option>
                     ))}
                 </select>
                 <select
-                    value={selectedLocationForAssignment}
-                    onChange={(e) => setSelectedLocationForAssignment(Number(e.target.value))} // Convert to number on change
+                    value={selectedUserForAssignment ?? ''}
+                    onChange={(e) => setSelectedLocationForAssignment(Number(e.target.value))}
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
                     <option value={-1}>Sélectionner une localisation</option>
-                    {locations.map((loc) => (
-                        <option key={loc.id} value={loc.id}> {/* value is now a number */}
+                    {locations?.map((loc) => (
+                        <option key={loc.id} value={loc.id}>
                             {loc.location_name}
                         </option>
                     ))}
@@ -239,7 +234,7 @@ const Admin: React.FC = () => {
                 <button
                     onClick={assignUserToLocation}
                     className="px-4 py-2 bg-green-500 text-white rounded-md"
-                    disabled={loading}
+                    disabled={loading || !selectedUserForAssignment || selectedLocationForAssignment === -1}
                 >
                     {loading ? 'Chargement...' : 'Assigner'}
                 </button>
@@ -256,7 +251,7 @@ const Admin: React.FC = () => {
             <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
                 <h2 className="text-xl font-semibold mb-4">Assigner un Appareil à une Localisation</h2>
                 <select
-                    value={selectedDevice}
+                    value={selectedDevice ?? ''}
                     onChange={(e) => setSelectedDevice(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
@@ -269,14 +264,14 @@ const Admin: React.FC = () => {
                     ))}
                 </select>
                 <select
-                    value={selectedLocationForAssignment}
-                    onChange={(e) => setSelectedLocationForAssignment(Number(e.target.value))} // Convert to number on change
+                    value={selectedLocationForAssignment ?? ''}
+                    onChange={(e) => setSelectedLocationForAssignment(Number(e.target.value))}
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
-                    <option value="">Sélectionner une localisation</option>
-                    {locations.map((loc) => (
-                        <option key={loc.id} value={loc.location_name}>
+                    <option value={-1}>Sélectionner une localisation</option>
+                    {locations?.map((loc) => (
+                        <option key={loc.id} value={loc.id}>
                             {loc.location_name}
                         </option>
                     ))}
@@ -284,7 +279,7 @@ const Admin: React.FC = () => {
                 <button
                     onClick={assignDeviceToLocation}
                     className="px-4 py-2 bg-red-500 text-white rounded-md"
-                    disabled={loading}
+                    disabled={loading || !selectedDevice || selectedLocationForAssignment === -1}
                 >
                     {loading ? 'Chargement...' : 'Assigner'}
                 </button>
@@ -301,13 +296,13 @@ const Admin: React.FC = () => {
             <div className="p-6 border bg-mint-500 border-gray-300 rounded-md">
                 <h2 className="text-xl font-semibold mb-4">Gestion des Rôles Utilisateur</h2>
                 <select
-                    value={selectedUserForRole}
+                    value={selectedUserForRole ?? ''}
                     onChange={(e) => setSelectedUserForRole(e.target.value)}
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
                     <option value="">Sélectionner un utilisateur</option>
-                    {users.map((user) => (
+                    {users?.map((user) => (
                         <option key={user.id} value={user.id}>
                             {user.name} (Rôle actuel: {user.role || 'Non défini'})
                         </option>
