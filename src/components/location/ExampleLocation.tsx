@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import createApi from '../../axios/api';
-import LocationsSection, { LocationItemProps } from './LocationSection.tsx'; // Import the correct type
+import LocationsSection from './LocationSection.tsx';
+import {useEffect, useState} from "react"; // Import the correct type
 
 interface Location {
     id: number; // Backend uses 'ID' (uppercase)
