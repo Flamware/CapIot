@@ -56,6 +56,10 @@ const ExampleLocations = () => {
         return <div>Chargement des localisations...</div>;
     }
 
+    if (locations.length === 0) {
+        return <div>Aucune localisation trouvée.</div>;
+    }
+
     return (
         <div>
             <LocationsSection
