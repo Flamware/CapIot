@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import createApi from '../axios/api';
 
 type Location = {
-    id: string;
+    id: number; // Change id to number
     location_name: string;
     location_description: string;
 };
@@ -22,7 +22,7 @@ const Admin: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [devices, setDevices] = useState<Device[]>([]);
     const [newLocation, setNewLocation] = useState({ location_name: '', location_description: '' });
-    const [selectedLocationForAssignment, setSelectedLocationForAssignment] = useState('');
+    const [selectedLocationForAssignment, setSelectedLocationForAssignment] = useState(-1);
     const [selectedUserForAssignment, setSelectedUserForAssignment] = useState('');
     const [selectedDevice, setSelectedDevice] = useState('');
     const [selectedUserForRole, setSelectedUserForRole] = useState('');
@@ -114,7 +114,7 @@ const Admin: React.FC = () => {
         if (selectedUserForAssignment && selectedLocationForAssignment) {
             setLoading(true);
             try {
-                await api.post('/assign-user', { userName: selectedUserForAssignment, locationName: selectedLocationForAssignment });
+                await api.post('/assign-user/'+selectedUserForAssignment, { locationID: selectedLocationForAssignment });
                 fetchUsers();
             } catch (error) {
                 console.error('Error assigning user:', error);
@@ -126,11 +126,11 @@ const Admin: React.FC = () => {
 
     const assignDeviceToLocation = async () => {
         if (selectedDevice && selectedLocationForAssignment) {
-            const location = locations.find(loc => loc.location_name === selectedLocationForAssignment);
+            const location = locations.find(loc => loc.id === selectedLocationForAssignment); // Compare with the numeric ID
             if (location) {
                 setLoading(true);
                 try {
-                    await api.post('/assign-device', { device_id: selectedDevice, location_id: location.id });
+                    await api.post('/assign-device/'+location.id, { locationID: location.id  });
                     fetchDevices();
                 } catch (error) {
                     console.error('Error assigning device:', error);
@@ -218,20 +218,20 @@ const Admin: React.FC = () => {
                 >
                     <option value="">Sélectionner un utilisateur</option>
                     {users.map((user) => (
-                        <option key={user.id} value={user.name}>
+                        <option key={user.id} value={user.id}> {/* Use user.id as the value */}
                             {user.name}
                         </option>
                     ))}
                 </select>
                 <select
                     value={selectedLocationForAssignment}
-                    onChange={(e) => setSelectedLocationForAssignment(e.target.value)}
+                    onChange={(e) => setSelectedLocationForAssignment(Number(e.target.value))} // Convert to number on change
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
-                    <option value="">Sélectionner une localisation</option>
+                    <option value={-1}>Sélectionner une localisation</option>
                     {locations.map((loc) => (
-                        <option key={loc.id} value={loc.location_name}>
+                        <option key={loc.id} value={loc.id}> {/* value is now a number */}
                             {loc.location_name}
                         </option>
                     ))}
@@ -270,7 +270,7 @@ const Admin: React.FC = () => {
                 </select>
                 <select
                     value={selectedLocationForAssignment}
-                    onChange={(e) => setSelectedLocationForAssignment(e.target.value)}
+                    onChange={(e) => setSelectedLocationForAssignment(Number(e.target.value))} // Convert to number on change
                     className="p-2 border rounded-md w-full mb-2"
                     disabled={loading}
                 >
