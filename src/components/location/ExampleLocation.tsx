@@ -9,7 +9,7 @@ interface Location {
 }
 
 const ExampleLocations = () => {
-    const [locations, setLocations] = useState<Location[]>([]);
+    const [locations, setLocations] = useState<Location[] | null>([]); // Allow null as a possible state
     const [loading, setLoading] = useState(true);
     const api = createApi();
 
@@ -22,7 +22,7 @@ const ExampleLocations = () => {
         try {
             const response = await api.get('/users/me/locations');
             console.log('User Locations:', response.data);
-            // Assuming the backend returns an array of Location objects
+            // Assuming the backend returns an array of Location objects or null
             setLocations(response.data);
         } catch (error) {
             console.error('Error fetching user locations:', error);
@@ -56,7 +56,8 @@ const ExampleLocations = () => {
         return <div>Chargement des localisations...</div>;
     }
 
-    if (locations.length === 0) {
+    // Check if locations is null or an empty array
+    if (!locations || locations.length === 0) {
         return <div>Aucune localisation trouvée.</div>;
     }
 
