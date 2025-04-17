@@ -194,8 +194,7 @@ const History: React.FC = () => {
 
     const selectedLocation = locations.find(loc => loc.id === selectedLocationId);
     const selectedDevice = selectedLocation?.devices.find(dev => dev.device_id === selectedDeviceId);
-    const selectedSensors = selectedDevice?.captors.filter(sensor => selectedSensorIds.includes(sensor.sensor_id));
-
+    selectedDevice?.captors.filter(sensor => selectedSensorIds.includes(sensor.sensor_id));
     if (loading) {
         return <div className="p-5 bg-gray-100 rounded-lg shadow-md">Chargement des lieux, des appareils et des capteurs...</div>;
     }

@@ -1,5 +1,4 @@
-import createApi from '../../axios/api';
-import LocationsSection from './LocationSection.tsx';
+import {createApi} from '../../axios/api';
 import {useEffect, useState} from "react"; // Import the correct type
 
 interface Location {
@@ -32,25 +31,6 @@ const ExampleLocations = () => {
         }
     };
 
-    const handleViewDetails = (locationName: string) => {
-        console.log(`Voir les détails pour ${locationName}`);
-        // Implement your logic
-    };
-
-    const handleToggleNotifications = (locationName: string) => {
-        console.log(`Activer/désactiver les notifications pour ${locationName}`);
-        // Implement your logic
-    };
-
-    const handleViewChart = (locationName: string) => {
-        console.log(`Voir le graphique pour ${locationName}`);
-        // Implement your logic
-    };
-
-    const handleSetupNewLocation = () => {
-        console.log('Configurer un nouvel emplacement');
-        // Implement your logic
-    };
 
     if (loading) {
         return <div>Chargement des localisations...</div>;
