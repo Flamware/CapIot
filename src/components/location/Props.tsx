@@ -10,6 +10,7 @@ export interface LocationsSectionProps {
 export interface CaptorInfo {
     captor_id: string;
     captor_type: string;
+
 }
 
 export interface DeviceInfo {

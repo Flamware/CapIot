@@ -59,29 +59,8 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                         <h6 className="col-span-full font-semibold text-gray-600">Capteurs:</h6>
                                         {device.captors.map((captor) => (
                                             <div key={captor.captor_id} className="bg-white p-2 rounded-md shadow-sm">
-                                                <p className="text-gray-600">{captor.captor_name || captor.captor_type}</p>
-                                                <p className="font-bold">
-                                                    <span className="captor-value">
-                                                        {captor.value !== null && captor.value !== undefined ? captor.value : 'N/A'}
-                                                        {typeof captor.value === 'number' ? (
-                                                            captor.captor_type.toLowerCase().includes('qualiteair') ? '%' :
-                                                                captor.captor_type.toLowerCase().includes('polluant') ? ' ppm' : ''
-                                                        ) : ''}
-                                                        {typeof captor.value === 'boolean' ? (
-                                                            captor.value ? ' (Activé)' : ' (Désactivé)'
-                                                        ) : ''}
-                                                    </span>
-                                                    {captor.captor_status && (
-                                                        <span className={`ml-1 text-xs px-2 py-1 rounded-full ${
-                                                            captor.captor_status.toLowerCase() === 'normal' ? 'bg-green-100 text-green-800' :
-                                                                captor.captor_status.toLowerCase() === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                                                                    captor.captor_status.toLowerCase() === 'critical' ? 'bg-red-100 text-red-800' :
-                                                                        'bg-gray-100 text-gray-800'
-                                                        }`}>
-                                                            {captor.captor_status}
-                                                        </span>
-                                                    )}
-                                                </p>
+                                                <p className="text-gray-600">{captor.captor_id || captor.captor_type}</p>
+
                                             </div>
                                         ))}
                                     </div>
