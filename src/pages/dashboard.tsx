@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
         };
 
         fetchAllData();
-    }, [api, hasFetched]);
+    }, []); // Empty dependency array means this runs only once on mount
 
     const handleViewDetails = (locationName: string) => {
         console.log(`View details for ${locationName}`);

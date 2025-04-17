@@ -91,7 +91,7 @@ const History: React.FC = () => {
         };
 
         fetchAllData();
-    }, [api, hasFetched]);
+    }, []); // Empty dependency array means this runs only once on mount
 
     const handleLocationClick = (locationId: number) => {
         if (expandedLocationId === locationId) {
