@@ -15,9 +15,10 @@ COPY . .
 
 # Pass VITE_API_URL as a build argument
 ARG VITE_API_URL
+ARG VITE_INFLUXDB_URL
 
 # Build the React application with the API URL
-RUN VITE_API_URL=$VITE_API_URL npm run build
+RUN VITE_API_URL=$VITE_API_URL VITE_INFLUXDB_URL=$VITE_INFLUXDB_URL npm run build
 
 # Stage 2: Serve the built application with Nginx
 FROM nginx:alpine
