@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
-import createApi from '../axios/api';
-import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../slices/authSlice'; // Import your login success action
+import React, {useContext, useState} from 'react';
+import {createApi} from '../axios/api';
 import { useNavigate } from 'react-router-dom';
-
+import { AuthContext, AuthContextType } from '../AuthContext'; // Assurez-vous du chemin correct
+interface DecodedJwt {
+    userId: string;
+    email: string;
+    username?: string; // Assuming username might be in the token
+    name?: string;     // Or a 'name' field you can use as username
+    role?: string[];
+    iat?: number;
+    exp?: number;
+}
 const Login: React.FC = () => {
     const [isRegistering, setIsRegistering] = useState(false);
     const [loginEmail, setLoginEmail] = useState('');
@@ -17,9 +24,15 @@ const Login: React.FC = () => {
     const [registerError, setRegisterError] = useState<string | null>(null);
     const [registerLoading, setRegisterLoading] = useState(false);
     const [passwordStrengthErrors, setPasswordStrengthErrors] = useState<string[]>([]);
+    const { login } = useContext(AuthContext) as AuthContextType; // Get the login function from context
 
-    const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    const base64Decode = (str: string) => {
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    };
 
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,13 +45,20 @@ const Login: React.FC = () => {
             const response = await api.post('/login', { email: loginEmail, password: loginPassword });
             const customJwt = response.data.jwtToken;
             localStorage.setItem('customJwt', customJwt);
-            // Decode the JWT to get user roles (assuming your backend includes roles in the token)
-            const decodedToken = JSON.parse(atob(customJwt.split('.')[1]));
-            const roles = decodedToken?.role || []; // Adjust the key based on your JWT payload
+            // Decode the JWT payload
+            const base64Url = customJwt.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const decodedToken: DecodedJwt = JSON.parse(base64Decode(base64));
+            const roles = decodedToken?.role || [];
 
-            // Dispatch the login success action to update Redux state
-            dispatch(loginSuccess({ roles }));
-
+            // Construct the userData object to match the User interface
+            const userData: { id: string; username: string; email: string; roles?: string[] } = {
+                id: decodedToken.userId, // Use the correct property from your JWT
+                username: decodedToken.username || decodedToken.name || decodedToken.email.split('@')[0], // Prioritize username, then name, then derive from email
+                email: decodedToken.email,
+                roles: roles,
+            };
+            login(userData); // Update the AuthContext
             navigate('/dashboard');
         } catch (error: any) {
             setLoginError('Login error. Please check your credentials and try again.');

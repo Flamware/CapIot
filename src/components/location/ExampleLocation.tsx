@@ -63,30 +63,7 @@ const ExampleLocations = () => {
 
     return (
         <div>
-            <LocationsSection
-                locationsData={locations.map(loc => ({
-                    id: String(loc.id), // Convert backend 'ID' to string for frontend 'id'
-                    location_name: loc.location_name, // Use backend 'Name'
-                    lastUpdated: 'N/A', // Backend doesn't provide this, you might need to fetch it separately or calculate it
-                    status: 'N/A', // Backend doesn't provide a direct status, you might need to determine it based on other data
-                    sensorData: {
-                        temperature: 0, // Backend doesn't provide sensor data here
-                        humidity: 0,
-                        airPurity: 0,
-                        nh2Levels: 0,
-                        photocatalyseFonctionne: null,
-                        ionisateurFonctionne: null,
-                        ozoneNiveauDeclenchement: null,
-                        capteurQualiteAir: null,
-                        capteurPolluantSpecifique: null,
-                        capteurEfficaciteAutreSysteme: null,
-                    },
-                }))}
-                onViewDetails={handleViewDetails}
-                onToggleNotifications={handleToggleNotifications}
-                onViewChart={handleViewChart}
-                onSetupNewLocation={handleSetupNewLocation}
-            />
+
         </div>
     );
 };

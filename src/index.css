@@ -55,7 +55,31 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
-
+span {
+  font-size: 0.8em;
+  color: #666;
+}
+input {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #f9f9f9;
+}
+input:hover {
+  background-color: #d0d4da;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  margin: 0;
+  color: #1a1a1a;
+}
+p {
+  margin: 0;
+  color: #1a1a1a;
+}
 select, input {
   color: black; /* Set the text color to black */
   background: white;

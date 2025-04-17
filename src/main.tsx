@@ -1,17 +1,18 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import './index.css';
+// index.tsx (or your main entry point)
+import ReactDOM from 'react-dom/client';
 import App from './App';
-import { Provider } from 'react-redux';
-import store from './store'; // Assuming your Redux store is in './store'
+import './index.css';
+import { AuthProvider } from './AuthContext'; // Importez votre AuthProvider
+import React from 'react';
 
-const rootElement = document.getElementById('root')!;
-const root = createRoot(rootElement);
+const root = ReactDOM.createRoot(
+    document.getElementById('root') as HTMLElement
+);
 
 root.render(
-    <StrictMode>
-        <Provider store={store}>
+    <React.StrictMode>
+        <AuthProvider> {/* Enveloppez votre App avec l'AuthProvider */}
             <App />
-        </Provider>
-    </StrictMode>
+        </AuthProvider>
+    </React.StrictMode>
 );

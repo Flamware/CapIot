@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import createApi from "../axios/api"; // Adjust the path to your createApi function
+import {createApi} from "../axios/api"; // Adjust the path to your createApi function
 
 interface User {
     id: number;
