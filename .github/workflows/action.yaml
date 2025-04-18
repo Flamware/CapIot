@@ -34,6 +34,7 @@ jobs:
           IMAGE_TAG=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::8}
           docker build --push --no-cache \
             --build-arg VITE_API_URL=http://flamware.work/api \
+            --build-arg VITE_INFLUXDB_URL=http://flamware.work/influxdb \
             --tag flamware/capiot:$IMAGE_TAG .
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
