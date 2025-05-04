@@ -57,6 +57,6 @@ jobs:
 
       - name: Update Kubernetes deployment and YAML
         run: |
-          kubectl set image deployment/frontend-deployment frontend=flamware/capiot:${{ steps.docker_build.outputs.image_tag }} -n capiot-app
+          kubectl set image deployment/frontend-deployment frontend=flamware/capiot:${{ steps.docker_build.outputs.image_tag }} -n capiot
           kubectl rollout status deployment/frontend-deployment -n capiot
           kubectl get deployment frontend-deployment -n capiot-o yaml > frontend-deployment.yaml
