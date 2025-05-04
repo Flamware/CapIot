@@ -59,4 +59,3 @@ jobs:
         run: |
           kubectl set image deployment/frontend-deployment frontend-container=flamware/capiot:${{ steps.docker_build.outputs.image_tag }} -n capiot
           kubectl rollout status deployment/frontend-deployment -n capiot
-          kubectl get deployment frontend-deployment -n capiot yaml > frontend-deployment.yaml
