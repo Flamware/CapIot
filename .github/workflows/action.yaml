@@ -51,9 +51,9 @@ jobs:
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
-          cluster_name: capiot-eu-cluster
-          location: europe-west9
-          project_id: awesome-vigil-454917-q7
+          cluster_name: capiot-cluster
+          location: europe-west1
+          project_id: arcane-grin-458811-h4 # Utilisation du bon project ID
 
       - name: Update Kubernetes deployment and YAML
         run: |

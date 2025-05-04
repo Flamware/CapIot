@@ -1,20 +1,18 @@
-// contexts/AuthContext.tsx (Exemple de votre contexte d'authentification)
+// contexts/AuthContext.tsx
+
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import {User} from "./components/types/user.ts";
 
-interface User {
-    id: string;
-    username: string;
-    email: string;
-    roles?: string[];
-    // ... other properties
-}
 
+// Corrected: login function expects a User object
 export interface AuthContextType {
     user: User | null;
-    login: (userData: User) => void;
+    login: (userData: User) => void; // Changed parameter type to User
     logout: () => void;
-    isAuthenticated: boolean; // Ajoutez un indicateur d'authentification
+    isAuthenticated: boolean;
 }
+
+// ... rest of your AuthProvider code remains the same ...
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -22,16 +20,16 @@ interface AuthProviderProps {
     children: ReactNode;
 }
 
-
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(() => {
         const storedUser = localStorage.getItem('user');
+        // Ensure roles are parsed correctly if stored (might need adjustment if old data exists)
         return storedUser ? JSON.parse(storedUser) : null;
     });
 
-    const isAuthenticated = !!user; // Déterminez si l'utilisateur est authentifié
+    const isAuthenticated = !!user;
 
+    // This implementation now matches the corrected AuthContextType
     const login = (userData: User) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
@@ -40,12 +38,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
-        // Rediriger vers la page de connexion si nécessaire
+        localStorage.removeItem('customJwt'); // Also remove the JWT
     };
 
     useEffect(() => {
-        // Optionnellement, vous pouvez faire des appels API ici pour vérifier la session
-        // ou mettre à jour l'état de l'utilisateur.
+        // Optional: Verify token validity or refresh user data
     }, []);
 
     return (

@@ -17,14 +17,13 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                        location_name,
                                                        devices,
                                                        lastUpdated,
-                                                       status,
                                                        onViewDetails,
                                                        onToggleNotifications,
                                                        onViewChart,
                                                    }) => {
     const getStatusColorClass = (status: string) => {
         switch (status) {
-            case 'online': return 'bg-green-100 text-green-800';
+            case 'running': return 'bg-green-100 text-green-800';
             case 'offline': return 'bg-red-100 text-red-800';
             case 'warning': return 'bg-yellow-100 text-yellow-800';
             default: return 'bg-gray-100 text-gray-800';
@@ -33,15 +32,13 @@ const LocationCard: React.FC<LocationCardProps> = ({
 
     return (
         <div className="bg-white location-card p-6 rounded-lg shadow transition duration-300 flex flex-col">
-            <div className="flex justify-between items-start mb-4">
-                <div>
+                <div className="flex flex-col mb-4 items-center justify-center bg-gray-200 rounded-md p-4">
                     <h3 className="font-bold text-lg text-black">{location_name}</h3>
                     <p className="text-gray-500 text-sm">
                         Dernière mise à jour : <span className="text-gray-700">{lastUpdated}</span>
                     </p>
                 </div>
-                <span className={`${getStatusColorClass(status)} text-xs px-2 py-1 rounded-full capitalize`}>{status}</span>
-            </div>
+
 
             <div className="mb-4">
                 <h4 className="font-semibold text-md text-gray-700 mb-2">Appareils:</h4>

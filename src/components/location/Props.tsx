@@ -1,4 +1,7 @@
 // src/components/location/Props.tsx
+import {CaptorInfo} from "../types/device.ts";
+import {Location} from "../types/location.ts";
+
 export interface LocationsSectionProps {
     locationsData: LocationData[];
     onViewDetails: (locationName: string) => void;
@@ -7,15 +10,11 @@ export interface LocationsSectionProps {
     onSetupNewLocation: () => void;
 }
 
-export interface CaptorInfo {
-    captor_id: string;
-    captor_type: string;
-
-}
 
 export interface DeviceInfo {
     device_id: string;
     last_seen?: string;
+    location?: Location; // Location might be fetched separately or included
     status?: string;
     created_at?: string;
     captors?: CaptorInfo[]; // Captors might be fetched separately or included
@@ -27,3 +26,5 @@ export interface LocationData {
     location_description: string;
     devices: DeviceInfo[];
 }
+
+export type { CaptorInfo };
