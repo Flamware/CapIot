@@ -52,8 +52,8 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: capiot-cluster
-          location: europe-west1
-          project_id: arcane-grin-458811-h4 # Utilisation du bon project ID
+          location: europe-west1-b
+          project_id: arcane-grin-458811-h4
 
       - name: Update Kubernetes deployment and YAML
         run: |
