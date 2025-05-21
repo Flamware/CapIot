@@ -6,9 +6,10 @@ interface DeviceTableProps {
     devices: DevicesWithLocation[];
     onDelete: (id: string) => void;
     onAssignLocation: (id: string) => void;
+    onEdit: (device: DevicesWithLocation) => void;
 }
 
-export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onDelete, onAssignLocation }) => {
+export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onDelete, onAssignLocation, onEdit }) => {
     if (devices.length === 0) {
         return (
             <tr>
@@ -27,9 +28,9 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onDelete, onA
                 <td className="p-2">
                         <span
                             className={`px-2 py-1 rounded text-xs font-medium ${
-                                deviceLocation?.status === "Online"
+                                deviceLocation?.status === "Running"
                                     ? "bg-green-100 text-green-700"
-                                    : deviceLocation?.status === "Offline"
+                                    : deviceLocation?.status === "stopped"
                                         ? "bg-red-100 text-red-700"
                                         : "bg-yellow-100 text-yellow-700"
                             }`}
@@ -57,6 +58,14 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onDelete, onA
                     ) : (
                         <span className="text-gray-500">No captors</span>
                     )}
+                </td>
+                <td className="p-2">
+                    <button
+                        onClick={() => onEdit(deviceLocation)}
+                        className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                        Edit
+                    </button>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     <DeviceMenuDropdown

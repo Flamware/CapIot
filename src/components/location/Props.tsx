@@ -21,7 +21,7 @@ export interface DeviceInfo {
 }
 
 export interface LocationData {
-    id: number;
+    location_id: number;
     location_name: string;
     location_description: string;
     devices: DeviceInfo[];

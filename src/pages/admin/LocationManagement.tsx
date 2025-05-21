@@ -112,7 +112,7 @@ const LocationManagement: React.FC = () => {
         setLoading(true);
         setIsAddLocationOpen(false);
         setError(null);
-        api.post<Location>(`/admin/location`, locationData)
+        api.post<Location>(`/admin/location/create`, locationData)
             .then(() => {
                 closeAddLocationModal();
                 fetchLocations(1, pagination.pageSize, searchTerm);

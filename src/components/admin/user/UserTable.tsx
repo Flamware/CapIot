@@ -64,15 +64,13 @@ export const UserTable: React.FC<UserTableProps> = ({users, onDelete, onUserUpda
         if (editingUserId !== null) {
             fetchLocations();
         } else {
-            setAvailableLocations([]);
-            setLocationPagination({currentPage: 1, pageSize: 10, totalItems: 0, totalPages: 1});
         }
-    }, [editingUserId, locationPagination.currentPage, locationPagination.pageSize, api]);
+    }, [editingUserId]);
 
     const startEdit = (user: UserWithLocations) => {
         setEditingUserId(user.id);
         setEditedName(user.name);
-        setEditedLocations(user.locations.map(loc => loc.location_id));
+        setEditedLocations(user.locations?.map(loc => loc.location_id));
     };
 
     const cancelEdit = () => {
@@ -142,7 +140,7 @@ export const UserTable: React.FC<UserTableProps> = ({users, onDelete, onUserUpda
                                 {renderLocationOptions()}
                             </select>
                         ) : (
-                            userWithLocation.locations.map((location) => (
+                            userWithLocation?.locations?.map((location) => (
                                 <div key={location.location_id}>{location.location_name}</div>
                             ))
                         )}

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp } from "lucide-react";
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartLine } from "@fortawesome/free-solid-svg-icons";
-
+import {AuthContext} from "../AuthContext.tsx";
 interface MenuItem {
     id: string;
     label: string;
@@ -18,6 +18,13 @@ interface SideBarProps {
 export function SideBar({ isAdmin }: SideBarProps) {
     useLocation();
     const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
+    const { logout } = useContext(AuthContext)!;
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate("/login");
+    };
 
     const menuItems: MenuItem[] = [
         { id: "dashboard", label: "Dashboard", icon: Home, path: "/dashboard" },
@@ -49,8 +56,8 @@ export function SideBar({ isAdmin }: SideBarProps) {
                 </div>
 
                 {/* General Navigation */}
-                <div className="w-full mb-4">
-                    <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">General</h3>
+                <div className="w-full ">
+                    <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider ">General</h3>
                     <nav>
                         {menuItems.map((item) => (
                             <NavLink
@@ -66,6 +73,8 @@ export function SideBar({ isAdmin }: SideBarProps) {
                         ))}
                     </nav>
                 </div>
+
+
 
                 {/* Admin Section (Dropdown) */}
                 {isAdmin && (
@@ -98,14 +107,15 @@ export function SideBar({ isAdmin }: SideBarProps) {
                         )}
                     </div>
                 )}
-
-                {/* Spacer to push items to the top (optional) */}
-                <div className="flex-grow"></div>
-
-                {/* Optional: Footer or additional links */}
-                {/* <div className="w-full p-4 text-center text-xs text-gray-500">
-                    <p>&copy; {new Date().getFullYear()} My Company</p>
-                </div> */}
+                {/* Logout Button */}
+                <div className="w-full p-4 border-t">
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-center px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
+                    >
+                        Logout
+                    </button>
+                </div>
             </div>
         </div>
     );

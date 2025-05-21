@@ -46,19 +46,19 @@ const SelectionTree: React.FC<SelectionTreeProps> = ({
             <h2 className="text-lg font-semibold mb-4">Sélection</h2>
             <div className="space-y-2">
                 {locations.map((location) => (
-                    <div key={location.id}>
+                    <div key={location.location_id}>
                         <div
-                            className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${selectedLocationId === location.id ? 'bg-blue-100' : 'hover:bg-gray-50'}`}
-                            onClick={() => onLocationClick(location.id)}
+                            className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${selectedLocationId === location.location_id ? 'bg-blue-100' : 'hover:bg-gray-50'}`}
+                            onClick={() => onLocationClick(location.location_id)}
                         >
                             <span className="font-semibold">{location.location_name}</span>
-                            {expandedLocationId === location.id ? (
+                            {expandedLocationId === location.location_id ? (
                                 <ChevronDownIcon className="h-5 w-5" />
                             ) : (
                                 <ChevronRightIcon className="h-5 w-5" />
                             )}
                         </div>
-                        {expandedLocationId === location.id && (
+                        {expandedLocationId === location.location_id && (
                             <ul className="ml-4 space-y-1">
                                 {location.devices.map((device) => (
                                     <li key={device.device_id}>

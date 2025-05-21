@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DevicesWithLocation } from '../../types/device.ts';
 
 interface EditDeviceDialogProps {
@@ -13,6 +13,19 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({ isOpen, devi
     if (!isOpen || !device) {
         return null;
     }
+
+    const [localStatus, setLocalStatus] = useState(""); // Initialize local status with empty string
+
+    // Function to handle status change and ensure lowercase
+    const handleStatusChange = (status: string) => {
+        setLocalStatus(status); // Update local state
+        onStatusChange(status); //
+    };
+
+    // Function to handle save
+    const handleSave = () => {
+        onSave();
+    };
 
     return (
         <dialog open={isOpen} className="w-full max-w-md p-0 rounded-lg shadow-md">
@@ -40,13 +53,15 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({ isOpen, devi
                             </label>
                             <select
                                 id="edit-device-status"
-                                value={device.status}
-                                onChange={(e) => onStatusChange(e.target.value)}
+                                value={localStatus} // Use localStatus here
+                                onChange={(e) => handleStatusChange(e.target.value)}
                                 className="px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+
                             >
-                                <option value="Online">Online</option>
-                                <option value="Offline">Offline</option>
-                                <option value="Maintenance">Maintenance</option>
+                                <option value="" disabled selected>Select Status</option>
+                                <option value="Running">Running</option>
+                                <option value="Stopped">Stopped</option>
+                                <option value="Idle">Idle</option>
                             </select>
                         </div>
                         {/* Add more editable fields here */}
@@ -54,7 +69,7 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({ isOpen, devi
                 </div>
                 <div className="flex justify-end p-4 gap-2">
                     <button onClick={onClose} className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100">Cancel</button>
-                    <button onClick={onSave} className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600">Save Changes</button>
+                    <button onClick={handleSave} className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600">Save Changes</button>
                 </div>
             </div>
         </dialog>

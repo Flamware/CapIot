@@ -38,6 +38,7 @@ const History: React.FC = () => {
     const influxApi = createInfluxApi(); // Use createInfluxApi to get the InfluxDB API instance
     const [influxLoading, setInfluxLoading] = useState(false);
     const [influxError, setInfluxError] = useState<Error | null>(null);
+    const [noInfluxData, setNoInfluxData] = useState(false);
 
     // State for tree expansion
     const [expandedLocationId, setExpandedLocationId] = useState<number | null>(null);
@@ -54,19 +55,35 @@ const History: React.FC = () => {
                 const response = await api.get<Omit<LocationDataType, 'devices'>[]>('/users/me/locations'); // Fetch locations without devices initially
                 const baseLocations = response.data;
 
+                if (!baseLocations || !Array.isArray(baseLocations)) { // Check if baseLocations is null or not an array
+                    console.warn("No locations found for the user.");
+                    setLocations([]);
+                    setHasFetched(true);
+                    setLoading(false);
+                    return;
+                }
+
                 const locationsWithDeviceData: Location[] = await Promise.all(
                     baseLocations.map(async (location) => {
                         try {
-                            const devicesResponse = await api.get<DeviceInfoType[]>(`/location/${location.id}/devices`); // Fetch devices for each location
+                            const devicesResponse = await api.get<DeviceInfoType[]>(`/location/${location.location_id}/devices`); // Fetch devices for each location
+                            const devicesData = devicesResponse.data;
+
+                            if (!devicesData || !Array.isArray(devicesData)) { // Check if devicesData is null or not an array
+                                console.warn(`No devices found for location ID ${location.location_id}.`);
+                                return { ...location, devices: [] };
+                            }
+
                             const devicesWithCaptors: Device[] = await Promise.all(
-                                devicesResponse.data.map(async (device) => {
+                                devicesData.map(async (device) => {
                                     try {
                                         const captorsResponse = await api.get<CaptorInfo[]>(`/device/${device.device_id}/captors`);
-                                        const sensors: Sensor[] = captorsResponse.data.map(captor => ({
+                                        const captorsData = captorsResponse.data;
+                                        const sensors: Sensor[] = captorsData?.map(captor => ({
                                             sensor_id: captor.captor_id,
                                             sensor_type: captor.captor_type,
                                             name: captor.captor_id || captor.captor_type,
-                                        }));
+                                        })) || [];
                                         return { ...device, captors: sensors };
                                     } catch (captorError: any) {
                                         console.error(`Error fetching captors for device ID ${device.device_id}:`, captorError);
@@ -76,7 +93,7 @@ const History: React.FC = () => {
                             );
                             return { ...location, devices: devicesWithCaptors };
                         } catch (deviceError: any) {
-                            console.error(`Error fetching devices for location ID ${location.id}:`, deviceError);
+                            console.error(`Error fetching devices for location ID ${location.location_id}:`, deviceError);
                             return { ...location, devices: [] };
                         }
                     })
@@ -91,56 +108,38 @@ const History: React.FC = () => {
         };
 
         fetchAllData();
-    }, []); // Empty dependency array means this runs only once on mount
+    }, [api, hasFetched]); // Added 'api' to the dependency array as it's used in the effect
 
     const handleLocationClick = (locationId: number) => {
-        if (expandedLocationId === locationId) {
-            setExpandedLocationId(null);
-            setSelectedLocationId(null);
-            setSelectedDeviceId(null);
-            setSelectedSensorIds([]);
-            setSelectedSensorTypes([]);
-            setStartTime('');
-            setEndTime('');
-        } else {
-            setExpandedLocationId(locationId);
-            setSelectedLocationId(locationId);
-            setSelectedDeviceId(null);
-            setSelectedSensorIds([]);
-            setSelectedSensorTypes([]);
-            setStartTime('');
-            setEndTime('');
-        }
+        setExpandedLocationId(prev => prev === locationId ? null : locationId);
+        setSelectedLocationId(prev => prev === locationId ? null : locationId);
+        setSelectedDeviceId(null);
+        setSelectedSensorIds([]);
+        setSelectedSensorTypes([]);
+        setStartTime('');
+        setEndTime('');
     };
 
     const handleDeviceClick = (deviceId: string) => {
-        if (expandedDeviceId === deviceId) {
-            setExpandedDeviceId(null);
-            setSelectedDeviceId(null);
-            setSelectedSensorIds([]);
-            setSelectedSensorTypes([]);
-            setStartTime('');
-            setEndTime('');
-        } else {
-            setExpandedDeviceId(deviceId);
-            setSelectedDeviceId(deviceId);
-            setSelectedSensorIds([]);
-            setSelectedSensorTypes([]);
-            setStartTime('');
-            setEndTime('');
-        }
+        setExpandedDeviceId(prev => prev === deviceId ? null : deviceId);
+        setSelectedDeviceId(prev => prev === deviceId ? null : deviceId);
+        setSelectedSensorIds([]);
+        setSelectedSensorTypes([]);
+        setStartTime('');
+        setEndTime('');
     };
 
     const handleSensorChange = (sensorId: string, sensorType: string) => {
-        if (selectedSensorIds.includes(sensorId)) {
-            setSelectedSensorIds(selectedSensorIds.filter((id) => id !== sensorId));
-            setSelectedSensorTypes(selectedSensorTypes.filter((type) => type !== sensorType));
-        } else {
-            setSelectedSensorIds([...selectedSensorIds, sensorId]);
-            if (!selectedSensorTypes.includes(sensorType)) {
-                setSelectedSensorTypes([...selectedSensorTypes, sensorType]);
+        setSelectedSensorIds(prev =>
+            prev.includes(sensorId) ? prev.filter((id) => id !== sensorId) : [...prev, sensorId]
+        );
+        setSelectedSensorTypes(prev => {
+            if (prev.includes(sensorType)) {
+                return prev.filter((type) => type !== sensorType);
+            } else {
+                return [...prev, sensorType];
             }
-        }
+        });
     };
 
     const handleStartTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,24 +152,18 @@ const History: React.FC = () => {
 
     const handleMonitor = async () => {
         if (!selectedLocationId || !selectedDeviceId || selectedSensorIds.length === 0) {
-            alert('Veuillez sélectionner une localisation, un device et au moins un capteur.');
+            alert('Veuillez sélectionner une localisation, un appareil et au moins un capteur.');
             return;
         }
 
         setInfluxLoading(true);
         setInfluxError(null);
         setMonitoringData(null);
+        setNoInfluxData(false);
 
         try {
-            let formattedStartTime: string | undefined = undefined;
-            if (startTime) {
-                formattedStartTime = new Date(startTime).toISOString();
-            }
-
-            let formattedEndTime: string | undefined = undefined;
-            if (endTime) {
-                formattedEndTime = new Date(endTime).toISOString();
-            }
+            const formattedStartTime = startTime ? new Date(startTime).toISOString() : undefined;
+            const formattedEndTime = endTime ? new Date(endTime).toISOString() : undefined;
 
             const queryParams = {
                 locationId: selectedLocationId,
@@ -183,16 +176,23 @@ const History: React.FC = () => {
             };
 
             const influxResponse = await influxApi.get('/query', { params: queryParams });
-            setMonitoringData(influxResponse.data);
+            if (influxResponse.data && Object.keys(influxResponse.data).length > 0) {
+                setMonitoringData(influxResponse.data);
+                setNoInfluxData(false);
+            } else {
+                setMonitoringData(null);
+                setNoInfluxData(true);
+            }
         } catch (influxApiError: any) {
             setInfluxError(influxApiError);
             console.error("Error fetching data from InfluxDB:", influxApiError);
+            setNoInfluxData(false); // Reset no data flag on error
         } finally {
             setInfluxLoading(false);
         }
     };
 
-    const selectedLocation = locations.find(loc => loc.id === selectedLocationId);
+    const selectedLocation = locations.find(loc => loc.location_id === selectedLocationId);
     const selectedDevice = selectedLocation?.devices.find(dev => dev.device_id === selectedDeviceId);
     selectedDevice?.captors.filter(sensor => selectedSensorIds.includes(sensor.sensor_id));
     if (loading) {
@@ -241,14 +241,20 @@ const History: React.FC = () => {
                     </div>
                 )}
 
-                {monitoringData && (
+                {monitoringData && Object.keys(monitoringData).length > 0 && (
                     <div className="bg-white rounded-md shadow-md p-6">
                         <h2 className="text-xl font-semibold mb-2">Données de Monitoring</h2>
                         <MonitoringDataDisplay monitoringData={monitoringData} /> {/* Use the new component */}
                     </div>
                 )}
 
-                {!monitoringData && !influxLoading && !influxError && (selectedLocationId !== null || selectedDeviceId || selectedSensorIds.length > 0) && (
+                {noInfluxData && (
+                    <div className="bg-yellow-100 text-yellow-800 rounded-md p-4 mb-4">
+                        Aucune donnée de monitoring trouvée pour la sélection et la période spécifiées.
+                    </div>
+                )}
+
+                {!monitoringData && !influxLoading && !influxError && !noInfluxData && (selectedLocationId !== null || selectedDeviceId || selectedSensorIds.length > 0) && (
                     <div className="bg-gray-50 rounded-md p-4">
                         Sélection effectuée. Veuillez choisir une date et une heure de début et de fin, puis cliquez sur "Afficher les Données".
                     </div>
@@ -261,7 +267,7 @@ const History: React.FC = () => {
                 )}
                 {selectedLocationId !== null && !selectedDeviceId && !loading && !error && (
                     <div className="bg-gray-50 rounded-md p-4">
-                        Veuillez sélectionner un device dans l'arbre à gauche.
+                        Veuillez sélectionner un appareil dans l'arbre à gauche.
                     </div>
                 )}
                 {selectedDeviceId && selectedSensorIds.length === 0 && !loading && !error && (

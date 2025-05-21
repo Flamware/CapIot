@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const influxdbUrl = import.meta.env.VITE_INFLUXDB_URL || 'http://localhost:8086';
+const apiUrl = import.meta.env.VITE_API_URL;
+const influxdbUrl = import.meta.env.VITE_INFLUXDB_URL;
 
 console.log("API URL : ", apiUrl);
 console.log("InfluxDB URL : ", influxdbUrl);

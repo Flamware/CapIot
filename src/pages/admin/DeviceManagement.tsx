@@ -148,6 +148,9 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
     const handleEditDevice = async () => {
         if (currentDevice) {
             try {
+                console.log("Editing device...");
+                // Ensure the status is in lowercase
+                console.log("Edited device status:", editedDeviceStatus);
                 await api.patch(`/admin/devices/${currentDevice.device_id}`, { status: editedDeviceStatus });
                 fetchDevicesData(pagination.currentPage, pagination.pageSize, searchTerm);
                 setIsEditDeviceOpen(false);
@@ -225,6 +228,11 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
                         devices={filteredDevicesLocations}
                         onDelete={handleDeleteDevice}
                         onAssignLocation={openAssignLocationModal}
+                        onEdit={(device) => {
+                            setCurrentDevice(device);
+                            setEditedDeviceStatus("");
+                            setIsEditDeviceOpen(true);
+                        }}
                     />
                 </table>
             </div>
