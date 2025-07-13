@@ -46,11 +46,9 @@ const App: React.FC = () => {
                     />
                 )}
                 <div className="flex-1 overflow-y-auto">
-                    <div className="flex-1 overflow-y-auto flex flex-col">
                         {isAuthenticated && (
                             <ContentHeader  />
                         )}
-                    </div>
                     <main className="container mx-auto p-4">
                         <Routes>
                             <Route path="/" element={<Dashboard />} />

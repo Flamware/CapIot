@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createApi, createInfluxApi } from "../axios/api";
-import { LocationData as LocationDataType, DeviceInfo as DeviceInfoType, CaptorInfo } from "../components/location/Props";
+import { LocationData as LocationDataType, DeviceInfo as DeviceInfoType, sensorInfo } from "../components/location/Props";
 import SelectionTree from '../components/history/SelectionTree.tsx';
 import DateTimeInputs from '../components/commun/DateTimeInputs.tsx';
 import MonitoringDataDisplay from "../components/monitoring/MonitoringDataDisplay.tsx";
@@ -11,8 +11,8 @@ interface Sensor {
     name?: string;
 }
 
-interface Device extends Omit<DeviceInfoType, 'captors'> {
-    captors: Sensor[];
+interface Device extends Omit<DeviceInfoType, 'sensors'> {
+    sensors: Sensor[];
     name?: string;
 }
 
@@ -74,24 +74,24 @@ const History: React.FC = () => {
                                 return { ...location, devices: [] };
                             }
 
-                            const devicesWithCaptors: Device[] = await Promise.all(
+                            const devicesWithsensors: Device[] = await Promise.all(
                                 devicesData.map(async (device) => {
                                     try {
-                                        const captorsResponse = await api.get<CaptorInfo[]>(`/device/${device.device_id}/captors`);
-                                        const captorsData = captorsResponse.data;
-                                        const sensors: Sensor[] = captorsData?.map(captor => ({
-                                            sensor_id: captor.captor_id,
-                                            sensor_type: captor.captor_type,
-                                            name: captor.captor_id || captor.captor_type,
+                                        const sensorsResponse = await api.get<sensorInfo[]>(`/devices/${device.device_id}/sensors`);
+                                        const sensorsData = sensorsResponse.data;
+                                        const sensors: Sensor[] = sensorsData?.map(sensor => ({
+                                            sensor_id: sensor.sensor_id,
+                                            sensor_type: sensor.sensor_type,
+                                            name: sensor.sensor_id || sensor.sensor_type,
                                         })) || [];
-                                        return { ...device, captors: sensors };
-                                    } catch (captorError: any) {
-                                        console.error(`Error fetching captors for device ID ${device.device_id}:`, captorError);
-                                        return { ...device, captors: [] }; // Add empty captors array on error
+                                        return { ...device, sensors: sensors };
+                                    } catch (sensorError: any) {
+                                        console.error(`Error fetching sensors for device ID ${device.device_id}:`, sensorError);
+                                        return { ...device, sensors: [] }; // Add empty sensors array on error
                                     }
                                 })
                             );
-                            return { ...location, devices: devicesWithCaptors };
+                            return { ...location, devices: devicesWithsensors };
                         } catch (deviceError: any) {
                             console.error(`Error fetching devices for location ID ${location.location_id}:`, deviceError);
                             return { ...location, devices: [] };
@@ -194,7 +194,7 @@ const History: React.FC = () => {
 
     const selectedLocation = locations.find(loc => loc.location_id === selectedLocationId);
     const selectedDevice = selectedLocation?.devices.find(dev => dev.device_id === selectedDeviceId);
-    selectedDevice?.captors.filter(sensor => selectedSensorIds.includes(sensor.sensor_id));
+    selectedDevice?.sensors.filter(sensor => selectedSensorIds.includes(sensor.sensor_id));
     if (loading) {
         return <div className="p-5 bg-gray-100 rounded-lg shadow-md">Chargement des lieux, des appareils et des capteurs...</div>;
     }
@@ -230,7 +230,7 @@ const History: React.FC = () => {
                 />
 
                 {(selectedLocationId !== null && selectedDeviceId && selectedSensorIds.length > 0) && (
-                    <button onClick={handleMonitor} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4" disabled={influxLoading}>
+                    <button onClick={handleMonitor} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4" disabled={influxLoading}>
                         {influxLoading ? 'Chargement...' : 'Afficher les Données'}
                     </button>
                 )}
@@ -255,23 +255,23 @@ const History: React.FC = () => {
                 )}
 
                 {!monitoringData && !influxLoading && !influxError && !noInfluxData && (selectedLocationId !== null || selectedDeviceId || selectedSensorIds.length > 0) && (
-                    <div className="bg-gray-50 rounded-md p-4">
+                    <div className="bg-gray-50 rounded-md p-4 text-red-500">
                         Sélection effectuée. Veuillez choisir une date et une heure de début et de fin, puis cliquez sur "Afficher les Données".
                     </div>
                 )}
 
                 {!selectedLocationId && !loading && !error && (
-                    <div className="bg-gray-50 rounded-md p-4">
+                    <div className="bg-gray-50 rounded-md p-4 text-red-500">
                         Veuillez sélectionner une localisation dans l'arbre à gauche.
                     </div>
                 )}
                 {selectedLocationId !== null && !selectedDeviceId && !loading && !error && (
-                    <div className="bg-gray-50 rounded-md p-4">
+                    <div className="bg-gray-50 rounded-md p-4 text-red-500">
                         Veuillez sélectionner un appareil dans l'arbre à gauche.
                     </div>
                 )}
                 {selectedDeviceId && selectedSensorIds.length === 0 && !loading && !error && (
-                    <div className="bg-gray-50 rounded-md p-4">
+                    <div className="bg-gray-50 rounded-md p-4 text-red-500">
                         Veuillez sélectionner au moins un capteur dans l'arbre à gauche.
                     </div>
                 )}

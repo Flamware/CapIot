@@ -61,34 +61,61 @@ th {
   color: #1a1a1a;
 }
 
-/* Custom Mint Color Classes (suggested: move to Tailwind config) */
-.bg-mint-50 {
+/* Custom green Color Classes (suggested: move to Tailwind config) */
+.bg-green-50 {
   background-color: oklch(97% 0.03 178);
 }
-.bg-mint-100 {
+.bg-green-100 {
   background-color: oklch(94% 0.06 178);
 }
-.bg-mint-200 {
+.bg-green-200 {
   background-color: oklch(90% 0.09 178);
 }
-.bg-mint-500 {
+.bg-green-300 {
+  background-color: oklch(80% 0.08 178);
+}
+.bg-green-400 {
+  background-color: oklch(70% 0.10 178);
+}
+.bg-green-500 {
   background-color: oklch(72% 0.11 178);
 }
 
-.text-mint-600 {
+.bg-green-600 {
+  background-color: oklch(60% 0.10 178);
+}
+
+
+.text-green-100 {
+  color: oklch(94% 0.06 178);
+}
+.text-green-200 {
+  color: oklch(90% 0.09 178);
+}
+.text-green-300 {
+  color: oklch(80% 0.08 178);
+}
+.text-green-400 {
+  color: oklch(70% 0.10 178);
+}
+.text-green-500 {
+  color: oklch(72% 0.11 178);
+}
+.text-green-600 {
   color: oklch(60% 0.10 178);
 }
-.text-mint-700 {
+.text-green-700 {
   color: oklch(50% 0.09 178);
 }
-.text-mint-800 {
+.text-green-800 {
   color: oklch(40% 0.08 178);
 }
-.text-mint-900 {
+.text-green-900 {
   color: oklch(30% 0.07 178);
 }
 
-.border-mint-200 {
+
+.border-green-200 {
   border-color: oklch(90% 0.09 178);
 }
 

@@ -261,7 +261,7 @@ const LocationManagement: React.FC = () => {
                         </button>
                         <button
                             onClick={handleEditLocation}
-                            className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600"
+                            className="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600"
                         >
                             Enregistrer les modifications
                         </button>

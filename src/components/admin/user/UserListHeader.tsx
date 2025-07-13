@@ -22,7 +22,7 @@ export const UserListHeader: React.FC<UserListHeaderProps> = ({ searchTerm, onSe
             </div>
             <button
                 onClick={onAddUser}
-                className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-2"
+                className="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600 flex items-center gap-2"
             >
                 <UserPlus className="mr-2 h-4 w-4" />
                 Ajouter un utilisateur
