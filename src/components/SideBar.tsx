@@ -50,8 +50,8 @@ export function SideBar({ isAdmin }: SideBarProps) {
                 {/* Logo Section */}
                 <div className="mb-8 flex items-center justify-center px-4">
                     <NavLink to="/" className="flex items-center space-x-2">
-                        <FontAwesomeIcon icon={faChartLine} className="text-mint-500 text-2xl" />
-                        <span className="text-xl font-semibold text-gray-800">Cap<span className="text-mint-500">Iot</span></span>
+                        <FontAwesomeIcon icon={faChartLine} className="text-green-300 text-2xl" />
+                        <span className="text-xl font-semibold text-gray-800">Cap<span className="text-green-300">Iot</span></span>
                     </NavLink>
                 </div>
 
@@ -64,10 +64,12 @@ export function SideBar({ isAdmin }: SideBarProps) {
                                 key={item.id}
                                 to={item.path}
                                 className={({ isActive }) =>
-                                    `flex items-center w-full px-4 py-3 text-sm font-medium text-left hover:bg-mint-100 hover:text-mint-800 focus:outline-none focus:bg-mint-200 focus:text-mint-900 transition-colors duration-200 ${isActive ? 'bg-mint-200 text-mint-900 font-semibold' : ''}`
+                                    `flex items-center w-full px-4 py-3 text-sm font-medium text-left
+                                     hover:bg-green-100 hover:text-green-800 focus:outline-none focus:bg-green-200
+                                      focus:text-green-900 transition-colors duration-200 ${isActive ? 'bg-green-300 text-green-900 font-semibold' : ''}`
                                 }
                             >
-                                <item.icon className="w-5 h-5 mr-2 text-mint-600" />
+                                <item.icon className="w-5 h-5 mr-2 text-green-600" />
                                 <span>{item.label}</span>
                             </NavLink>
                         ))}

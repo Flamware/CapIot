@@ -56,7 +56,7 @@ const AboutPage: React.FC = () => {
             <section>
                 <h2 className="text-xl font-semibold text-gray-700 mb-2">Contact</h2>
                 <p className="text-gray-600 leading-relaxed">
-                    Pour toute question ou demande d'information, n'hésitez pas à <NavLink to="https://www.technopure.fr/Contact.html" className="text-blue-500 hover:underline">nous contacter</NavLink>.
+                    Pour toute question ou demande d'information, n'hésitez pas à <NavLink to="https://www.technopure.fr/Contact.html" className="text-green-500 hover:underline">nous contacter</NavLink>.
                 </p>
             </section>
         </div>

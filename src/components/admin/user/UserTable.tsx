@@ -127,7 +127,7 @@ export const UserTable: React.FC<UserTableProps> = ({users, onDelete, onUserUpda
                         )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {userWithLocation.roles.join(', ')}
+                        {userWithLocation.roles ? userWithLocation.roles.join(', ') : 'No roles assigned'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {editingUserId === userWithLocation.id ? (

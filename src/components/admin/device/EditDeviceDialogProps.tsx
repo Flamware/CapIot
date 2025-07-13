@@ -69,7 +69,7 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({ isOpen, devi
                 </div>
                 <div className="flex justify-end p-4 gap-2">
                     <button onClick={onClose} className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600">Save Changes</button>
+                    <button onClick={handleSave} className="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600">Save</button>
                 </div>
             </div>
         </dialog>

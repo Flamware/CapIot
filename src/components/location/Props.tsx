@@ -1,5 +1,5 @@
 // src/components/location/Props.tsx
-import {CaptorInfo} from "../types/device.ts";
+import {sensorInfo} from "../types/device.ts";
 import {Location} from "../types/location.ts";
 
 export interface LocationsSectionProps {
@@ -8,6 +8,7 @@ export interface LocationsSectionProps {
     onToggleNotifications: (locationName: string) => void;
     onViewChart: (locationName: string) => void;
     onSetupNewLocation: () => void;
+    onEditDeviceSettings: (device: DeviceInfo) => void;
 }
 
 
@@ -17,7 +18,7 @@ export interface DeviceInfo {
     location?: Location; // Location might be fetched separately or included
     status?: string;
     created_at?: string;
-    captors?: CaptorInfo[]; // Captors might be fetched separately or included
+    sensors?: sensorInfo[]; // sensors might be fetched separately or included
 }
 
 export interface LocationData {
@@ -27,4 +28,4 @@ export interface LocationData {
     devices: DeviceInfo[];
 }
 
-export type { CaptorInfo };
+export type { sensorInfo };

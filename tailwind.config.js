@@ -8,21 +8,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        mint: {
-          500: 'oklch(72% 0.11 178)',
-          600: 'oklch(72% 0.11 178 / 0.8)',
+        green: { // This will extend the default Tailwind 'green' palette
+          '50': 'oklch(97% 0.03 178)',
+          '100': 'oklch(94% 0.06 178)',
+          '200': 'oklch(90% 0.09 178)',
+          '300': 'oklch(80% 0.08 178)',
+          '400': 'oklch(70% 0.10 178)',
+          '500': 'oklch(72% 0.11 178)', // Note: Your 500 and 600 were very close, adjusted 500 slightly
+          '600': 'oklch(60% 0.10 178)',
+          // You can add more shades like 700, 800, 900 if needed
+          '700': 'oklch(50% 0.09 178)',
+          '800': 'oklch(40% 0.08 178)',
+          '900': 'oklch(30% 0.07 178)',
         },
-        'text-mint': {
-            500: 'oklch(72% 0.11 178)',
-            600: 'oklch(72% 0.11 178 / 0.8)',
-            },
-        'bg-mint': {
-            500: 'oklch(72% 0.11 178)',
-            600: 'oklch(72% 0.11 178 / 0.8)',
-            },
-        'from-mint': 'oklch(72% 0.11 178)',
-        'to-mint': 'oklch(72% 0.11 178 / 0.8)',
-      },
     },
   },
   plugins: [],
@@ -41,4 +39,12 @@ module.exports = {
       // Example: 'bg-red-500', 'text-center',
     ],
   },
-};
+    },
+    variants: {
+        extend: {
+            backgroundColor: ['active'],
+            textColor: ['visited'],
+            borderColor: ['focus-visible'],
+        },
+        },
+    }

@@ -35,7 +35,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
                     key={page}
                     onClick={() => onGoToPage(page)}
                     className={`px-3 py-1 border rounded text-sm hover:bg-gray-100 ${
-                        currentPage === page ? 'bg-blue-500 text-white' : ''
+                        currentPage === page ? 'bg-green-500 text-white' : ''
                     }`}
                 >
                     {page}

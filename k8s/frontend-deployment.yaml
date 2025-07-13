@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: capiot # This Deployment will be in the 'capiot' namespace
+  labels:
+    app: capiot-frontend # A label for this specific application
+spec:
+  replicas: 1 # You can adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: capiot-frontend
+  template:
+    metadata:
+      labels:
+        app: capiot-frontend # Matches the selector above
+    spec:
+      containers:
+        - name: capiot-frontend
+          image: flamware/capiot:5 # Your specified image
+          ports:
+            - containerPort: 80 # Assuming your frontend serves on port 80
+          env: # <--- New section for environment variables
+            - name: VITE_API_URL
+              value: "http://api.flamware.work" # The API URL for your frontend
+            - name: VITE_INFLUXDB_URL
+              value: "http://influxdb.flamware.work" # The InfluxDB URL for your frontend

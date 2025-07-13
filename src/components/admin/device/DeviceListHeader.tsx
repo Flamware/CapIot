@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Cpu } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface DeviceListHeaderProps {
     searchTerm: string;
@@ -35,11 +35,7 @@ export const DeviceListHeader: React.FC<DeviceListHeaderProps> = ({ searchTerm, 
                     Search
                 </button>
             </div>
-            <button
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded">
-                <Cpu className="w-4 h-4" />
-                Add Device
-            </button>
+
         </div>
     );
 };

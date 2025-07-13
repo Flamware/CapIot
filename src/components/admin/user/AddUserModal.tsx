@@ -49,7 +49,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
                     </button>
                     <button
                         onClick={handleSubmit}
-                        className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600"
+                        className="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600"
                     >
                         Ajouter un utilisateur
                     </button>
