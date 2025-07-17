@@ -39,7 +39,7 @@ export const LocationListHeader: React.FC<LocationListHeaderProps> = ({ searchTe
             </div>
             <button
                 onClick={() => { onAddLocation(true); }}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded"
             >
                 <MapPin className="w-4 h-4" />
                 Ajouter un Emplacement

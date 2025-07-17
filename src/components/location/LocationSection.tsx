@@ -8,6 +8,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
                                                                onViewDetails,
                                                                onToggleNotifications,
                                                                onViewChart,
+                                                               onEditDeviceSettings,
                                                            }) => {
     return (
         <section id="locations" className="py-12 bg-gray-100">
@@ -17,7 +18,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {locationsData.map((location) => (
                         <LocationCard
-                            key={location.id}
+                            key={location.location_id}
                             location_name={location.location_name}
                             devices={location.devices}
                             onViewDetails={() => onViewDetails(location.location_name)}
@@ -25,6 +26,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
                             onViewChart={() => onViewChart(location.location_name)}
                             lastUpdated={''}
                             status={''}
+                            onEditDeviceSettings={(device) => onEditDeviceSettings(device)}
                         />
                     ))}
                 </div>

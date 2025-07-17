@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service # A unique name for your frontend Service
+  namespace: capiot     # This Service will be in the 'capiot' namespace
+  labels:
+    app: capiot-frontend # Optional: label the service itself
+spec:
+  selector:
+    app: capiot-frontend # **Crucial:** Matches the 'app' label of your frontend Pods
+  ports:
+    - protocol: TCP
+      port: 80           # The port on which the Service itself will listen (standard HTTP)
+      targetPort: 80     # The port on which your frontend container is listening inside the Pod
+      name: http         # Optional: name the port for clarity (e.g., 'http' or 'web')
+  type: LoadBalancer     # Civo will provision an external IP for this service to make it publicly accessible

@@ -83,7 +83,7 @@ export const AssignLocationModal: React.FC<AssignLocationModalProps> = ({
                                 key={page}
                                 onClick={() => onGoToLocationPage(page)}
                                 className={`px-3 py-1 border rounded text-sm hover:bg-gray-100 ${
-                                    locationPagination.currentPage === page ? 'bg-blue-500 text-white' : ''
+                                    locationPagination.currentPage === page ? 'bg-green-500 text-white' : ''
                                 }`}
                             >
                                 {page}
@@ -104,7 +104,7 @@ export const AssignLocationModal: React.FC<AssignLocationModalProps> = ({
                             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md">Cancel
                     </button>
                     <button onClick={onAssign} disabled={selectedLocationId === null}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed">Assign
+                            className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed">Assign
                     </button>
                 </div>
             </div>

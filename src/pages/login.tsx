@@ -249,7 +249,7 @@ const Login: React.FC = () => {
                         <div className="mt-6 text-center">
                             <p className="text-sm text-gray-600">
                                 Already have an account?{' '}
-                                <button type="button" onClick={toggleRegisterForm} className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline">
+                                <button type="button" onClick={toggleRegisterForm} className="font-medium text-green-600 hover:text-green-500 focus:outline-none focus:underline">
                                     Log in
                                 </button>
                             </p>
@@ -291,7 +291,7 @@ const Login: React.FC = () => {
                             {/* Submit Button */}
                             <button
                                 type="submit"
-                                className="w-full py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={loginLoading || !loginEmail || !loginPassword} // Disable if loading or fields empty
                             >
                                 {loginLoading ? 'Logging in...' : 'Login'}

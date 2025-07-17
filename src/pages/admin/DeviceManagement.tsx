@@ -181,8 +181,8 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
         deviceLocation?.device_id?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
         deviceLocation?.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         new Date(deviceLocation?.last_seen).toLocaleString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-        deviceLocation?.captors?.some(captor => captor.captor_type?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        deviceLocation?.captors?.some(captor => captor.captor_id?.toLowerCase().includes(searchTerm.toLowerCase()))
+        deviceLocation?.sensors?.some(sensor => sensor.sensor_type?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        deviceLocation?.sensors?.some(sensor => sensor.sensor_id?.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     const goToLocationPage = (page: number) => {
@@ -220,7 +220,7 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
                         <th className="p-2">Status</th>
                         <th className="p-2">Last Active</th>
                         <th className="p-2">Locations</th>
-                        <th className="p-2">Captors</th>
+                        <th className="p-2">sensors</th>
                         <th className="p-2 text-right">Actions</th>
                     </tr>
                     </thead>

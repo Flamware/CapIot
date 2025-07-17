@@ -82,7 +82,7 @@ export const ApiErrorModal: React.FC<ApiErrorModalProps> = ({ isOpen, error, onC
                     {onRetry && (
                         <button
                             onClick={onRetry}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:shadow-outline"
+                            className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:shadow-outline"
                         >
                             Retry
                         </button>
