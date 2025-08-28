@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import LocationsSection from "../components/location/LocationSection.tsx";
-import { sensorInfo, DeviceInfo, LocationData } from "../components/location/Props.tsx";
+import { DeviceInfo, LocationData } from "../components/location/Props.tsx";
 import { createApi } from "../axios/api.tsx";
+import {ComponentInfo} from "../components/types/device.ts";
 import DeviceSettingsModal from "../components/dashboard/DeviceSettingModal.tsx";
 
 const Dashboard: React.FC = () => {
@@ -35,10 +36,10 @@ const Dashboard: React.FC = () => {
                         const devicesWithsensors = await Promise.all(
                             devices.map(async (device) => {
                                 try {
-                                    const sensorsResponse = await api.get<sensorInfo[]>(`/devices/${device.device_id}/sensors`);
-                                    return { ...device, sensors: sensorsResponse.data };
+                                    const sensorsResponse = await api.get<ComponentInfo[]>(`/devices/${device.device_id}/components`);
+                                    return { ...device, components: sensorsResponse.data };
                                 } catch {
-                                    return { ...device, sensors: [] };
+                                    return { ...device, components: [] };
                                 }
                             })
                         );
@@ -66,10 +67,10 @@ const Dashboard: React.FC = () => {
         setIsSettingModalOpen(true);
     };
 
-    const handleSavesensorsettings = async (updatedsensor: sensorInfo, deviceId: string) => {
+    const handleSavesensorsettings = async (updatedsensor: ComponentInfo, deviceId: string) => {
         try {
-            await api.put(`/admin/devices/${deviceId}/sensors/${updatedsensor.sensor_id}/range`, {
-                sensor_id: updatedsensor.sensor_id,
+            await api.put(`/admin/devices/${deviceId}/sensors/${updatedsensor.component_id}/range`, {
+                sensor_id: updatedsensor.component_id,
                 min_threshold: updatedsensor.min_threshold,
                 max_threshold: updatedsensor.max_threshold,
             });
@@ -80,11 +81,12 @@ const Dashboard: React.FC = () => {
                 devices: location.devices.map((device) => {
                     if (device.device_id !== deviceId) return device;
 
-                    const updatedsensors = device.sensors?.map((sensor) =>
-                        sensor.sensor_id === updatedsensor.sensor_id ? updatedsensor : sensor
-                    );
-
-                    return { ...device, sensors: updatedsensors };
+                    const updatedsensors = device.components
+                        ?.filter(component => component.component_type === 'sensor')
+                        .map(component => ({
+                            ...component,
+                        }));
+                    return { ...device, components: updatedsensors };
                 }),
             }));
 

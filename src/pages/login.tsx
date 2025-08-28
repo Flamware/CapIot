@@ -80,7 +80,6 @@ const Login: React.FC = () => {
                 id: decodedToken.userId,
                 name: username,
                 roles: roles,
-                // Add any other properties required by the User interface
             };
 
             login(userData); // Update the AuthContext

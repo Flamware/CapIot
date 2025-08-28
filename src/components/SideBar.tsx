@@ -1,9 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp } from "lucide-react";
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartLine } from "@fortawesome/free-solid-svg-icons";
-import {AuthContext} from "../AuthContext.tsx";
 interface MenuItem {
     id: string;
     label: string;
@@ -18,14 +17,6 @@ interface SideBarProps {
 export function SideBar({ isAdmin }: SideBarProps) {
     useLocation();
     const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
-    const { logout } = useContext(AuthContext)!;
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        logout();
-        navigate("/login");
-    };
-
     const menuItems: MenuItem[] = [
         { id: "dashboard", label: "Dashboard", icon: Home, path: "/dashboard" },
         { id: "history", label: "History", icon: Users, path: "/history" },
@@ -109,15 +100,6 @@ export function SideBar({ isAdmin }: SideBarProps) {
                         )}
                     </div>
                 )}
-                {/* Logout Button */}
-                <div className="w-full p-4 border-t">
-                    <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center justify-center px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
-                    >
-                        Logout
-                    </button>
-                </div>
             </div>
         </div>
     );

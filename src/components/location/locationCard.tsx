@@ -4,60 +4,80 @@ import {
     faQuestionCircle,
     faMicrochip,
     faPen,
-    faMapMarkerAlt // Added a new icon for location
+    faMapMarkerAlt,
+    faThermometerHalf,
+    faTint,
+    faFan,
+    faLightbulb,
 } from '@fortawesome/free-solid-svg-icons';
-import { DeviceInfo } from "./Props.tsx";
+import { DeviceInfo } from './Props.tsx';
+import { ComponentSubtype } from '../types/device.ts';
 
+// Interface for the LocationCard component props.
 interface LocationCardProps {
     location_name: string;
     devices: DeviceInfo[];
     lastUpdated: string;
-    status: string; // Keeping status prop for potential overall location status
-    onViewDetails: () => void;
-    onToggleNotifications: () => void;
-    onViewChart: () => void;
+    status: string;
     onEditDeviceSettings: (device: DeviceInfo) => void;
 }
+
+// Helper function to get the appropriate FontAwesome icon based on the component subtype.
+const getComponentIcon = (subtype?: ComponentSubtype) => {
+    switch (subtype) {
+        case ComponentSubtype.Temperature:
+            return faThermometerHalf;
+        case ComponentSubtype.Humidity:
+            return faTint;
+        case ComponentSubtype.Fan:
+            return faFan;
+        case ComponentSubtype.LED:
+            return faLightbulb;
+        default:
+            return faQuestionCircle;
+    }
+};
 
 const LocationCard: React.FC<LocationCardProps> = ({
                                                        location_name,
                                                        devices,
                                                        lastUpdated,
-                                                       status, // Destructure status as it's passed in
+                                                       status,
                                                        onEditDeviceSettings,
                                                    }) => {
-
-    // Helper function to determine badge color based on status
+    // Helper function to determine the badge color based on the device or location status.
     const getStatusColorClass = (deviceStatus: string | undefined) => {
-        switch (deviceStatus?.toLowerCase()) { // Ensure case-insensitivity
+        switch (deviceStatus?.toLowerCase()) {
+            // Statuses for devices and components
             case 'running':
-                return 'bg-green-100 text-green-800 border border-green-200';
-            case 'online': // Added 'online' as a common positive status
+            case 'online':
+            case 'ok':
                 return 'bg-green-100 text-green-800 border border-green-200';
             case 'offline':
+            case 'fault':
+            case 'faulty': // Added faulty for completeness
                 return 'bg-red-100 text-red-800 border border-red-200';
+            case 'idle':
+                return 'bg-blue-100 text-blue-800 border border-blue-200';
             case 'warning':
                 return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
-            case 'alert': // Added 'alert' for critical warnings
+            case 'alert':
                 return 'bg-orange-100 text-orange-800 border border-orange-200';
             default:
-                return 'bg-gray-100 text-gray-700 border border-gray-200'; // Default for unknown/N/A
+                return 'bg-gray-100 text-gray-700 border border-gray-200';
         }
     };
 
     return (
         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden">
             {/* Location Header Section */}
-            <div className="bg-gradient-to-r from-green-200 to-green-100 text-white p-5 rounded-t-xl flex items-center justify-between">
-                <div className="flex items-center">
-                    <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xl mr-3" />
+            <div className="bg-gradient-to-r from-green-200 to-green-100 p-5 rounded-t-xl flex items-center justify-between text-white">
+                <div className="flex items-center min-w-0">
+                    <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xl mr-3 flex-shrink-0" />
                     <h3 className="font-extrabold text-2xl truncate" title={location_name}>{location_name}</h3>
                 </div>
-                {/* Optional: Display overall location status badge if 'status' prop is used for it */}
                 {status && (
-                    <span
-                        className={`ml-3 text-xs font-semibold px-3 py-1 rounded-full capitalize ${getStatusColorClass(status)}`}
-                    >
+                    <span className={`ml-3 text-xs font-semibold px-3 py-1 rounded-full capitalize flex-shrink-0 ${getStatusColorClass(status)}`}>
                         {status}
                     </span>
                 )}
@@ -70,60 +90,88 @@ const LocationCard: React.FC<LocationCardProps> = ({
             </div>
 
             {/* Devices Section */}
-            <div className="p-5 flex-grow overflow-y-auto custom-scrollbar"> {/* Added custom-scrollbar for aesthetics */}
+            <div className="p-5 flex-grow overflow-y-auto custom-scrollbar">
                 <h4 className="font-bold text-lg text-gray-800 mb-3 border-b pb-2">Appareils Connectés ({devices.length})</h4>
-                {devices && devices.length > 0 ? (
+                {devices.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4">
-                        {devices.map((device) => (
-                            <div key={device.device_id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col">
-                                {/* Device ID and Status */}
-                                <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
-                                    <div className="flex items-center">
-                                        <FontAwesomeIcon icon={faMicrochip} className="mr-3 text-gray-500 text-lg" />
-                                        <h5 className="font-semibold text-gray-800 text-md truncate" title={device.device_id}>
-                                            {device.device_id}
-                                        </h5>
-                                        <span
-                                            className={`ml-3 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize ${getStatusColorClass(
-                                                device.status
-                                            )}`}
-                                        >
-                                            {device.status ?? 'N/A'}
-                                        </span>
-                                    </div>
-                                    {/* Edit Device Settings Button */}
-                                    <button
-                                        onClick={() => onEditDeviceSettings(device)}
-                                        className="text-green-500 hover:text-green-700 transition-colors duration-200 p-1 rounded-full hover:bg-green-100"
-                                        title="Modifier les paramètres de l'appareil"
-                                    >
-                                        <FontAwesomeIcon icon={faPen} className="text-base" />
-                                    </button>
-                                </div>
+                        {devices.map((device) => {
+                            // Filter components into sensors and others
+                            const sensors = device.components?.filter(comp => comp.component_type === 'sensor') || [];
+                            const otherComponents = device.components?.filter(comp => comp.component_type !== 'sensor') || [];
 
-                                {/* sensors List */}
-                                {device.sensors && device.sensors.length > 0 ? (
-                                    <div className="mt-2">
-                                        <h6 className="font-semibold text-gray-700 text-sm mb-2">Capteurs ({device.sensors.length}):</h6>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            {device.sensors.map((sensor) => (
-                                                <div key={sensor.sensor_id} className="bg-white p-3 rounded-md shadow-sm border border-gray-100 flex items-center">
-                                                    <span className="text-gray-600 text-sm font-medium">
-                                                        {sensor.sensor_type}
-                                                    </span>
-                                                    <span className="ml-2 text-xs text-gray-500">
-                                                        ({sensor.sensor_id.substring(0, 8)}...) {/* Truncate ID for display */}
-                                                    </span>
-                                                    {/* You could add a small indicator for threshold status here if available */}
-                                                </div>
-                                            ))}
+                            return (
+                                <div key={device.device_id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col">
+                                    {/* Device ID and Status */}
+                                    <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+                                        <div className="flex items-center flex-grow min-w-0">
+                                            <FontAwesomeIcon icon={faMicrochip} className="mr-3 text-gray-500 text-lg flex-shrink-0" />
+                                            <h5 className="font-semibold text-gray-800 text-md truncate flex-grow min-w-0" title={device.device_id}>
+                                                {device.device_id}
+                                            </h5>
+                                            <span className={`ml-3 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize flex-shrink-0 ${getStatusColorClass(device.status)}`}>
+                                                {device.status ?? 'N/A'}
+                                            </span>
                                         </div>
+                                        <button
+                                            onClick={() => onEditDeviceSettings(device)}
+                                            className="text-green-500 hover:text-green-700 transition-colors duration-200 p-1 rounded-full hover:bg-green-100 flex-shrink-0"
+                                            title="Modifier les paramètres de l'appareil"
+                                        >
+                                            <FontAwesomeIcon icon={faPen} className="text-base" />
+                                        </button>
                                     </div>
-                                ) : (
-                                    <p className="text-sm text-gray-500 italic mt-2">Aucun capteur configuré pour cet appareil.</p>
-                                )}
-                            </div>
-                        ))}
+
+                                    {/* Sensors List */}
+                                    {sensors.length > 0 && (
+                                        <div className="mt-2">
+                                            <h6 className="font-semibold text-gray-700 text-sm mb-2">Capteurs ({sensors.length}):</h6>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {sensors.map((component) => (
+                                                    <div key={component.component_id} className="bg-white p-3 rounded-md shadow-sm border border-gray-100 flex items-center justify-between">
+                                                        <div className="flex items-center flex-grow min-w-0">
+                                                            <FontAwesomeIcon icon={getComponentIcon(component.component_subtype)} className="text-gray-500 text-sm mr-3 flex-shrink-0" />
+                                                            <span className="text-gray-700 text-sm font-medium capitalize truncate flex-grow min-w-0">
+                                                                {component.component_subtype ?? component.component_type}
+                                                            </span>
+                                                        </div>
+                                                        <span className={`ml-3 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize flex-shrink-0 ${getStatusColorClass(component.component_status)}`}>
+                                                            {component.component_status ?? 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Other Components List */}
+                                    {otherComponents.length > 0 && (
+                                        <div className="mt-4">
+                                            <h6 className="font-semibold text-gray-700 text-sm mb-2">Autres Composants ({otherComponents.length}):</h6>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {otherComponents.map((component) => (
+                                                    <div key={component.component_id} className="bg-white p-3 rounded-md shadow-sm border border-gray-100 flex items-center justify-between">
+                                                        <div className="flex items-center flex-grow min-w-0">
+                                                            <FontAwesomeIcon icon={getComponentIcon(component.component_subtype)} className="text-gray-500 text-sm mr-3 flex-shrink-0" />
+                                                            <span className="text-gray-700 text-sm font-medium capitalize truncate flex-grow min-w-0">
+                                                                {component.component_subtype ?? component.component_type}
+                                                            </span>
+                                                        </div>
+                                                        <span className={`ml-3 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize flex-shrink-0 ${getStatusColorClass(component.component_status)}`}>
+                                                            {component.component_status ?? 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Empty state for components */}
+                                    {sensors.length === 0 && otherComponents.length === 0 && (
+                                        <p className="text-sm text-gray-500 italic mt-2">Aucun composant configuré pour cet appareil.</p>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
@@ -133,8 +181,6 @@ const LocationCard: React.FC<LocationCardProps> = ({
                     </div>
                 )}
             </div>
-
-
         </div>
     );
 };

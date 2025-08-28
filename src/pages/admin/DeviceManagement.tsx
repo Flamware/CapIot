@@ -41,7 +41,7 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
         setApiError(null);
         setIsApiErrorModalOpen(false);
         try {
-            const response = await api.get<DevicesLocationsResponse>(`/admin/devices-sensors-locations`, {
+            const response = await api.get<DevicesLocationsResponse>(`/admin/devices-components-locations`, {
                 params: { page, limit, search: query },
             });
             // Handle null data by setting an empty array
@@ -181,8 +181,8 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
         deviceLocation?.device_id?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
         deviceLocation?.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         new Date(deviceLocation?.last_seen).toLocaleString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-        deviceLocation?.sensors?.some(sensor => sensor.sensor_type?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        deviceLocation?.sensors?.some(sensor => sensor.sensor_id?.toLowerCase().includes(searchTerm.toLowerCase()))
+        deviceLocation?.components?.some(sensor => sensor.component_type?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        deviceLocation?.components?.some(sensor => sensor.component_id?.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     const goToLocationPage = (page: number) => {
@@ -213,17 +213,6 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
                 onClose={handleCloseAssignErrorModal}
             />
             <div className="rounded-md border">
-                <table className="w-full text-sm">
-                    <thead className="bg-gray-100 text-left">
-                    <tr>
-                        <th className="p-2">ID</th>
-                        <th className="p-2">Status</th>
-                        <th className="p-2">Last Active</th>
-                        <th className="p-2">Locations</th>
-                        <th className="p-2">sensors</th>
-                        <th className="p-2 text-right">Actions</th>
-                    </tr>
-                    </thead>
                     <DeviceTable
                         devices={filteredDevicesLocations}
                         onDelete={handleDeleteDevice}
@@ -234,7 +223,6 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
                             setIsEditDeviceOpen(true);
                         }}
                     />
-                </table>
             </div>
 
             <PaginationControls

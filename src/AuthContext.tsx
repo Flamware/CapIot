@@ -1,5 +1,3 @@
-// contexts/AuthContext.tsx
-
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import {User} from "./components/types/user.ts";
 
@@ -39,6 +37,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('customJwt'); // Also remove the JWT
+        console.log('User logged out');
     };
 
     useEffect(() => {

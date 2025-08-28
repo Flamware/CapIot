@@ -1,6 +1,6 @@
 // src/components/location/Props.tsx
-import {sensorInfo} from "../types/device.ts";
 import {Location} from "../types/location.ts";
+import {ComponentInfo} from "../types/device.ts";
 
 export interface LocationsSectionProps {
     locationsData: LocationData[];
@@ -18,7 +18,7 @@ export interface DeviceInfo {
     location?: Location; // Location might be fetched separately or included
     status?: string;
     created_at?: string;
-    sensors?: sensorInfo[]; // sensors might be fetched separately or included
+    components?: ComponentInfo[]; // sensors might be fetched separately or included
 }
 
 export interface LocationData {
@@ -27,5 +27,3 @@ export interface LocationData {
     location_description: string;
     devices: DeviceInfo[];
 }
-
-export type { sensorInfo };

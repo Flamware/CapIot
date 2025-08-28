@@ -1,20 +1,30 @@
+
+// File: ../../components/admin/location/AddLocationModal.tsx
 import React, { useState } from 'react';
-import {Location} from "../../types/location.ts";
+import { Globe } from 'lucide-react';
+import { Location, Site } from "../../types/location.ts";
 
 interface AddLocationModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAdd: (newLocation: Partial<Location>) => void;
+    sites: Site[];
 }
 
-export const AddLocationModal: React.FC<AddLocationModalProps> = ({ isOpen, onClose, onAdd }) => {
+export const AddLocationModal: React.FC<AddLocationModalProps> = ({ isOpen, onClose, onAdd, sites }) => {
     const [locationName, setLocationName] = useState('');
     const [locationDescription, setLocationDescription] = useState('');
+    const [siteId, setSiteId] = useState<number | ''>('');
 
     const handleAdd = () => {
-        onAdd({ location_name: locationName, location_description: locationDescription });
-        setLocationName('');
-        setLocationDescription('');
+        if (locationName && siteId) {
+            onAdd({ location_name: locationName, location_description: locationDescription, site_id: Number(siteId) });
+            // Reset state
+            setLocationName('');
+            setLocationDescription('');
+            setSiteId('');
+            onClose();
+        }
     };
 
     if (!isOpen) {
@@ -31,26 +41,44 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({ isOpen, onCl
                     </p>
                     <div className="grid gap-4">
                         <div className="grid gap-2">
-                            <label htmlFor="location_name" className="text-sm font-medium">
+                            <label htmlFor="add_location_name" className="text-sm font-medium">
                                 Nom
                             </label>
                             <input
-                                id="location_name"
+                                id="add_location_name"
                                 value={locationName}
                                 onChange={(e) => setLocationName(e.target.value)}
                                 className="px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label htmlFor="location_description" className="text-sm font-medium">
+                            <label htmlFor="add_location_description" className="text-sm font-medium">
                                 Description
                             </label>
                             <textarea
-                                id="location_description"
+                                id="add_location_description"
                                 value={locationDescription}
                                 onChange={(e) => setLocationDescription(e.target.value)}
                                 className="px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <label htmlFor="add_site_id" className="text-sm font-medium flex items-center">
+                                <Globe className="w-4 h-4 mr-2" /> Site
+                            </label>
+                            <select
+                                id="add_site_id"
+                                value={siteId}
+                                onChange={(e) => setSiteId(Number(e.target.value) || '')}
+                                className="px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Sélectionner un site</option>
+                                {sites.map(site => (
+                                    <option key={site.site_id} value={site.site_id}>
+                                        {site.site_name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -63,7 +91,8 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({ isOpen, onCl
                     </button>
                     <button
                         onClick={handleAdd}
-                        className="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600"
+                        disabled={!locationName || !siteId}
+                        className={`px-4 py-2 rounded-md text-white ${!locationName || !siteId ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
                     >
                         Ajouter
                     </button>

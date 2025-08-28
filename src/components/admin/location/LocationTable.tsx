@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import {Location} from "../../types/location.ts";
 
@@ -10,36 +10,38 @@ interface LocationTableProps {
 
 const LocationTable: React.FC<LocationTableProps> = ({ locations, onEdit, onDelete }) => {
     return (
-            <table className="min-w-full text-sm border rounded-md text-left">
-                <thead className="bg-gray-100">
-                <tr>
-                    <th className="px-4 py-3">ID</th>
-                    <th className="px-4 py-3">Nom</th>
-                    <th className="px-4 py-3">Description</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {locations.length ? (
-                    locations.map((location) => (
-                        <tr key={location.location_id} className="border-t">
-                            <td className="px-4 py-2 font-medium">{location.location_id}</td>
-                            <td className="px-4 py-2">{location.location_name}</td>
-                            <td className="px-4 py-2">{location.location_description}</td>
-                            <td className="px-4 py-2 text-right relative">
-                                <ActionDropdown location={location} onEdit={onEdit} onDelete={onDelete} />
-                            </td>
-                        </tr>
-                    ))
-                ) : (
-                    <tr>
-                        <td colSpan={4} className="text-center py-6 text-gray-500">
-                            Aucun emplacement trouvé.
+        <table className="min-w-full text-sm border rounded-md text-left">
+            <thead className="bg-gray-100">
+            <tr>
+                <th className="px-4 py-3">ID</th>
+                <th className="px-4 py-3">Nom</th>
+                <th className="px-4 py-3">Description</th>
+                <th className="px-4 py-3">Site</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {locations.length ? (
+                locations.map((location) => (
+                    <tr key={location.location_id} className="border-t">
+                        <td className="px-4 py-2 font-medium">{location.location_id}</td>
+                        <td className="px-4 py-2">{location.location_name}</td>
+                        <td className="px-4 py-2">{location.location_description}</td>
+                        <td className="px-4 py-2">{location.site_name}</td>
+                        <td className="px-4 py-2 text-right relative">
+                            <ActionDropdown location={location} onEdit={onEdit} onDelete={onDelete} />
                         </td>
                     </tr>
-                )}
-                </tbody>
-            </table>
+                ))
+            ) : (
+                <tr>
+                    <td colSpan={5} className="text-center py-6 text-gray-500">
+                        Aucun emplacement trouvé.
+                    </td>
+                </tr>
+            )}
+            </tbody>
+        </table>
     );
 };
 
@@ -55,6 +57,18 @@ const ActionDropdown: React.FC<ActionDropdownProps> = ({ location, onEdit, onDel
     const toggleDropdown = () => {
         setIsOpen(!isOpen);
     };
+
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (isOpen && !(event.target as HTMLElement).closest('.relative')) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, [isOpen]);
 
     return (
         <div className="relative">

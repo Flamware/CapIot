@@ -4,12 +4,20 @@ import {User} from "./user.ts";
 import {Device} from "./device.ts";
 import {Pagination} from "./pagination.ts";
 
-export type Location = {
+export interface Location {
     location_id: number;
     location_name: string;
     location_description: string;
-};
+    site_id: number;
+    site_name: string;
+    site_address: string;
+}
 
+export interface Site {
+    site_id: number;
+    site_name: string;
+    site_address: string;
+}
 
 export type LocationWithUsersDevices = Device & User & Location
 

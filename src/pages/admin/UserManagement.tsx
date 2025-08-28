@@ -161,17 +161,7 @@ export function UserManagement() {
             <ApiErrorModal isOpen={isApiErrorModalOpen} error={apiError} onClose={handleCloseErrorModal} />
 
             <div className="rounded-md border">
-                <table className="min-w-full">
-                    <thead className="bg-gray-100">
-                    <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôles</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locations</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                    </thead>
                     <UserTable users={usersLocations} onDelete={handleDeleteUserClick} onUserUpdated={handleEditUserSubmit} />
-                </table>
             </div>
 
             <PaginationControls pagination={pagination} onGoToPage={goToPage}

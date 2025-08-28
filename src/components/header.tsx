@@ -1,45 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/logo.png';
-import { jwtDecode } from 'jwt-decode';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartLine, faArrowLeft, faBell, faUserCircle } from '@fortawesome/free-solid-svg-icons'; // Added faBell, faUserCircle
-
-interface JwtPayload {
-    name?: string;
-}
+import { faChartLine, faArrowLeft, faBell, faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from './hooks/useAuth'; // Import the useAuth hook
 
 interface HeaderProps {
     onToggleSidebar?: () => void;
 }
 
 const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
-    const [userName, setUserName] = useState<string | undefined>(''); // Changed to use userName directly
+    // We now get user and isAuthenticated from the useAuth hook
+    const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const isAuthenticated = localStorage.getItem('customJwt') !== null;
-    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false); // Managed state directly
-    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);     // Managed state directly
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
     const accountMenuRef = useRef<HTMLDivElement>(null);
     const notificationMenuRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            try {
-                const token = localStorage.getItem('customJwt')!;
-                const decodedToken = jwtDecode<JwtPayload>(token);
-                setUserName(decodedToken?.name);
-            } catch (error) {
-                console.error("Error decoding JWT:", error);
-                setUserName('');
-            }
-        } else {
-            setUserName('');
-        }
-    }, [isAuthenticated]);
-
     const handleGoBack = () => {
-        navigate(-1); // Go back to the previous page in history
+        navigate(-1);
+    };
+
+    const handleLogout = () => {
+        logout(); // Use the logout function from the AuthContext
+        navigate('/login');
+        setIsAccountMenuOpen(false); // Close the menu after logging out
     };
 
     // Close menus when clicking outside
@@ -57,7 +44,7 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, []); // Empty dependency array as refs are stable
+    }, []);
 
     // Helper to render the back button and title
     const renderHeaderSection = (title: string, isAccent: boolean = false) => (
@@ -94,14 +81,13 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         );
     } else if (location.pathname === '/profile') {
         headerContent = renderHeaderSection('Your Profile');
-    } else if (location.pathname.startsWith('/admin')) { // Simpler check for all admin routes
-        headerContent = renderHeaderSection('Admin Area', true); // Use accent for admin area
+    } else if (location.pathname.startsWith('/admin')) {
+        headerContent = renderHeaderSection('Admin Area', true);
     } else if (location.pathname === '/history') {
         headerContent = renderHeaderSection('History');
     } else if (location.pathname === '/about') {
         headerContent = renderHeaderSection('About Us');
     } else {
-        // Default header content if no specific route matches
         headerContent = (
             <div className="hidden md:flex items-center space-x-4">
                 {onToggleSidebar && (
@@ -117,8 +103,8 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                 )}
                 <div className="flex items-center space-x-2">
                     <img className="block h-8 w-auto" src={logo} alt="CapIot Logo" />
-                    <FontAwesomeIcon icon={faChartLine} className="text-primary text-2xl" /> {/* Used primary color */}
-                    <span className="text-xl font-semibold text-gray-800">Cap<span className="text-primary">Iot</span></span> {/* Used primary color */}
+                    <FontAwesomeIcon icon={faChartLine} className="text-primary text-2xl" />
+                    <span className="text-xl font-semibold text-gray-800">Cap<span className="text-primary">Iot</span></span>
                 </div>
             </div>
         );
@@ -150,25 +136,22 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                                 className="flex items-center space-x-2 text-gray-600 hover:text-secondary focus:outline-none p-2 rounded-full hover:bg-gray-100 transition duration-200"
                                 aria-label="Account menu"
                             >
-                                <FontAwesomeIcon icon={faUserCircle} className="h-7 w-7 text-primary" /> {/* Larger, primary icon */}
-                                <span className="font-medium text-sm hidden sm:block">{userName || 'User'}</span>
+                                <FontAwesomeIcon icon={faUserCircle} className="h-7 w-7 text-primary" />
+                                <span className="font-medium text-sm hidden sm:block">{user?.name || 'User'}</span>
                             </button>
                             {isAccountMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-20">
                                     <button
                                         onClick={() => {
                                             navigate('/profile');
+                                            setIsAccountMenuOpen(false); // Close menu after navigation
                                         }}
                                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                                     >
                                         Profile
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            localStorage.removeItem('customJwt');
-                                            navigate('/login');
-                                            setIsAccountMenuOpen(false);
-                                        }}
+                                        onClick={handleLogout}
                                         className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
                                     >
                                         Sign out
