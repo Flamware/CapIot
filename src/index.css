@@ -41,7 +41,9 @@ button {
   transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   /* :hover styles handled via Tailwind classes in components */
 }
-
+p{
+  color: #1a1a1a;
+}
 input,textarea
  {
   background: #ffffff;

@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
 import { User } from "@auth0/auth0-react";
-import {createApi} from "../../axios/api.tsx";
-import {UsersLocationsResponse, UserWithLocations} from "../types/user.ts";
-import {Pagination} from "../types/pagination.ts";
+import { createApi } from "../../axios/api.tsx";
+import { UsersLocationsResponse, UserWithLocations } from "../types/user.ts";
+import { Pagination } from "../types/pagination.ts";
+import { Site } from "../types/location.ts";
 
 export function useUsersApi() {
     const api = createApi();
@@ -20,7 +21,7 @@ export function useUsersApi() {
         setLoading(true);
         setApiError(null);
         try {
-            const response = await api.get<UsersLocationsResponse>(`/admin/users-locations`, {
+            const response = await api.get<UsersLocationsResponse>(`/admin/users`, {
                 params: { page, limit, search: query },
             });
             setUsersLocations(response.data.data || []);
@@ -30,34 +31,40 @@ export function useUsersApi() {
                 totalItems: response.data.totalItems,
                 totalPages: response.data.totalPages,
             });
+            return response.data; // Return data for use in other functions
         } catch (error: any) {
             setApiError(error);
+            // Don't rethrow or call fetchUsers again
         } finally {
             setLoading(false);
         }
-    }, [api]);
+    }, []);
 
     const addUser = useCallback(async (userData: Partial<Omit<User, 'id' | 'createdAt' | 'roles'>>) => {
         setLoading(true);
         setApiError(null);
         try {
             await api.post('/admin/users', userData);
+            // Only refetch if the operation was successful
             await fetchUsers(1, pagination.pageSize);
         } catch (error: any) {
             setApiError(error);
+            // No re-render loop here, as we don't call fetchUsers again on error
         } finally {
             setLoading(false);
         }
     }, [api, fetchUsers, pagination.pageSize]);
 
-    const updateUser = useCallback(async (id: string, userData: { name?: string; locations?: number[] }) => {
+    const updateUser = useCallback(async (id: string, userData: { name?: string; sites?: number[] }) => {
         setLoading(true);
         setApiError(null);
         try {
             await api.put(`/admin/users/${id}`, userData);
+            // Only refetch if the operation was successful
             await fetchUsers(pagination.currentPage, pagination.pageSize);
         } catch (error: any) {
             setApiError(error);
+            // No re-render loop here
         } finally {
             setLoading(false);
         }
@@ -68,6 +75,7 @@ export function useUsersApi() {
         setApiError(null);
         try {
             await api.delete(`/admin/users/${id}`);
+            // Use a functional update to avoid stale state issues
             setUsersLocations(prev => prev.filter(user => user.id !== id));
             setPagination(prev => ({
                 ...prev,
@@ -78,6 +86,17 @@ export function useUsersApi() {
             setApiError(error);
         } finally {
             setLoading(false);
+        }
+    }, [api]);
+
+    const fetchUserSites = useCallback(async (userId: string) => {
+        try {
+            const response = await api.get<Site[]>(`/admin/users/${userId}/sites`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching user sites:", error);
+            setApiError(error);
+            return [];
         }
     }, [api]);
 
@@ -92,5 +111,6 @@ export function useUsersApi() {
         updateUser,
         deleteUser,
         setApiError,
+        fetchUserSites,
     };
 }

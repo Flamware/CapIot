@@ -2,13 +2,14 @@ import { useState, useCallback } from 'react';
 import { createApi } from "../../axios/api.tsx";
 import { DevicesLocationsResponse, DevicesWithLocation } from "../types/device.ts";
 import { Pagination } from "../types/pagination.ts";
-import { LocationsResponse, Location } from "../types/location.ts";
+import { LocationsResponse, Location, SitesResponse, Site } from "../types/location.ts";
 
 export const useDeviceApi = () => {
     const api = createApi();
 
     const [loadingDevices, setLoadingDevices] = useState(false);
     const [loadingLocations, setLoadingLocations] = useState(false);
+    const [loadingSites, setLoadingSites] = useState(false);
     const [apiError, setApiError] = useState<any | null>(null);
 
     const fetchDevices = useCallback(async (page: number, limit: number, query?: string): Promise<{ devices: DevicesWithLocation[], pagination: Pagination }> => {
@@ -34,7 +35,7 @@ export const useDeviceApi = () => {
         }
     }, [api]);
 
-    const fetchAllLocations = useCallback(async (page: number = 1, limit: number = 10): Promise<{ locations: Location[], pagination: Pagination }> => {
+    const fetchAllLocations = useCallback(async (page: number = 1, limit: number = 1000): Promise<{ locations: Location[], pagination: Pagination }> => {
         setLoadingLocations(true);
         setApiError(null);
         try {
@@ -54,6 +55,20 @@ export const useDeviceApi = () => {
             throw error;
         } finally {
             setLoadingLocations(false);
+        }
+    }, [api]);
+
+    const fetchSites = useCallback(async (): Promise<Site[]> => {
+        setLoadingSites(true);
+        setApiError(null);
+        try {
+            const sitesResponse = await api.get<SitesResponse>('/admin/sites');
+            return sitesResponse.data.data || [];
+        } catch (error) {
+            setApiError(error);
+            throw error;
+        } finally {
+            setLoadingSites(false);
         }
     }, [api]);
 
@@ -93,9 +108,11 @@ export const useDeviceApi = () => {
     return {
         loadingDevices,
         loadingLocations,
+        loadingSites,
         apiError,
         fetchDevices,
         fetchAllLocations,
+        fetchSites,
         assignLocationToDevice,
         editDeviceStatus,
         deleteDevice,

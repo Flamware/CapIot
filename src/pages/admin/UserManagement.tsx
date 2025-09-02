@@ -1,149 +1,91 @@
-import { useState, useEffect, useCallback } from 'react';
-import {UsersLocationsResponse, UserWithLocations} from "../../components/types/user.ts";
-import {Pagination} from "../../components/types/pagination.ts";
-import {createApi} from "../../axios/api.tsx";
-import {User} from "@auth0/auth0-react";
-import {UserListHeader} from "../../components/admin/user/UserListHeader.tsx";
-import {ApiErrorModal} from "../../components/ApiErrorModal.tsx";
-import {UserTable} from "../../components/admin/user/UserTable.tsx";
-import {PaginationControls} from "../../components/admin/PaginationControls.tsx";
-import {AddUserModal} from "../../components/admin/user/AddUserModal.tsx";
+// UserManagement.tsx
+import { UserListHeader } from "../../components/admin/user/UserListHeader.tsx";
+import { ApiErrorModal } from "../../components/ApiErrorModal.tsx";
+import { UserTable } from "../../components/admin/user/UserTable.tsx";
+import { PaginationControls } from "../../components/admin/PaginationControls.tsx";
+import { useUsersApi } from "../../components/hooks/useUsers.tsx";
+import { UserWithLocations } from "../../components/types/user.ts";
+import { Site } from "../../components/types/location.ts";
+import {useSites} from "../../components/hooks/useSite.tsx";
+import {useCallback, useEffect, useState} from "react";
+
+interface UserWithSites extends UserWithLocations {
+    sites: Site[];
+}
 
 export function UserManagement() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-    const [, setIsEditUserOpen] = useState(false);
-    const [, setCurrentUser] = useState<UserWithLocations | null>(null);
-    const [usersLocations, setUsersLocations] = useState<UserWithLocations[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [apiError, setApiError] = useState<any | null>(null);
-    const [isApiErrorModalOpen, setIsApiErrorModalOpen] = useState(false);
-    const [pagination, setPagination] = useState<Pagination>({
-        currentPage: 1,
-        pageSize: 10,
-        totalItems: 0,
-        totalPages: 1,
-    });
-    const api = createApi();
-    const [, setNewUser] = useState<Partial<Omit<User, 'id' | 'createdAt' | 'roles'>>>({
-        name: '',
-    });
+    const [usersWithSites, setUsersWithSites] = useState<UserWithSites[]>([]);
+    const [allSites, setAllSites] = useState<Site[]>([]); // New state for all sites
+    const [, setIsApiErrorModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const {
+        apiError,
+        pagination,
+        fetchUsers,
+        updateUser, // Make sure you have this function
+        setApiError,
+        fetchUserSites,
+    } = useUsersApi();
+    const { fetchAllSites } = useSites(); // New function to fetch all sites
 
-    const fetchUsers = useCallback(async (page: number, limit: number, query?: string) => {
-        setLoading(true);
-        setApiError(null);
-        setIsApiErrorModalOpen(false);
-        try {
-            const response = await api.get<UsersLocationsResponse>(`/admin/users-locations`, {
-                params: {
-                    page: page,
-                    limit: limit,
-                    search: query,
-                },
-            });
-            setUsersLocations(response.data.data || []);
-            setPagination({
-                currentPage: response.data.currentPage,
-                pageSize: response.data.pageSize,
-                totalItems: response.data.totalItems,
-                totalPages: response.data.totalPages,
-            });
-        } catch (error: any) {
-            setApiError(error);
-            setIsApiErrorModalOpen(true);
-        } finally {
-            setLoading(false);
-        }
-    }, [api]);
-
-    const addUser = useCallback(async (userData: Partial<Omit<User, 'id' | 'createdAt' | 'roles'>>) => {
-        setLoading(true);
-        setApiError(null);
-        setIsApiErrorModalOpen(false);
-        try {
-            await api.post('/admin/users', userData);
-            fetchUsers(1, pagination.pageSize, searchTerm); // Refetch after adding
-        } catch (error: any) {
-            setApiError(error);
-            setIsApiErrorModalOpen(true);
-        } finally {
-            setLoading(false);
-        }
-    }, [api, fetchUsers, pagination.pageSize, searchTerm]);
-
-    const updateUser = useCallback(async (id: string, userData: { name?: string; locations?: number[] }) => {
-        setLoading(true);
-        setApiError(null);
-        setIsApiErrorModalOpen(false);
-        try {
-            await api.put(`/admin/users/${id}`, userData);
-            fetchUsers(pagination.currentPage, pagination.pageSize, searchTerm); // Refetch after updating
-        } catch (error: any) {
-            setApiError(error);
-            setIsApiErrorModalOpen(true);
-        } finally {
-            setLoading(false);
-        }
-    }, [api, fetchUsers, pagination.currentPage, pagination.pageSize, searchTerm]);
-
-    const deleteUser = useCallback(async (id: string) => {
-        setLoading(true);
-        setApiError(null);
-        setIsApiErrorModalOpen(false);
-        try {
-            await api.delete(`/admin/users/${id}`);
-            setUsersLocations(prev => prev.filter(user => user.id !== id));
-            setPagination(prev => ({ ...prev, totalItems: prev.totalItems - 1, totalPages: Math.ceil((prev.totalItems - 1) / prev.pageSize) }));
-        } catch (error: any) {
-            setApiError(error);
-            setIsApiErrorModalOpen(true);
-        } finally {
-            setLoading(false);
-        }
-    }, [api]);
-
+    // Consolidated useEffect to fetch users and sites
     useEffect(() => {
-        fetchUsers(pagination.currentPage, pagination.pageSize, searchTerm);
+        const fetchAllData = async () => {
+            // Fetch all sites first, as they are needed for the table
+            setLoading(true);
+            const fetchedAllSites = await fetchAllSites();
+            if (fetchedAllSites) {
+                setAllSites(fetchedAllSites);
+            }
+
+            // Then fetch users and their assigned sites
+            const fetchedUsers = await fetchUsers(pagination.currentPage, pagination.pageSize, searchTerm);
+            if (fetchedUsers && fetchedUsers.data && fetchedUsers.data.length > 0) {
+                const updatedUsers = await Promise.all(
+                    fetchedUsers.data.map(async (user: UserWithLocations) => {
+                        const sites = await fetchUserSites(user.id);
+                        return { ...user, sites };
+                    })
+                );
+                setUsersWithSites(updatedUsers);
+            } else {
+                setUsersWithSites([]);
+            }
+            setLoading(false);
+        };
+
+        fetchAllData();
     }, [pagination.currentPage, pagination.pageSize, searchTerm]);
+
+    const handleSaveUser = async (user: UserWithSites, updatedData: { name: string, siteIds: string[] }) => {
+        // 1. Prepare the data for the API call
+        const siteIdsToAssign = updatedData.siteIds
+            .map(id => allSites.find(site => site.site_id === Number(id)))
+            .filter(Boolean)
+            .map(site => site!.site_id);
+
+        // 2. Call the API to update the user on the server
+        await updateUser(user.id, { name: updatedData.name, sites: siteIdsToAssign });
+
+        // 3. Update the local state efficiently without creating a new array
+        setUsersWithSites(prevUsers => {
+            // Use `map` to find and replace only the user that was updated
+            return prevUsers.map(u => {
+                if (u.id === user.id) {
+                    // Find the new site objects from `allSites`
+                    const updatedSites = allSites.filter(site => siteIdsToAssign.includes(site.site_id));
+                    // Return a new object for the updated user
+                    return { ...u, name: updatedData.name, sites: updatedSites };
+                }
+                // For all other users, return the original object reference
+                return u;
+            });
+        });
+    };
 
     const handleSearch = (term: string) => {
         setSearchTerm(term);
-        setPagination(prev => ({ ...prev, currentPage: 1 }));
-    };
-
-    const openAddUserModal = () => {
-        setIsAddUserOpen(true);
-        setNewUser({ name: '' });
-    };
-
-    const closeAddUserModal = () => {
-        setIsAddUserOpen(false);
-    };
-
-    const handleAddUserSubmit = (userData: { name: string }) => {
-        addUser(userData);
-        closeAddUserModal();
-    };
-    const closeEditDialog = () => {
-        setIsEditUserOpen(false);
-        setCurrentUser(null);
-    };
-
-    // Corrected signature to accept id, name, and locations as separate arguments
-    const handleEditUserSubmit = (id: string, name: string, locations: number[]) => {
-        // Call updateUser with the provided arguments
-        updateUser(id, { name, locations });
-        closeEditDialog()
-    };
-
-    const handleDeleteUserClick = (id: string) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
-            deleteUser(id);
-        }
-    };
-
-    const goToPage = (page: number) => {
-        setPagination(prev => ({ ...prev, currentPage: page }));
     };
 
     const handleCloseErrorModal = () => {
@@ -151,25 +93,46 @@ export function UserManagement() {
         setApiError(null);
     };
 
-    if (loading) {
-        return <div>Chargement des utilisateurs...</div>;
-    }
+
+
+    const goToPage = useCallback((page: number) => {
+        fetchUsers(page, pagination.pageSize, searchTerm);
+    }, [fetchUsers, pagination.pageSize, searchTerm]);
+
+
+    const combinedError = apiError;
 
     return (
         <div className="space-y-4">
-            <UserListHeader searchTerm={searchTerm} onSearch={handleSearch} onAddUser={openAddUserModal} />
-            <ApiErrorModal isOpen={isApiErrorModalOpen} error={apiError} onClose={handleCloseErrorModal} />
+            <UserListHeader searchTerm={searchTerm} onSearch={handleSearch}  />
+            <ApiErrorModal isOpen={!!combinedError} error={combinedError} onClose={handleCloseErrorModal} />
+            {loading ? (
 
-            <div className="rounded-md border">
-                    <UserTable users={usersLocations} onDelete={handleDeleteUserClick} onUserUpdated={handleEditUserSubmit} />
-            </div>
+                <div role="status" className="flex justify-center items-center h-64">
+                    <svg aria-hidden="true"
+                         className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                         viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                            fill="currentColor"/>
+                        <path
+                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                            fill="currentFill"/>
+                    </svg>
+                    <span className="sr-only">Loading...</span>
+                </div>
 
+            ) : (
+                <UserTable
+                    users={usersWithSites}
+                    allSites={allSites} // Pass all sites to the table for the dropdowns
+                    onSave={handleSaveUser} // Use the new save handler
+                />
+            )}
             <PaginationControls pagination={pagination} onGoToPage={goToPage}
                                 onGoToPreviousPage={() => goToPage(pagination.currentPage - 1)}
                                 onGoToNextPage={() => goToPage(pagination.currentPage + 1)}
             />
-
-            <AddUserModal isOpen={isAddUserOpen} onClose={closeAddUserModal} onAdd={handleAddUserSubmit} />
         </div>
     );
 }

@@ -8,9 +8,7 @@ export interface Location {
     location_id: number;
     location_name: string;
     location_description: string;
-    site_id: number;
-    site_name: string;
-    site_address: string;
+    site_id?: number | null;
 }
 
 export interface Site {
@@ -27,4 +25,8 @@ export type LocationsWithUsersDevicesResponse = Pagination & {
 
 export type LocationsResponse = Pagination & {
     data: Location[];
+};
+
+export type SitesResponse = Pagination & {
+    data: Site[];
 };
