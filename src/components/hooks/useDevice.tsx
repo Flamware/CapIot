@@ -1,15 +1,13 @@
 import { useState, useCallback } from 'react';
 import { createApi } from "../../axios/api.tsx";
-import { DevicesLocationsResponse, DevicesWithLocation } from "../types/device.ts";
+import {ComponentInfo, DevicesLocationsResponse, DevicesWithLocation} from "../types/device.ts";
 import { Pagination } from "../types/pagination.ts";
-import { LocationsResponse, Location, SitesResponse, Site } from "../types/location.ts";
+import {DeviceInfo} from "../location/Props.tsx";
 
 export const useDeviceApi = () => {
     const api = createApi();
 
     const [loadingDevices, setLoadingDevices] = useState(false);
-    const [loadingLocations, setLoadingLocations] = useState(false);
-    const [loadingSites, setLoadingSites] = useState(false);
     const [apiError, setApiError] = useState<any | null>(null);
 
     const fetchDevices = useCallback(async (page: number, limit: number, query?: string): Promise<{ devices: DevicesWithLocation[], pagination: Pagination }> => {
@@ -29,48 +27,44 @@ export const useDeviceApi = () => {
             return { devices, pagination };
         } catch (error) {
             setApiError(error);
+            setLoadingDevices(false);
             throw error;
         } finally {
             setLoadingDevices(false);
         }
     }, [api]);
 
-    const fetchAllLocations = useCallback(async (page: number = 1, limit: number = 1000): Promise<{ locations: Location[], pagination: Pagination }> => {
-        setLoadingLocations(true);
+    const fetchDeviceFromLocation = useCallback(async (locationId: number): Promise<DeviceInfo[]> => {
+        setLoadingDevices(true);
         setApiError(null);
         try {
-            const locationsResponse = await api.get<LocationsResponse>(`/admin/locations`, {
-                params: { page, limit },
-            });
-            const locations = locationsResponse.data.data || [];
-            const pagination = {
-                currentPage: locationsResponse.data.currentPage,
-                pageSize: locationsResponse.data.pageSize,
-                totalItems: locationsResponse.data.totalItems,
-                totalPages: locationsResponse.data.totalPages,
-            };
-            return { locations, pagination };
+            const response = await api.get<DeviceInfo[]>(`/location/${locationId}/devices`);
+            return response.data || [];
         } catch (error) {
             setApiError(error);
+            setLoadingDevices(false);
             throw error;
         } finally {
-            setLoadingLocations(false);
+            setLoadingDevices(false);
         }
-    }, [api]);
+    }
+    , [api]);
 
-    const fetchSites = useCallback(async (): Promise<Site[]> => {
-        setLoadingSites(true);
+    const fetchComponentsFromDevice = useCallback(async (deviceId: string): Promise<ComponentInfo[]> => {
+        setLoadingDevices(true);
         setApiError(null);
         try {
-            const sitesResponse = await api.get<SitesResponse>('/admin/sites');
-            return sitesResponse.data.data || [];
+            const response = await api.get<ComponentInfo[]>(`/devices/${deviceId}/components`);
+            return response.data;
         } catch (error) {
             setApiError(error);
+            setLoadingDevices(false);
             throw error;
         } finally {
-            setLoadingSites(false);
+            setLoadingDevices(false);
         }
-    }, [api]);
+    }
+    , [api]);
 
     const assignLocationToDevice = useCallback(async (deviceId: string, locationId: number) => {
         setApiError(null);
@@ -81,8 +75,10 @@ export const useDeviceApi = () => {
             });
         } catch (error) {
             setApiError(error);
+            setLoadingDevices(false);
             throw error;
         }
+        // if successful, update the device's location in state
     }, [api]);
 
     const editDeviceStatus = useCallback(async (deviceId: string, status: string) => {
@@ -107,12 +103,11 @@ export const useDeviceApi = () => {
 
     return {
         loadingDevices,
-        loadingLocations,
-        loadingSites,
         apiError,
+        setApiError,
         fetchDevices,
-        fetchAllLocations,
-        fetchSites,
+        fetchDeviceFromLocation,
+        fetchComponentsFromDevice,
         assignLocationToDevice,
         editDeviceStatus,
         deleteDevice,

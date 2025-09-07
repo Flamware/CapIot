@@ -2,7 +2,6 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import {User} from "./components/types/user.ts";
 
 
-// Corrected: login function expects a User object
 export interface AuthContextType {
     user: User | null;
     login: (userData: User) => void; // Changed parameter type to User
@@ -10,7 +9,6 @@ export interface AuthContextType {
     isAuthenticated: boolean;
 }
 
-// ... rest of your AuthProvider code remains the same ...
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

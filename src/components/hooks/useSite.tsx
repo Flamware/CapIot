@@ -12,7 +12,7 @@ export const useSites = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [sitePagination, setSitePagination] = useState<Pagination>({
         currentPage: 1,
-        pageSize: 3,
+        pageSize: 10,
         totalItems: 0,
         totalPages: 1,
     });
@@ -62,26 +62,50 @@ export const useSites = () => {
     }, [api]);
 
     // New: A dedicated function to fetch ALL sites (unpaginated)
-    const fetchAllSites = useCallback(async (): Promise<Site[] | null> => {
+    const fetchSites = useCallback(async (page: number, limit: number, query?: string) => {
         setLoading(true);
         setError(null);
         try {
-            // Using a high limit to get all sites. A dedicated API endpoint is better.
-            const response = await api.get<SitesResponse>(`/admin/sites?limit=1000`);
-            return response.data.data || [];
+            const sitesResponse = await api.get<SitesResponse>(`/admin/sites`, {
+                params: {
+                    page: page,
+                    limit: limit,
+                    search: query,
+                },
+            });
+            setSites(sitesResponse.data.data || []);
         } catch (err) {
             console.error("Error fetching all sites:", err);
             if (err instanceof AxiosError && err.response?.data?.message) {
                 setError(err.response.data.message);
             } else {
-                setError("Erreur lors du chargement de tous les sites.");
+                setError("Erreur lors du chargement des sites.");
+            }
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }
+    , [api]);
+    const fetchMySites = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await api.get<Site[]>(`/sites/me`);
+            setSites(response.data || []);
+        } catch (err) {
+            console.error("Error fetching my sites:", err);
+            if (err instanceof AxiosError && err.response?.data?.message) {
+                setError(err.response.data.message);
+            } else {
+                setError("Erreur lors du chargement de vos sites.");
             }
             return null;
         } finally {
             setLoading(false);
         }
-    }, [api]);
-
+    }
+    , [api]);
 
     const addSite = useCallback(async (siteData: { site_name: string; site_address: string }): Promise<string | null> => {
         setLoading(true);
@@ -186,6 +210,7 @@ export const useSites = () => {
         sitePagination,
         addSite,
         deleteSite,
+        fetchMySites,
         handleSearch,
         goToSitePage,
         setError,
@@ -193,6 +218,6 @@ export const useSites = () => {
         deleteLocation,
         modifyLocation,
         fetchSitesAndLocations,
-        fetchAllSites
+        fetchSites
     };
 };

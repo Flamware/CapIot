@@ -9,6 +9,7 @@ import {
     faTint,
     faFan,
     faLightbulb,
+    faInfoCircle, // Import the new info icon
 } from '@fortawesome/free-solid-svg-icons';
 import { DeviceInfo } from './Props.tsx';
 import { ComponentSubtype } from '../types/device.ts';
@@ -20,6 +21,7 @@ interface LocationCardProps {
     lastUpdated: string;
     status: string;
     onEditDeviceSettings: (device: DeviceInfo) => void;
+    onViewDeviceDetails: (device: DeviceInfo) => void; // New prop to handle the info modal
 }
 
 // Helper function to get the appropriate FontAwesome icon based on the component subtype.
@@ -44,18 +46,18 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                        lastUpdated,
                                                        status,
                                                        onEditDeviceSettings,
+                                                       onViewDeviceDetails, // Make sure to destructure the new prop
                                                    }) => {
     // Helper function to determine the badge color based on the device or location status.
     const getStatusColorClass = (deviceStatus: string | undefined) => {
         switch (deviceStatus?.toLowerCase()) {
-            // Statuses for devices and components
             case 'running':
             case 'online':
             case 'ok':
                 return 'bg-green-100 text-green-800 border border-green-200';
             case 'offline':
             case 'fault':
-            case 'faulty': // Added faulty for completeness
+            case 'faulty':
                 return 'bg-red-100 text-red-800 border border-red-200';
             case 'idle':
                 return 'bg-blue-100 text-blue-800 border border-blue-200';
@@ -71,10 +73,10 @@ const LocationCard: React.FC<LocationCardProps> = ({
     return (
         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden">
             {/* Location Header Section */}
-            <div className="bg-gradient-to-r from-green-200 to-green-100 p-5 rounded-t-xl flex items-center justify-between text-white">
+            <div className="bg-gradient-to-r from-green-200 to-green-100 p-5 rounded-t-xl flex items-center justify-between">
                 <div className="flex items-center min-w-0">
-                    <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xl mr-3 flex-shrink-0" />
-                    <h3 className="font-extrabold text-2xl truncate" title={location_name}>{location_name}</h3>
+                    <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xl mr-3 flex-shrink-0 text-green-700" />
+                    <h3 className="font-extrabold text-2xl text-gray-800 truncate" title={location_name}>{location_name}</h3>
                 </div>
                 {status && (
                     <span className={`ml-3 text-xs font-semibold px-3 py-1 rounded-full capitalize flex-shrink-0 ${getStatusColorClass(status)}`}>
@@ -84,7 +86,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
             </div>
 
             {/* Last Updated Info */}
-            <div className="bg-green-50 text-green-800 text-sm px-5 py-2 flex justify-between items-center border-b border-blue-100">
+            <div className="bg-green-50 text-green-800 text-sm px-5 py-2 flex justify-between items-center border-b border-green-100">
                 <span>Dernière mise à jour :</span>
                 <span className="font-medium">{lastUpdated}</span>
             </div>
@@ -95,10 +97,8 @@ const LocationCard: React.FC<LocationCardProps> = ({
                 {devices.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4">
                         {devices.map((device) => {
-                            // Filter components into sensors and others
                             const sensors = device.components?.filter(comp => comp.component_type === 'sensor') || [];
                             const otherComponents = device.components?.filter(comp => comp.component_type !== 'sensor') || [];
-
                             return (
                                 <div key={device.device_id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col">
                                     {/* Device ID and Status */}
@@ -112,13 +112,25 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                 {device.status ?? 'N/A'}
                                             </span>
                                         </div>
-                                        <button
-                                            onClick={() => onEditDeviceSettings(device)}
-                                            className="text-green-500 hover:text-green-700 transition-colors duration-200 p-1 rounded-full hover:bg-green-100 flex-shrink-0"
-                                            title="Modifier les paramètres de l'appareil"
-                                        >
-                                            <FontAwesomeIcon icon={faPen} className="text-base" />
-                                        </button>
+                                        <div className="flex space-x-2 flex-shrink-0">
+                                            {/* Info button for component details */}
+                                            <button
+                                                onClick={() => onViewDeviceDetails(device)}
+                                                className="text-blue-500 hover:text-blue-700 transition-colors duration-200 p-1 rounded-full hover:bg-blue-100"
+                                                title="Voir les détails de l'appareil"
+                                                aria-label="Voir les détails de l'appareil"
+                                            >
+                                                <FontAwesomeIcon icon={faInfoCircle} className="text-base" />
+                                            </button>
+                                            <button
+                                                onClick={() => onEditDeviceSettings(device)}
+                                                className="text-green-500 hover:text-green-700 transition-colors duration-200 p-1 rounded-full hover:bg-green-100"
+                                                title="Modifier les paramètres de l'appareil"
+                                                aria-label="Modifier les paramètres de l'appareil"
+                                            >
+                                                <FontAwesomeIcon icon={faPen} className="text-base" />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Sensors List */}

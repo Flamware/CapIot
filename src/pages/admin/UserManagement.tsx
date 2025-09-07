@@ -6,7 +6,6 @@ import { PaginationControls } from "../../components/admin/PaginationControls.ts
 import { useUsersApi } from "../../components/hooks/useUsers.tsx";
 import { UserWithLocations } from "../../components/types/user.ts";
 import { Site } from "../../components/types/location.ts";
-import {useSites} from "../../components/hooks/useSite.tsx";
 import {useCallback, useEffect, useState} from "react";
 
 interface UserWithSites extends UserWithLocations {
@@ -16,28 +15,23 @@ interface UserWithSites extends UserWithLocations {
 export function UserManagement() {
     const [searchTerm, setSearchTerm] = useState('');
     const [usersWithSites, setUsersWithSites] = useState<UserWithSites[]>([]);
-    const [allSites, setAllSites] = useState<Site[]>([]); // New state for all sites
     const [, setIsApiErrorModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
     const {
         apiError,
         pagination,
         fetchUsers,
-        updateUser, // Make sure you have this function
         setApiError,
         fetchUserSites,
     } = useUsersApi();
-    const { fetchAllSites } = useSites(); // New function to fetch all sites
+
 
     // Consolidated useEffect to fetch users and sites
     useEffect(() => {
         const fetchAllData = async () => {
             // Fetch all sites first, as they are needed for the table
             setLoading(true);
-            const fetchedAllSites = await fetchAllSites();
-            if (fetchedAllSites) {
-                setAllSites(fetchedAllSites);
-            }
 
             // Then fetch users and their assigned sites
             const fetchedUsers = await fetchUsers(pagination.currentPage, pagination.pageSize, searchTerm);
@@ -58,31 +52,7 @@ export function UserManagement() {
         fetchAllData();
     }, [pagination.currentPage, pagination.pageSize, searchTerm]);
 
-    const handleSaveUser = async (user: UserWithSites, updatedData: { name: string, siteIds: string[] }) => {
-        // 1. Prepare the data for the API call
-        const siteIdsToAssign = updatedData.siteIds
-            .map(id => allSites.find(site => site.site_id === Number(id)))
-            .filter(Boolean)
-            .map(site => site!.site_id);
 
-        // 2. Call the API to update the user on the server
-        await updateUser(user.id, { name: updatedData.name, sites: siteIdsToAssign });
-
-        // 3. Update the local state efficiently without creating a new array
-        setUsersWithSites(prevUsers => {
-            // Use `map` to find and replace only the user that was updated
-            return prevUsers.map(u => {
-                if (u.id === user.id) {
-                    // Find the new site objects from `allSites`
-                    const updatedSites = allSites.filter(site => siteIdsToAssign.includes(site.site_id));
-                    // Return a new object for the updated user
-                    return { ...u, name: updatedData.name, sites: updatedSites };
-                }
-                // For all other users, return the original object reference
-                return u;
-            });
-        });
-    };
 
     const handleSearch = (term: string) => {
         setSearchTerm(term);
@@ -125,8 +95,6 @@ export function UserManagement() {
             ) : (
                 <UserTable
                     users={usersWithSites}
-                    allSites={allSites} // Pass all sites to the table for the dropdowns
-                    onSave={handleSaveUser} // Use the new save handler
                 />
             )}
             <PaginationControls pagination={pagination} onGoToPage={goToPage}

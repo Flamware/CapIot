@@ -52,7 +52,7 @@ const App: React.FC = () => {
                                 <Route path="/admin/locations" element={<LocationManagement />} />
                             </Route>
 
-                            <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+                            <Route path="/login" element={<Login />} />
                             <Route path="/about" element={<About />} />
                             <Route path="/unauthorized" element={<div className="text-center mt-10"><h1 className="text-2xl font-semibold text-red-500">Unauthorized</h1><p className="mt-2">You do not have permission to access this page.</p></div>} />
                         </Routes>

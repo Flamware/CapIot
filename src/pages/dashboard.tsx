@@ -1,144 +1,206 @@
-import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useLocations } from "../components/hooks/useLocation.tsx";
+import { useDeviceApi } from "../components/hooks/useDevice.tsx";
+import { ApiErrorModal } from "../components/ApiErrorModal.tsx";
 import LocationsSection from "../components/location/LocationSection.tsx";
+import DeviceInfoModal from "../components/dashboard/DeviceInfoModal.tsx";
+import { useSites } from "../components/hooks/useSite.tsx";
+import {useEffect, useState} from "react";
 import { DeviceInfo, LocationData } from "../components/location/Props.tsx";
-import { createApi } from "../axios/api.tsx";
-import {ComponentInfo} from "../components/types/device.ts";
-import DeviceSettingsModal from "../components/dashboard/DeviceSettingModal.tsx";
+import {PaginationControls} from "../components/admin/PaginationControls.tsx";
 
-const Dashboard: React.FC = () => {
-    const [locationsWithDevicesAndsensors, setLocationsWithDevicesAndsensors] = useState<LocationData[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
-    const [hasFetched, setHasFetched] = useState(false);
-    const [isSettingModalOpen, setIsSettingModalOpen] = useState(false);
+const Dashboard = () => {
+    // Hooks and state
+    const {
+        loadingLocations,
+        locations: baseLocations,
+        pagination,
+        goToSitePage: goToPage,
+        error: locationError,
+        fetchLocationsBySiteIds,
+        setError: setLocationError,
+        setSelectedSiteId,
+        selectedSiteId
+    } = useLocations();
+
+    const {
+        loadingDevices: loadingDeviceData,
+        apiError: deviceApiError,
+        fetchDeviceFromLocation,
+        fetchComponentsFromDevice,
+        setApiError: setDeviceApiError,
+    } = useDeviceApi();
+
+    const { sites: userSites, fetchMySites } = useSites();
+
     const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
+    const [loadingDevicesAndSensors, setLoadingDevicesAndSensors] = useState(false);
+    const [isDeviceInfoModalOpen, setIsDeviceInfoModalOpen] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [locationWithDevices, setLocationWithDevices] = useState<LocationData[]>([]);
 
-    const api = createApi();
-
+    // EFFECT 1: Fetch sites on initial mount
     useEffect(() => {
-        const fetchAllData = async () => {
-            if (hasFetched) return;
+        fetchMySites();
+    }, [fetchMySites]);
 
-            setLoading(true);
-            setError(null);
+    // EFFECT 2: Fetch locations when site is selected
+    useEffect(() => {
+        const fetchAllDataForSite = async () => {
+            await fetchLocationsBySiteIds(selectedSiteId ? [selectedSiteId] : []);
+            setLocationWithDevices([]);
+        };
+        fetchAllDataForSite();
+    }, [selectedSiteId ]);
 
-            try {
-                const response = await api.get<Omit<LocationData, "devices">[]>("/users/me/locations");
-                const baseLocations = response.data ?? [];
-                const locationsWithDeviceData: LocationData[] = [];
-
-                for (const location of baseLocations) {
-                    try {
-                        const devicesResponse = await api.get<DeviceInfo[]>(`/location/${location.location_id}/devices`);
-                        const devices = devicesResponse?.data ?? [];
-
-                        const devicesWithsensors = await Promise.all(
-                            devices.map(async (device) => {
-                                try {
-                                    const sensorsResponse = await api.get<ComponentInfo[]>(`/devices/${device.device_id}/components`);
-                                    return { ...device, components: sensorsResponse.data };
-                                } catch {
-                                    return { ...device, components: [] };
-                                }
-                            })
-                        );
-
-                        locationsWithDeviceData.push({ ...location, devices: devicesWithsensors });
-                    } catch {
-                        locationsWithDeviceData.push({ ...location, devices: [] });
-                    }
-                }
-
-                setLocationsWithDevicesAndsensors(locationsWithDeviceData);
-                setHasFetched(true);
-            } catch (err: any) {
-                setError(err);
-            } finally {
-                setLoading(false);
+    // EFFECT 3: Fetch devices + sensors after locations load
+    useEffect(() => {
+        const fetchDevicesAndSensors = async () => {
+            if (loadingLocations) {
+                setLoadingDevicesAndSensors(true);
+                return;
             }
+
+            if (baseLocations.length === 0) {
+                setLoadingDevicesAndSensors(false);
+                return;
+            }
+
+            setLoadingDevicesAndSensors(true);
+            const locationsWithDeviceData: LocationData[] = [];
+
+            for (const location of baseLocations) {
+                try {
+                    const devices = await fetchDeviceFromLocation(location.location_id);
+                    const devicesWithSensors = [];
+                    for (const device of devices) {
+                        try {
+                            const sensors = await fetchComponentsFromDevice(device.device_id);
+                            devicesWithSensors.push({ ...device, components: sensors });
+                        } catch {
+                            devicesWithSensors.push({ ...device, components: [] });
+                        }
+                    }
+                    locationsWithDeviceData.push({ ...location, devices: devicesWithSensors });
+                } catch {
+                    locationsWithDeviceData.push({ ...location, devices: [] });
+                }
+            }
+            setLocationWithDevices(locationsWithDeviceData);
+            setLoadingDevicesAndSensors(false);
         };
 
-        fetchAllData();
-    }, [hasFetched]);
+        fetchDevicesAndSensors();
+    }, [baseLocations]);
 
+    const handleCloseApiErrorModal = () => {
+        setSaveError(null);
+        setLocationError(null);
+        setDeviceApiError(null);
+    };
+    // FIX: Define handlers for devices
     const handleEditDeviceSettings = (device: DeviceInfo) => {
-        setSelectedDevice(device);
-        setIsSettingModalOpen(true);
+        console.log("Edit device:", device);
+        // open a modal or update state
     };
 
-    const handleSavesensorsettings = async (updatedsensor: ComponentInfo, deviceId: string) => {
-        try {
-            await api.put(`/admin/devices/${deviceId}/sensors/${updatedsensor.component_id}/range`, {
-                sensor_id: updatedsensor.component_id,
-                min_threshold: updatedsensor.min_threshold,
-                max_threshold: updatedsensor.max_threshold,
-            });
-
-            // Update local state
-            const updatedLocations = locationsWithDevicesAndsensors.map((location) => ({
-                ...location,
-                devices: location.devices.map((device) => {
-                    if (device.device_id !== deviceId) return device;
-
-                    const updatedsensors = device.components
-                        ?.filter(component => component.component_type === 'sensor')
-                        .map(component => ({
-                            ...component,
-                        }));
-                    return { ...device, components: updatedsensors };
-                }),
-            }));
-
-            setLocationsWithDevicesAndsensors(updatedLocations);
-        } catch (err) {
-            console.error("Failed to update sensor:", err);
-            // Optional: show toast or error message
-        }
+    const handleInfoDevice = (device: DeviceInfo) => {
+        setSelectedDevice(device);
+        setIsDeviceInfoModalOpen(true);
     };
 
     return (
-        <div className="p-5 bg-gray-100 rounded-lg shadow-md max-w-7xl mx-auto">
-            {loading ? (
-                <div className="flex items-center justify-center py-8">
-                    <Loader2 className="animate-spin h-8 w-8 text-gray-500 mr-3" />
-                    <p className="text-gray-500">Chargement des lieux, des appareils et des capteurs...</p>
-                </div>
-            ) : error ? (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-                    <strong className="font-bold">Erreur: </strong>
-                    <span className="block sm:inline">{error.message}</span>
-                </div>
-            ) : locationsWithDevicesAndsensors.length === 0 ? (
-                <div className="text-center py-10 text-gray-600">
-                    <p>Aucun lieu trouvé. Vous pouvez commencer par configurer un nouveau lieu.</p>
-                    <button
-                        onClick={() => console.log("Setup new location")}
-                        className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                    >
-                        Configurer un nouveau lieu
-                    </button>
-                </div>
-            ) : (
-                <LocationsSection
-                    locationsData={locationsWithDevicesAndsensors}
-                    onViewDetails={(name) => console.log(`View details for ${name}`)}
-                    onToggleNotifications={(name) => console.log(`Toggle notifications for ${name}`)}
-                    onViewChart={(name) => console.log(`View chart for ${name}`)}
-                    onSetupNewLocation={() => console.log("Setup new location")}
-                    onEditDeviceSettings={handleEditDeviceSettings}
-                />
-            )}
+        <div className="p-5 min-h-screen">
+            <ApiErrorModal
+                isOpen={!!(deviceApiError || locationError || saveError)}
+                error={deviceApiError || locationError || saveError}
+                onClose={handleCloseApiErrorModal}
+            />
 
+            {/* Sites Section */}
+            <div className="sites-section mb-10">
+                <div className="mb-6 text-center">
+                    <h1 className="text-xl font-bold text-gray-900 mb-2">Vos Sites</h1>
+                    <p className="text-gray-600">Sélectionnez un site pour gérer ses emplacements et ses appareils.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    {userSites.map((site) => (
+                        <button
+                            key={site.site_id}
+                            onClick={() => setSelectedSiteId(site.site_id)}
+                            className={`p-4 rounded-lg shadow-md transition-colors duration-300 ${
+                                selectedSiteId === site.site_id
+                                    ? "bg-green-500 hover:bg-green-700 text-white"
+                                    : "bg-gray-100 hover:bg-green-100 text-gray-900"
+                            }`}
+                        >
+                            <h2
+                                className={`text-lg font-semibold mb-1 ${
+                                    selectedSiteId === site.site_id ? "text-gray-800 " : "text-gray-900"
+                                }`}
+                            >
+                                {site.site_name}
+                            </h2>
+                            <p
+                                className={`text-sm ${
+                                    selectedSiteId === site.site_id ? "text-blue-100" : "text-gray-500"
+                                }`}
+                            >
+                                Cliquez pour voir les emplacements
+                            </p>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+
+            {/* Locations Section */}
+            <div className="locations-section mt-8">
+                {selectedSiteId ? (
+                    loadingLocations || loadingDeviceData || loadingDevicesAndSensors ? (
+                        <div className="flex flex-col items-center justify-center py-8">
+                            <Loader2 className="animate-spin h-8 w-8 text-gray-500 mb-3" />
+                            <p className="text-gray-500">Chargement des lieux, des appareils et des capteurs...</p>
+                        </div>
+                    ): (
+                        <div className="mb-6">
+                        <LocationsSection
+                            locationsData={locationWithDevices}
+                            onEditDeviceSettings={handleEditDeviceSettings}
+                            onViewDeviceDetails={handleInfoDevice}
+                        />
+                            <PaginationControls
+                                pagination={pagination}
+                                onGoToPage={goToPage}
+                                onGoToPreviousPage={() => goToPage(pagination.currentPage - 1)}
+                                onGoToNextPage={() => goToPage(pagination.currentPage + 1)}
+                            />
+
+                            <p className="text-gray-500 text-sm mt-2">
+                                Page {pagination.currentPage} sur {pagination.totalPages} - {pagination.totalItems}{" "}
+                                {pagination.totalItems === 1 ? "élément" : "éléments"}
+                            </p>
+                        </div>
+                    )
+                ) : (
+                    <div className="text-center py-10 text-gray-600 text-lg">
+                        <p>Veuillez sélectionner un site ci-dessus pour afficher ses emplacements.</p>
+                    </div>
+                )}
+
+
+            </div>
+
+            {/* Device Info Modal */}
             {selectedDevice && (
-                <DeviceSettingsModal
-                    isOpen={isSettingModalOpen}
+                <DeviceInfoModal
+                    isOpen={isDeviceInfoModalOpen}
                     device={selectedDevice}
                     onClose={() => {
-                        setIsSettingModalOpen(false);
+                        setIsDeviceInfoModalOpen(false);
                         setSelectedDevice(null);
                     }}
-                    onSave={handleSavesensorsettings}
                 />
             )}
         </div>

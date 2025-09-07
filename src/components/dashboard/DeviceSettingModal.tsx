@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {ComponentInfo, Device} from "../types/device.ts";
+import {DeviceInfo} from "../location/Props.tsx";
 
 interface DeviceSettingsModalProps {
     isOpen: boolean;
-    device: Device | null;
+    device: DeviceInfo | null;
     onClose: () => void;
     onSave: (updatedComponent: ComponentInfo, deviceId: string) => void;
 }

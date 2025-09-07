@@ -1,27 +1,34 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Trash2, Globe, Pencil, Check, X, Search } from 'lucide-react';
 import { UserWithSites } from "../../types/user.ts";
-import { Site } from "../../types/location.ts";
+import {useSites} from "../../hooks/useSite.tsx";
+import {useUsersApi} from "../../hooks/useUsers.tsx";
 
 interface UserTableProps {
     users: UserWithSites[];
-    allSites: Site[];
-    onSave: (user: UserWithSites, updatedData: { name: string; siteIds: string[]; }) => Promise<void>;
 }
 
 export const UserTable: React.FC<UserTableProps> = ({
                                                         users,
-                                                        allSites,
-                                                        onSave,
                                                     }) => {
-    // State to track which user is being edited
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
     const [editedName, setEditedName] = useState('');
-    // This state is correctly typed as string[]
     const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([]);
-
-    // New state for the site search term
     const [siteSearchTerm, setSiteSearchTerm] = useState('');
+
+    const {
+        sites: sites,
+        fetchSites,
+    } = useSites();
+
+    const{
+        updateUser,
+    } = useUsersApi();
+
+
+    useEffect(() => {
+        fetchSites(1, 100, siteSearchTerm);
+    }, [fetchSites, siteSearchTerm]);
 
     const handleEditClick = (user: UserWithSites) => {
         setEditingUserId(user.id);
@@ -31,10 +38,6 @@ export const UserTable: React.FC<UserTableProps> = ({
         setSiteSearchTerm(''); // Reset the search term when a new user is selected
     };
 
-    const handleSaveClick = (user: UserWithSites) => {
-        onSave(user, { name: editedName, siteIds: selectedSiteIds });
-        setEditingUserId(null);
-    };
 
     const handleCancelClick = () => {
         setEditingUserId(null);
@@ -49,8 +52,22 @@ export const UserTable: React.FC<UserTableProps> = ({
         );
     };
 
+    const handleSaveClick = async (user: UserWithSites, updatedData: { name: string, siteIds: string[] }) => {
+        const siteIdsToAssign = updatedData.siteIds
+            .map(id => sites.find(site => site.site_id === Number(id)))
+            .filter(Boolean)
+            .map(site => site!.site_id);
+
+        await updateUser(user.id, { name: updatedData.name, sites: siteIdsToAssign });
+
+        setEditingUserId(null);
+
+        //Update the local user data to reflect changes immediately
+        user.name = updatedData.name;
+        user.sites = sites.filter(site => siteIdsToAssign.includes(site.site_id));
+    };
     // Filter the sites based on the siteSearchTerm
-    const filteredSites = allSites.filter(site =>
+    const filteredSites = sites.filter(site =>
         site.site_name.toLowerCase().includes(siteSearchTerm.toLowerCase())
     );
 
@@ -139,7 +156,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                     <>
                                         {/* Save Button */}
                                         <button
-                                            onClick={() => handleSaveClick(user)}
+                                            onClick={() => handleSaveClick(user, { name: editedName, siteIds: selectedSiteIds })}
                                             className="p-2 rounded-full text-green-500 hover:bg-green-100 transition-colors"
                                             title="Enregistrer"
                                         >

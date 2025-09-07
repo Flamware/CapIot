@@ -1,5 +1,11 @@
 import { Pagination } from "./pagination.ts";
-import { Location } from "./location.ts";
+import {Location} from "./location.ts";
+
+export interface Site {
+    site_id: number;
+    site_name: string;
+    site_address?: string;
+}
 
 export enum ComponentType {
     Sensor = "sensor",
@@ -18,16 +24,18 @@ export interface Component {
     component_id: string;
     component_type: ComponentType;
     component_subtype?: ComponentSubtype;
+    max_running_hours?: number;
     min_threshold?: number;
     max_threshold?: number;
+    current_running_hours?: number;
 }
 
 export type Device = {
-    device_id: string
-    last_seen: string
-    status: string
-    created_at: string
-    components: Component[]
+    device_id: string;
+    last_seen: string;
+    status: string;
+    created_at: string;
+    components: Component[];
 }
 
 export type DeviceComponent = {
@@ -46,14 +54,14 @@ export type ComponentLog = {
 }
 
 export type DeviceWithComponentsAndLocation = Device & {
-    location: Location
+    location: Location;
 }
 
 export type DevicesLocationsResponse = Pagination & {
-    data: DeviceWithComponentsAndLocation[]
+    data: DeviceWithComponentsAndLocation[];
 }
 
-export type ComponentInfo ={
+export type ComponentInfo = {
     component_id: string;
     component_type: ComponentType;
     component_subtype?: ComponentSubtype;
@@ -61,8 +69,9 @@ export type ComponentInfo ={
     min_threshold?: number;
     max_threshold?: number;
     max_running_hours?: number;
+    current_running_hours?: number;
 }
 
 export type DevicesWithLocation = Device & {
-    location: Location
+    location: Location; // now includes site inside location
 }

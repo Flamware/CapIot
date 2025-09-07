@@ -4,10 +4,7 @@ import {ComponentInfo} from "../types/device.ts";
 
 export interface LocationsSectionProps {
     locationsData: LocationData[];
-    onViewDetails: (locationName: string) => void;
-    onToggleNotifications: (locationName: string) => void;
-    onViewChart: (locationName: string) => void;
-    onSetupNewLocation: () => void;
+    onViewDeviceDetails: (device: DeviceInfo) => void;
     onEditDeviceSettings: (device: DeviceInfo) => void;
 }
 

@@ -17,6 +17,21 @@ export function useUsersApi() {
         totalPages: 1,
     });
 
+    const fetchMe = useCallback(async (): Promise<User | null> => {
+        setLoading(true);
+        setApiError(null);
+        try {
+            const response = await api.get<User>(`/users/me`);
+            return response.data;
+        } catch (error: any) {
+            setApiError(error);
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    }
+    , [api]);
+
     const fetchUsers = useCallback(async (page: number, limit: number, query?: string) => {
         setLoading(true);
         setApiError(null);
@@ -112,5 +127,6 @@ export function useUsersApi() {
         deleteUser,
         setApiError,
         fetchUserSites,
+        fetchMe
     };
 }
