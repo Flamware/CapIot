@@ -3,6 +3,7 @@ import { Pagination } from "./pagination.ts"; // Assuming you have a Pagination 
 
 export type User = {
     id: string;
+    email: string;
     name: string;
     roles: string[];
 };

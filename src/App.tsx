@@ -13,6 +13,7 @@ import LocationManagement from "./pages/admin/LocationManagement.tsx";
 import {UserManagement} from "./pages/admin/UserManagement.tsx";
 import {useAuth} from "./components/hooks/useAuth.tsx";
 import NoRolePage from "./pages/norole.tsx";
+import Notifications from "./pages/Notifications.tsx";
 
 const App: React.FC = () => {
     // Get user and authentication state from the context
@@ -43,6 +44,7 @@ const App: React.FC = () => {
                                 <Route path="/dashboard" element={<Dashboard />} />
                                 <Route path="/profile" element={<Profile />} />
                                 <Route path="/history" element={<History />} />
+                                <Route path="/notifications" element={<Notifications />} />
                             </Route>
 
                             {/* Specific protected routes for admin users */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp } from "lucide-react";
+import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp, Bell } from 'lucide-react';
 import {NavLink, useLocation} from "react-router-dom";
 
 // Define the shape of a menu item for clarity
@@ -32,6 +32,7 @@ export function SideBar({ role = [] }: SideBarProps) {
         { id: "history", label: "History", icon: Users, path: "/history" },
         { id: "profile", label: "Profile", icon: Cpu, path: "/profile" },
         { id: "about", label: "About", icon: MapPin, path: "/about" },
+        { id: "notifications", label: "Notifications", icon: Bell, path: "/notifications" },
     ];
 
     // Menu items specific to 'admin' role

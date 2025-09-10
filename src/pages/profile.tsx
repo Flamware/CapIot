@@ -1,62 +1,21 @@
 import React, { useState, useEffect } from "react";
-import {createApi} from "../axios/api"; // Adjust the path to your createApi function
-
-interface User {
-    id: number;
-    email: string;
-    name: string | null;
-    role: string | null;
-    created_at: string;
-}
+import { useAuth } from "../components/hooks/useAuth.tsx";
+import { useUsersApi } from "../components/hooks/useUsers.tsx";
 
 const Profile: React.FC = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const [newName, setNewName] = useState<string>("");
+    const { user, updateUser } = useAuth();
+    const { updateMe: updateMe } = useUsersApi();
+    const [newName, setNewName] = useState<string>(user?.name || "");
     const [isEditingName, setIsEditingName] = useState<boolean>(false);
     const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
     const [errorMessage, setErrorMessage] = useState<string>("");
-    const api = createApi(); // Initialize your Axios instance
 
-    const fetchUserProfile = async () => {
-        try {
-            const response = await api.get<User>("/users/me"); // Adjust your API endpoint to fetch the current user's profile
-            setUser(response.data);
-            setNewName(response.data.name || "");
-        } catch (error: any) {
-            console.error("Error fetching profile:", error);
-            setErrorMessage("Failed to load user profile.");
-        }
-    };
-
-    const updateUserName = async () => {
-        if (!user || newName === user.name) {
-            setIsEditingName(false);
-            return;
-        }
-
-        setSaveStatus("saving");
-        setErrorMessage("");
-
-        try {
-            const response = await api.patch<User>("/users/me", { name: newName }); // Adjust your API endpoint to update the current user's name
-            setUser(response.data);
-            setIsEditingName(false);
-            setSaveStatus("success");
-            setTimeout(() => setSaveStatus("idle"), 2000);
-        } catch (error: any) {
-            console.error("Error updating name:", error);
-            setErrorMessage(error?.response?.data?.message || error.message);
-            setSaveStatus("error");
-        }
-    };
-
+    // Sync newName with context user when user changes
     useEffect(() => {
-        fetchUserProfile();
-    }, []);
+        setNewName(user?.name || "");
+    }, [user]);
 
-    const handleEditNameClick = () => {
-        setIsEditingName(true);
-    };
+    const handleEditNameClick = () => setIsEditingName(true);
 
     const handleCancelEditName = () => {
         setNewName(user?.name || "");
@@ -71,87 +30,103 @@ const Profile: React.FC = () => {
         setSaveStatus("idle");
     };
 
-    if (errorMessage) {
-        return <div className="bg-red-200 p-4 text-red-800">{errorMessage}</div>;
-    }
+    const handleSaveName = async () => {
+        if (!user || !updateUser) return;
 
-    if (!user) {
-        return <div className="bg-gray-100 p-4">Loading profile...</div>;
-    }
+        try {
+            setSaveStatus("saving");
+
+            // Call API, will throw if it fails
+            const updatedUser = await updateMe({ name: newName });
+
+            // Update local context only if API call succeeded
+            updateUser({ name: updatedUser.name });
+
+            setSaveStatus("success");
+            setIsEditingName(false);
+        } catch (err: any) {
+            setErrorMessage(err.response?.data?.message || "Failed to update name.");
+            setSaveStatus("error");
+        }
+    };
+
+
+
+    if (!user) return <div className="bg-gray-100 p-4">Loading profile...</div>;
 
     return (
         <div className="bg-gray-100 p-6 rounded shadow-md">
             <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
 
+            {/* Email */}
             <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Email:</label>
                 <input
                     type="email"
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-200 cursor-not-allowed"
                     value={user.email}
                     readOnly
+                    className="w-full px-3 py-2 rounded bg-gray-200 cursor-not-allowed"
                 />
-                <p className="text-gray-500 text-xs italic">Email cannot be changed yet.</p>
             </div>
 
+            {/* Name */}
             <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Name:</label>
                 {isEditingName ? (
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                         <input
                             type="text"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             value={newName}
                             onChange={handleNameInputChange}
+                            className="w-full px-3 py-2 border rounded"
                         />
                         <button
-                            onClick={updateUserName}
-                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                            onClick={handleSaveName}
                             disabled={saveStatus === "saving"}
+                            className="bg-green-500 text-white px-3 py-1 rounded"
                         >
                             {saveStatus === "saving" ? "Saving..." : "Save"}
                         </button>
                         <button
                             onClick={handleCancelEditName}
-                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
-                            disabled={saveStatus === "saving"}
+                            className="bg-gray-300 px-3 py-1 rounded"
                         >
                             Cancel
                         </button>
                     </div>
                 ) : (
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                         <input
                             type="text"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-200 cursor-not-allowed"
                             value={user.name || "Not set"}
                             readOnly
+                            className="w-full px-3 py-2 rounded bg-gray-200 cursor-not-allowed"
                         />
                         <button
                             onClick={handleEditNameClick}
-                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                            className="bg-green-500 text-white px-3 py-1 rounded"
                         >
                             Edit
                         </button>
                     </div>
                 )}
-                {saveStatus === "success" && <p className="text-green-500 text-sm mt-1">Name updated successfully!</p>}
-                {saveStatus === "error" && <p className="text-red-500 text-sm mt-1">{errorMessage}</p>}
+                {saveStatus === "success" && (
+                    <p className="text-green-500 text-sm mt-1">Name updated!</p>
+                )}
+                {saveStatus === "error" && (
+                    <p className="text-red-500 text-sm mt-1">{errorMessage}</p>
+                )}
             </div>
 
+            {/* Role */}
             <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Role:</label>
                 <input
                     type="text"
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-200 cursor-not-allowed"
-                    value={user.role || "N/A"}
+                    value={Array.isArray(user.roles) ? user.roles.join(", ") : user.roles || "N/A"}
                     readOnly
+                    className="w-full px-3 py-2 rounded bg-gray-200 cursor-not-allowed"
                 />
-                <p className="text-gray-500 text-xs italic">Role cannot be changed.</p>
-            </div>
-
-            <div className="text-gray-600 text-sm">
-                Created At: {new Date(user.created_at).toLocaleDateString()}
             </div>
         </div>
     );

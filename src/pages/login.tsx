@@ -16,7 +16,6 @@ interface DecodedJwt {
     userId: string;
     email: string;
     username?: string;
-    name?: string;
     role?: string[]; // Assuming roles is an array in the token
     iat?: number;
     exp?: number;
@@ -66,19 +65,19 @@ const Login: React.FC = () => {
             const response = await api.post(API_ENDPOINTS.LOGIN, { email: loginEmail, password: loginPassword });
             const customJwt = response.data.jwtToken;
             localStorage.setItem('customJwt', customJwt);
-
             // Decode JWT using the library
             const decodedToken = jwtDecode<DecodedJwt>(customJwt);
-
+            console.log('Decoded JWT:', decodedToken);
             // Ensure roles is always an array
             const roles = decodedToken?.role || [];
             // Determine username with fallbacks
-            const username = decodedToken.username || decodedToken.name || decodedToken.email.split('@')[0];
+            const username = decodedToken.username;
 
             // Construct the userData object using the imported User type
             const userData: User = {
                 id: decodedToken.userId,
-                name: username,
+                email: decodedToken.email,
+                name: username || decodedToken.email, // Fallback to email if username is not available
                 roles: roles,
             };
 

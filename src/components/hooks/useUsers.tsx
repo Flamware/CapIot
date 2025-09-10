@@ -70,7 +70,7 @@ export function useUsersApi() {
         }
     }, [api, fetchUsers, pagination.pageSize]);
 
-    const updateUser = useCallback(async (id: string, userData: { name?: string; sites?: number[] }) => {
+    const updateUser = useCallback(async (id: string, userData: { name?: string; sites?: number[] }) =>  {
         setLoading(true);
         setApiError(null);
         try {
@@ -84,6 +84,23 @@ export function useUsersApi() {
             setLoading(false);
         }
     }, [api, fetchUsers, pagination.currentPage, pagination.pageSize]);
+
+    const updateMe = useCallback(async (userData: { name?: string; }) =>  {
+        setLoading(true);
+        setApiError(null);
+        try {
+            const response = await api.put(`/users/me`, userData);
+            return response.data; // Return updated user from API
+        } catch (error: any) {
+            setApiError(error);
+            // Throw the error so calling component can handle it
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    }, [api]);
+
+
 
     const deleteUser = useCallback(async (id: string) => {
         setLoading(true);
@@ -115,6 +132,7 @@ export function useUsersApi() {
         }
     }, [api]);
 
+
     return {
         usersLocations,
         loading,
@@ -124,6 +142,7 @@ export function useUsersApi() {
         fetchUsers,
         addUser,
         updateUser,
+        updateMe,
         deleteUser,
         setApiError,
         fetchUserSites,

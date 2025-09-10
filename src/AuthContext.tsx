@@ -6,6 +6,7 @@ export interface AuthContextType {
     user: User | null;
     login: (userData: User) => void; // Changed parameter type to User
     logout: () => void;
+    updateUser?: (updatedData: Partial<User>) => void; // Optional updateUser function
     isAuthenticated: boolean;
 }
 
@@ -31,6 +32,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
     };
 
+    const updateUser = (updatedData: Partial<User>) => {
+        if (!user) return;
+        const updatedUser = { ...user, ...updatedData };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('User updated:', updatedUser);
+    }
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
@@ -43,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated }}>
             {children}
         </AuthContext.Provider>
     );
