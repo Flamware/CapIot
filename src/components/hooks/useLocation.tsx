@@ -77,7 +77,7 @@ export const useLocations = () => {
         setLoadingLocations(true);
         setError(null);
         try {
-            const response = await api.get<LocationsResponse>(`/admin/locations`);
+            const response = await api.get<LocationsResponse>(`/locations`);
             setLocations(response.data.data || []);
         } catch (err) {
             setError("Erreur lors du chargement des emplacements.");
@@ -92,7 +92,7 @@ export const useLocations = () => {
         setLoadingLocations(true);
         setError(null);
         try {
-            await api.post<Location>(`/admin/location/create`, locationData);
+            await api.post<Location>(`/location/create`, locationData);
             // After adding, we refetch to ensure the list is up-to-date.
             await fetchLocationsBySiteIds(siteIds);
             return null;

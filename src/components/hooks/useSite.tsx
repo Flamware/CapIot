@@ -24,7 +24,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            const sitesResponse = await api.get<SitesResponse>(`/admin/sites`, {
+            const sitesResponse = await api.get<SitesResponse>(`/sites`, {
                 params: {
                     page: page,
                     limit: limit,
@@ -42,7 +42,7 @@ export const useSites = () => {
 
             const siteIds = fetchedSites.map(site => site.site_id);
             if (siteIds.length > 0) {
-                const locationsResponse = await api.get<LocationsResponse>(`/admin/locations`, {
+                const locationsResponse = await api.get<LocationsResponse>(`/locations`, {
                     params: { site_ids: siteIds.join(',') }
                 });
                 setLocations(locationsResponse.data.data || []);
@@ -66,7 +66,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            const sitesResponse = await api.get<SitesResponse>(`/admin/sites`, {
+            const sitesResponse = await api.get<SitesResponse>(`/sites`, {
                 params: {
                     page: page,
                     limit: limit,
@@ -111,7 +111,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            await api.post(`/admin/site/create`, siteData);
+            await api.post(`/site/create`, siteData);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
             return null;
         } catch (err) {
@@ -128,7 +128,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            await api.delete(`/admin/site/${id}`);
+            await api.delete(`/site/${id}`);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
             return null;
         } catch (err) {
@@ -154,7 +154,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            await api.post<Location>(`/admin/location/create`, locationData);
+            await api.post<Location>(`/location/create`, locationData);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
             return null;
         } catch (err) {
@@ -171,7 +171,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            await api.delete(`/admin/location/${id}`);
+            await api.delete(`/location/${id}`);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
             return null;
         } catch (err) {
@@ -188,7 +188,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            await api.put<Location>(`/admin/location/${id}`, locationData);
+            await api.put<Location>(`/location/${id}`, locationData);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
             return null;
         } catch (err) {

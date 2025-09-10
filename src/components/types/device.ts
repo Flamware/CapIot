@@ -65,7 +65,6 @@ export type ComponentInfo = {
     component_id: string;
     component_type: ComponentType;
     component_subtype?: ComponentSubtype;
-    component_status?: string;
     min_threshold?: number;
     max_threshold?: number;
     max_running_hours?: number;

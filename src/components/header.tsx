@@ -111,7 +111,7 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     }
 
     return (
-        <div className="bg-background shadow-sm py-4 px-6 flex items-center justify-end md:justify-between sticky top-0 z-50 border-b border-gray-200">
+        <div className="bg-green-100 shadow-sm py-4 px-6 flex items-center justify-end md:justify-between sticky top-0 z-50 border-b border-gray-200">
             {headerContent}
             <div className="flex items-center space-x-4">
                 {isAuthenticated && (

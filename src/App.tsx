@@ -19,13 +19,13 @@ const App: React.FC = () => {
     const { isAuthenticated, user } = useAuth();
 
     // The isAdmin state can now be derived directly from the user object
-    const isAdmin = user?.roles?.includes('admin') || false;
+    const role = user?.roles
 
     return (
         <BrowserRouter>
             <div className="flex h-screen bg-gray-50">
                 {isAuthenticated && (
-                    <SideBar isAdmin={isAdmin} />
+                    <SideBar role={role}/>
                 )}
                 <div className="flex-1 overflow-y-auto">
                     {isAuthenticated && (
@@ -46,7 +46,7 @@ const App: React.FC = () => {
                             </Route>
 
                             {/* Specific protected routes for admin users */}
-                            <Route element={<ProtectedRoute requiredRoles={['admin']} />}>
+                            <Route element={<ProtectedRoute requiredRoles={['admin','operateur']} />}>
                                 <Route path="/admin/users" element={<UserManagement />} />
                                 <Route path="/admin/devices" element={<DeviceManagement />} />
                                 <Route path="/admin/locations" element={<LocationManagement />} />

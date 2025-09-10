@@ -14,7 +14,7 @@ export const useDeviceApi = () => {
         setLoadingDevices(true);
         setApiError(null);
         try {
-            const response = await api.get<DevicesLocationsResponse>(`/admin/devices-components-locations`, {
+            const response = await api.get<DevicesLocationsResponse>(`/devices-components-locations`, {
                 params: { page, limit, search: query },
             });
             const devices = response.data.data || [];
@@ -69,7 +69,7 @@ export const useDeviceApi = () => {
     const assignLocationToDevice = useCallback(async (deviceId: string, locationId: number) => {
         setApiError(null);
         try {
-            await api.post(`/admin/assign-device`, {
+            await api.post(`/assign-device`, {
                 device_id: deviceId,
                 location_id: locationId,
             });
@@ -84,17 +84,31 @@ export const useDeviceApi = () => {
     const editDeviceStatus = useCallback(async (deviceId: string, status: string) => {
         setApiError(null);
         try {
-            await api.patch(`/admin/devices/${deviceId}`, { status });
+            await api.patch(`/devices/${deviceId}`, { status });
         } catch (error) {
             setApiError(error);
             throw error;
         }
     }, [api]);
 
+    const changeDeviceRange= useCallback(async (deviceId: string, componentInfo: ComponentInfo) => {
+        setApiError(null);
+        try {
+            await api.patch(`/devices/${deviceId}/components/${componentInfo.component_id}/range`,
+                { min_threshold: componentInfo.min_threshold, max_threshold: componentInfo.max_threshold });
+            // if successful, update the device's component range in state
+
+        } catch (error) {
+            setApiError(error);
+            throw error;
+        }
+    }
+    , [api]);
+
     const deleteDevice = useCallback(async (deviceId: string) => {
         setApiError(null);
         try {
-            await api.delete(`/admin/device/${deviceId}`);
+            await api.delete(`/device/${deviceId}`);
         } catch (error) {
             setApiError(error);
             throw error;
@@ -109,6 +123,7 @@ export const useDeviceApi = () => {
         fetchDeviceFromLocation,
         fetchComponentsFromDevice,
         assignLocationToDevice,
+        changeDeviceRange,
         editDeviceStatus,
         deleteDevice,
     };

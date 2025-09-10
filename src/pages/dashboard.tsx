@@ -8,6 +8,8 @@ import { useSites } from "../components/hooks/useSite.tsx";
 import {useEffect, useState} from "react";
 import { DeviceInfo, LocationData } from "../components/location/Props.tsx";
 import {PaginationControls} from "../components/admin/PaginationControls.tsx";
+import DeviceSettingsModal from "../components/dashboard/DeviceSettingModal.tsx";
+import {ComponentInfo} from "../components/types/device.ts";
 
 const Dashboard = () => {
     // Hooks and state
@@ -29,6 +31,7 @@ const Dashboard = () => {
         fetchDeviceFromLocation,
         fetchComponentsFromDevice,
         setApiError: setDeviceApiError,
+        changeDeviceRange
     } = useDeviceApi();
 
     const { sites: userSites, fetchMySites } = useSites();
@@ -36,6 +39,7 @@ const Dashboard = () => {
     const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
     const [loadingDevicesAndSensors, setLoadingDevicesAndSensors] = useState(false);
     const [isDeviceInfoModalOpen, setIsDeviceInfoModalOpen] = useState(false);
+    const [isDeviceSettingsModalOpen, setIsDeviceSettingsModalOpen] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [locationWithDevices, setLocationWithDevices] = useState<LocationData[]>([]);
 
@@ -98,10 +102,41 @@ const Dashboard = () => {
         setLocationError(null);
         setDeviceApiError(null);
     };
-    // FIX: Define handlers for devices
+
+    const handleSaveDeviceSettings = async (updatedComponent: ComponentInfo, deviceId: string, ) => {
+        try {
+            // Assume we have an API function to save component settings
+            await changeDeviceRange(deviceId, updatedComponent);
+            // update local state to reflect changes
+            if (selectedDevice) {
+                setLocationWithDevices((prevLocations) =>
+                    prevLocations.map((loc) => ({
+                        ...loc,
+                        devices: loc.devices.map((dev) =>
+                            dev.device_id === deviceId
+                                ? {
+                                    ...dev,
+                                    components: dev.components?.map((comp) =>
+                                        comp.component_id === updatedComponent.component_id
+                                            ? { ...comp, ...updatedComponent }
+                                            : comp
+                                    ),
+                                }
+                                : dev
+                        ),
+                    }))
+                );
+            }
+            setIsDeviceSettingsModalOpen(false);
+            setSelectedDevice(null);
+        } catch (error) {
+            setSaveError("Failed to save device settings. Please try again.");
+        }
+    }
+        // FIX: Define handlers for devices
     const handleEditDeviceSettings = (device: DeviceInfo) => {
-        console.log("Edit device:", device);
-        // open a modal or update state
+        setSelectedDevice(device);
+        setIsDeviceSettingsModalOpen(true);
     };
 
     const handleInfoDevice = (device: DeviceInfo) => {
@@ -203,6 +238,21 @@ const Dashboard = () => {
                     }}
                 />
             )}
+            {
+                selectedDevice && (
+                    <DeviceSettingsModal
+                        isOpen={isDeviceSettingsModalOpen}
+                        device={selectedDevice}
+                        onSave={
+                            (updatedComponent) => handleSaveDeviceSettings(updatedComponent, selectedDevice.device_id)
+                        }
+                        onClose={() => {
+                            setIsDeviceSettingsModalOpen(false);
+                            setSelectedDevice(null);
+                        }}
+                        />
+                )
+            }
         </div>
     );
 };

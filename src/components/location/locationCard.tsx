@@ -146,9 +146,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                                 {component.component_subtype ?? component.component_type}
                                                             </span>
                                                         </div>
-                                                        <span className={`ml-3 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize flex-shrink-0 ${getStatusColorClass(component.component_status)}`}>
-                                                            {component.component_status ?? 'N/A'}
-                                                        </span>
+
                                                     </div>
                                                 ))}
                                             </div>
@@ -168,9 +166,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                                 {component.component_subtype ?? component.component_type}
                                                             </span>
                                                         </div>
-                                                        <span className={`ml-3 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize flex-shrink-0 ${getStatusColorClass(component.component_status)}`}>
-                                                            {component.component_status ?? 'N/A'}
-                                                        </span>
+
                                                     </div>
                                                 ))}
                                             </div>
