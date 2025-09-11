@@ -14,7 +14,7 @@ interface DeviceManagementProps {
 }
 
 export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: DeviceManagementProps) {
-    const { apiError, fetchDevices, assignLocationToDevice, editDeviceStatus, deleteDevice } = useDeviceApi();
+    const { apiError, fetchDevices, assignLocationToDevice, deleteDevice,commandDevice } = useDeviceApi();
     const [devicesLocations, setDevicesLocations] = useState<DevicesWithLocation[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [isApiErrorModalOpen, setIsApiErrorModalOpen] = useState(false);
@@ -63,23 +63,18 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
     const goToPreviousPage = () => goToPage(pagination.currentPage - 1);
     const goToNextPage = () => goToPage(pagination.currentPage + 1);
 
-    const handleDeviceUpdate = async (deviceId: string, newStatus: string, newLocation: Location | null) => {
+    const handleDeviceUpdate = async (deviceId: string, newLocation: Location | null) => {
         try {
             if (newLocation) {
                 await assignLocationToDevice(deviceId, newLocation.location_id);
                 if (onLocationAssigned) onLocationAssigned(deviceId, newLocation.location_id);
             }
-            if (newStatus) {
-                await editDeviceStatus(deviceId, newStatus);
-            }
-
             // Update local state after successful update
             setDevicesLocations(prevDevices =>
                 prevDevices.map(device =>
                     device.device_id === deviceId
                         ? {
                             ...device,
-                            status: newStatus || device.status,
                             location: newLocation || device.location
                         }
                         : device
@@ -104,6 +99,19 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
             }
         }
     };
+
+    const handleCommandDevice = async (device: DevicesWithLocation, command: string) => {
+        // Corrected logic to update state based on command
+        const newStatus = command === 'Start' ? 'Running' : 'Online';
+        commandDevice(device.device_id, command);
+        setDevicesLocations(prevDevices =>
+            prevDevices.map(d =>
+                d.device_id === device.device_id
+                    ? { ...d, status: newStatus }
+                    : d
+            )
+        );
+    }
 
     const handleCloseErrorModal = () => {
         setIsApiErrorModalOpen(false);
@@ -130,13 +138,12 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
                     <span>Loading...</span>
                 </div>
             ) : (
-                <div className="rounded-md border">
                     <DeviceTable
                         devices={filteredDevicesLocations}
                         onUpdate={handleDeviceUpdate}
                         onDelete={handleDeleteDevice}
+                        onDeviceCommandSend={handleCommandDevice}
                     />
-                </div>
             )}
 
             <PaginationControls

@@ -5,7 +5,8 @@ import LocationCard from "./locationCard";
 const LocationsSection: React.FC<LocationsSectionProps> = ({
                                                                locationsData,
                                                                onEditDeviceSettings,
-                                                               onViewDeviceDetails // Make sure this prop is received here
+                                                               onViewDeviceDetails,
+    onDeviceCommandSend
                                                            }) => {
 
     if (!locationsData || locationsData.length === 0) {
@@ -29,6 +30,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
                             // Pass down both handler props to LocationCard
                             onEditDeviceSettings={(device) => onEditDeviceSettings(device)}
                             onViewDeviceDetails={(device) => onViewDeviceDetails(device)}
+                            onDeviceCommandSend={onDeviceCommandSend}
                         />
                     ))}
                 </div>

@@ -111,7 +111,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            await api.post(`/site/create`, siteData);
+            await api.post(`/admin/site/create`, siteData);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
             return null;
         } catch (err) {
@@ -128,7 +128,7 @@ export const useSites = () => {
         setLoading(true);
         setError(null);
         try {
-            await api.delete(`/site/${id}`);
+            await api.delete(`/admin/site/${id}`);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
             return null;
         } catch (err) {

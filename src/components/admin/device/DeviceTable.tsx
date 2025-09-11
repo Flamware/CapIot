@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { DevicesWithLocation } from "../../types/device";
 import EditDeviceModal from "./EditDeviceModal";
 import {Location} from "../../types/location.ts";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
 
 const getStatusColorClass = (deviceStatus?: string) => {
     switch (deviceStatus?.toLowerCase()) {
@@ -31,16 +33,17 @@ const TrashIcon = () => <span>🗑️</span>;
 
 interface DeviceTableProps {
     devices: DevicesWithLocation[];
-    onUpdate: (deviceId: string, status: string, location: Location | null) => void;
+    onUpdate: (deviceId: string, location: Location | null) => void;
     onDelete: (deviceId: string) => void;
+    onDeviceCommandSend?: (device: DevicesWithLocation, command: string) => void;
 }
 
-export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onDelete }) => {
+export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onDelete, onDeviceCommandSend }) => {
     const [editingDevice, setEditingDevice] = useState<DevicesWithLocation | null>(null);
 
-    const handleSave = (status: string, newLoc : Location | null) => {
+    const handleSave = (newLoc : Location | null) => {
         if (editingDevice) {
-            onUpdate(editingDevice.device_id, status, newLoc);
+            onUpdate(editingDevice.device_id, newLoc);
             setEditingDevice(null);
         }
     };
@@ -74,15 +77,35 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onD
                             className="grid grid-cols-7 items-center px-6 py-4 hover:bg-gray-50 transition-colors duration-200"
                         >
                             <span className="font-medium text-gray-900 truncate">{device.device_id}</span>
-                            <span
-                                className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColorClass(
-                                    device.status
-                                )}`}
-                            >
-                                {device.status}
-                            </span>
+                            <div className="flex items-center space-x-2">
+                                <span
+                                    className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColorClass(
+                                        device.status
+                                    )}`}
+                                >
+                                    {device.status}
+                                </span>
+                                {onDeviceCommandSend && (device.status === 'Online' || device.status === 'Running' || device.status === 'Idle') && (
+                                    <button
+                                        onClick={() => onDeviceCommandSend(device, device.status === 'Online' ? 'Start' : 'Stop')}
+                                        className={`
+                                            w-6 h-6 flex items-center justify-center rounded-full transition-all duration-300
+                                            shadow-md hover:shadow-lg transform hover:scale-105
+                                            focus:outline-none focus:ring-2 focus:ring-opacity-50
+                                            ${device.status === 'Online'
+                                            ? 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-300'
+                                            : 'bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-300'
+                                        }
+                                        `}
+                                        title={device.status === 'Online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                        aria-label={device.status === 'Online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                    >
+                                        <FontAwesomeIcon icon={device.status === 'Online' ? faPlay : faPause} className="text-xs" />
+                                    </button>
+                                )}
+                            </div>
                             <span className="text-gray-600 text-sm">
-                                {new Date(device.last_seen).toLocaleString()}
+                                {device.last_seen ? new Date(device.last_seen).toLocaleString() : "Jamais"}
                             </span>
                             <span className="text-gray-600 text-sm">
                                 {device.location?.site_name ?? "Non assigné"}
@@ -131,4 +154,3 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onD
         </div>
     );
 };
-

@@ -166,7 +166,7 @@ const NotificationsPage = () => {
     };
 
     return (
-        <div className="p-6 md:p-10 bg-gray-50 min-h-screen">
+        <div className=" max-w-7xl mx-auto font-sans">
             <ApiErrorModal
                 isOpen={!!modalError}
                 error={modalError}

@@ -30,12 +30,13 @@ export interface Component {
     current_running_hours?: number;
 }
 
-export type Device = {
+export interface Device {
     device_id: string;
-    last_seen: string;
-    status: string;
-    created_at: string;
     components: Component[];
+    last_seen?: string;       // <-- make optional
+    created_at?: string;      // <-- make optional
+    status?: string;          // <-- make optional
+    location?: Location;      // <-- make optional
 }
 
 export type DeviceComponent = {

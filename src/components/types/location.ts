@@ -18,6 +18,18 @@ export interface Site {
     site_address: string;
 }
 
+export type SiteWithLocations = Site & {
+    locations: Location[];
+}
+
+export type SiteWithLocationAndDevices = Site & {
+    locations: LocationWithDevices[];
+}
+
+export type LocationWithDevices = Location & {
+    devices: Device[];
+}
+
 export type LocationWithUsersDevices = Device & User & Location
 
 export type LocationsWithUsersDevicesResponse = Pagination & {

@@ -81,16 +81,6 @@ export const useDeviceApi = () => {
         // if successful, update the device's location in state
     }, [api]);
 
-    const editDeviceStatus = useCallback(async (deviceId: string, status: string) => {
-        setApiError(null);
-        try {
-            await api.patch(`/devices/${deviceId}`, { status });
-        } catch (error) {
-            setApiError(error);
-            throw error;
-        }
-    }, [api]);
-
     const changeDeviceRange= useCallback(async (deviceId: string, componentInfo: ComponentInfo) => {
         setApiError(null);
         try {
@@ -115,6 +105,32 @@ export const useDeviceApi = () => {
         }
     }, [api]);
 
+    const commandDevice = useCallback(async (deviceId: string, command: string) => {
+        setApiError(null);
+        try {
+            await api.post(`/devices/${deviceId}/command`, { command });
+        } catch (error) {
+            setApiError(error);
+            throw error;
+        }
+    }, [api]);
+
+    const fetchDeviceSensors = useCallback(async (deviceId: string) => {
+        setLoadingDevices(true);
+        setApiError(null);
+        try {
+            const response = await api.get<ComponentInfo[]>(`/devices/${deviceId}/sensors`);
+            return response.data;
+        } catch (error) {
+            setApiError(error);
+            setLoadingDevices(false);
+            throw error;
+        } finally {
+            setLoadingDevices(false);
+        }
+    }
+    , [api]);
+
     return {
         loadingDevices,
         apiError,
@@ -122,9 +138,10 @@ export const useDeviceApi = () => {
         fetchDevices,
         fetchDeviceFromLocation,
         fetchComponentsFromDevice,
+        fetchDeviceSensors,
         assignLocationToDevice,
         changeDeviceRange,
-        editDeviceStatus,
+        commandDevice,
         deleteDevice,
     };
 };

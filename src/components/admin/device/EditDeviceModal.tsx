@@ -7,17 +7,15 @@ import {Location} from "../../types/location.ts";
 interface EditDeviceModalProps {
     device: DevicesWithLocation;
     onClose: () => void;
-    onSave: (status: string, newLoc : Location | null) => void;
+    onSave: ( newLoc : Location | null) => void;
 }
 
-const getStatusOptions = ["online", "offline", "warning", "idle","Running"];
 
 export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
                                                                     device,
                                                                     onClose,
                                                                     onSave,
                                                                 }) => {
-    const [status, setStatus] = useState(device.status || "");
     const [selectedSiteId, setSelectedSiteId] = useState<number | null>(device.location?.location_id || null);
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(device.location?.location_id || null);
 
@@ -62,7 +60,7 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
             }
             : null;
 
-        onSave(status, newLoc);
+        onSave(newLoc);
     };
 
 
@@ -70,22 +68,6 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-lg">
                 <h2 className="text-lg font-semibold mb-4">Modifier l'appareil {device.device_id}</h2>
-
-                {/* Status */}
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                    <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                    >
-                        {getStatusOptions.map((s) => (
-                            <option key={s} value={s}>
-                                {s.charAt(0).toUpperCase() + s.slice(1)}
-                            </option>
-                        ))}
-                    </select>
-                </div>
 
                 {/* Site */}
                 <div className="mb-4">

@@ -9,7 +9,9 @@ import {
     faTint,
     faFan,
     faLightbulb,
-    faInfoCircle, // Import the new info icon
+    faInfoCircle,
+    faPlay,
+    faPause,
 } from '@fortawesome/free-solid-svg-icons';
 import { DeviceInfo } from './Props.tsx';
 import { ComponentSubtype } from '../types/device.ts';
@@ -21,7 +23,8 @@ interface LocationCardProps {
     lastUpdated: string;
     status: string;
     onEditDeviceSettings: (device: DeviceInfo) => void;
-    onViewDeviceDetails: (device: DeviceInfo) => void; // New prop to handle the info modal
+    onViewDeviceDetails: (device: DeviceInfo) => void;
+    onDeviceCommandSend?: (device: DeviceInfo, command: string) => void;
 }
 
 // Helper function to get the appropriate FontAwesome icon based on the component subtype.
@@ -46,7 +49,8 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                        lastUpdated,
                                                        status,
                                                        onEditDeviceSettings,
-                                                       onViewDeviceDetails, // Make sure to destructure the new prop
+                                                       onViewDeviceDetails,
+                                                       onDeviceCommandSend,
                                                    }) => {
     // Helper function to determine the badge color based on the device or location status.
     const getStatusColorClass = (deviceStatus: string | undefined) => {
@@ -112,11 +116,33 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                 {device.status ?? 'N/A'}
                                             </span>
                                         </div>
+                                        {/* Updated Action Buttons Section */}
                                         <div className="flex space-x-2 flex-shrink-0">
+                                            {onDeviceCommandSend && (device.status === 'Online' || device.status === 'Running' || device.status === 'Idle') && (
+                                                <button
+                                                    onClick={() => onDeviceCommandSend(device, device.status === 'Online' ? 'Start' : 'Stop')}
+                                                    className={`
+                                                        w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300
+                                                        shadow-md hover:shadow-lg transform hover:scale-105
+                                                        focus:outline-none focus:ring-4 focus:ring-opacity-50
+                                                        ${device.status === 'Online'
+                                                        ? 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-300'
+                                                        : 'bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-300'
+                                                    }
+                                                    `}
+                                                    title={device.status === 'Online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                                    aria-label={device.status === 'Online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                                >
+                                                    <FontAwesomeIcon icon={device.status === 'Online' ? faPlay : faPause} className="text-sm" />
+                                                </button>
+                                            )}
                                             {/* Info button for component details */}
                                             <button
                                                 onClick={() => onViewDeviceDetails(device)}
-                                                className="text-blue-500 hover:text-blue-700 transition-colors duration-200 p-1 rounded-full hover:bg-blue-100"
+                                                className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300
+                                                text-blue-500 bg-gray-100 border border-gray-200 hover:bg-gray-200
+                                                shadow-md hover:shadow-lg transform hover:scale-105
+                                                focus:outline-none focus:ring-2 focus:ring-blue-300"
                                                 title="Voir les détails de l'appareil"
                                                 aria-label="Voir les détails de l'appareil"
                                             >
@@ -124,7 +150,10 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                             </button>
                                             <button
                                                 onClick={() => onEditDeviceSettings(device)}
-                                                className="text-green-500 hover:text-green-700 transition-colors duration-200 p-1 rounded-full hover:bg-green-100"
+                                                className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300
+                                                text-green-500 bg-gray-100 border border-gray-200 hover:bg-gray-200
+                                                shadow-md hover:shadow-lg transform hover:scale-105
+                                                focus:outline-none focus:ring-2 focus:ring-green-300"
                                                 title="Modifier les paramètres de l'appareil"
                                                 aria-label="Modifier les paramètres de l'appareil"
                                             >

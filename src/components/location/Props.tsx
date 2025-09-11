@@ -6,6 +6,7 @@ export interface LocationsSectionProps {
     locationsData: LocationData[];
     onViewDeviceDetails: (device: DeviceInfo) => void;
     onEditDeviceSettings: (device: DeviceInfo) => void;
+    onDeviceCommandSend?: (device: DeviceInfo, command: string) => void;
 }
 
 

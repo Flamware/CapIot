@@ -100,7 +100,7 @@ const LocationManagement: React.FC = () => {
     }, {} as {[key: number]: Location[]});
 
     return (
-        <div className="p-6 max-w-7xl mx-auto font-sans">
+        <div className=" max-w-7xl mx-auto font-sans">
             <LocationListHeader
                 searchTerm={searchTerm}
                 onSearch={handleSearch}
