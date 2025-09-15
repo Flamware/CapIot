@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
-import {ComponentInfo, Device} from "../types/device.ts";
 import {DeviceInfo} from "../location/Props.tsx";
+import {ComponentInfo} from "../types/device.ts";
 
 interface DeviceSettingsModalProps {
     isOpen: boolean;
     device: DeviceInfo | null;
     onClose: () => void;
     onSave: (updatedComponent: ComponentInfo, deviceId: string) => void;
+    onReset: (componentInfo: ComponentInfo) => void;
 }
 
-const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({ isOpen, device, onClose, onSave }) => {
-    const [editedDevice, setEditedDevice] = useState<Device | null>(device);
+const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({ isOpen, device, onClose, onSave, onReset }) => {
+    const [editedDevice, setEditedDevice] = useState<DeviceInfo | null>(device);
 
     useEffect(() => {
         if (isOpen && device) {
@@ -20,9 +21,9 @@ const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({ isOpen, devic
         }
     }, [isOpen, device]);
 
-    const handleSensorChange = (
+    const handleComponentChange = (
         index: number,
-        field: "min_threshold" | "max_threshold",
+        field: "min_threshold" | "max_threshold" | "max_running_hours",
         value: string
     ) => {
         if (!editedDevice || !editedDevice.components) return;
@@ -37,18 +38,26 @@ const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({ isOpen, devic
         setEditedDevice({ ...editedDevice, components: updatedComponents });
     };
 
-    const handleSaveSensor = (index: number) => {
+    const handleSaveComponent = (index: number) => {
         if (!editedDevice || !editedDevice.components) return;
-        const sensor = editedDevice.components[index];
-        onSave(sensor, editedDevice.device_id);
+        const componentToSave = editedDevice.components[index];
+        // The componentToSave object already contains the updated `max_running_hours`
+        // due to the state being updated in `handleComponentChange`.
+        onSave(componentToSave, editedDevice.device_id);
+    };
+
+    const handleResetComponent = (index: number) => {
+        if (!editedDevice || !editedDevice.components) return;
+        const componentToReset = editedDevice.components[index];
+        onReset(componentToReset);
     };
 
     if (!isOpen || !editedDevice) return null;
 
-    const sensors =
-        editedDevice.components
-            ?.map((component, index) => ({ component, index }))
-            .filter(({ component }) => component.component_type === 'sensor') || [];
+    // The code below was changed. Previously, it was filtering out components
+    // that were not of type 'sensor' or 'actuator'. This has been removed
+    // to show all components.
+    const components = editedDevice.components?.map((component, index) => ({ component, index })) || [];
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -73,51 +82,89 @@ const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({ isOpen, devic
                     </div>
                 </div>
 
-                {sensors.length > 0 ? (
+                {components.length > 0 ? (
                     <div className="flex-grow overflow-y-auto pr-2 -mr-2 space-y-5">
-                        {sensors.map(({ component: sensor, index }) => (
+                        {components.map(({ component, index }) => (
                             <div
-                                key={sensor.component_id}
+                                key={component.component_id}
                                 className="p-5 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md"
                             >
                                 <h3 className="font-bold text-xl text-gray-800 mb-3 flex items-center">
                                     <span className="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">
-                                        {sensor.component_subtype}
+                                        {component.component_subtype}
                                     </span>
-                                    {sensor.component_id}
+                                    {component.component_id}
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div>
-                                        <label htmlFor={`min-${sensor.component_id}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                            Min Threshold
+                                        <label htmlFor={`current-running-${component.component_id}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                            Current Running Hours
                                         </label>
                                         <input
-                                            id={`min-${sensor.component_id}`}
-                                            type="number"
-                                            className="w-full border border-gray-300 rounded-md p-2.5 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                                            value={sensor.min_threshold ?? ""}
-                                            onChange={(e) => handleSensorChange(index, "min_threshold", e.target.value)}
-                                            placeholder="e.g., 0"
+                                            id={`current-running-${component.component_id}`}
+                                            type="text"
+                                            className="w-full border border-gray-300 rounded-md p-2.5 text-gray-900 bg-gray-100 cursor-not-allowed"
+                                            value={component.current_running_hours ?? "N/A"}
+                                            readOnly
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor={`max-${sensor.component_id}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                            Max Threshold
+                                        <label htmlFor={`max-running-${component.component_id}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                            Max Running Hours
                                         </label>
                                         <input
-                                            id={`max-${sensor.component_id}`}
+                                            id={`max-running-${component.component_id}`}
                                             type="number"
                                             className="w-full border border-gray-300 rounded-md p-2.5 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                                            value={sensor.max_threshold ?? ""}
-                                            onChange={(e) => handleSensorChange(index, "max_threshold", e.target.value)}
-                                            placeholder="e.g., 100"
+                                            value={component.max_running_hours ?? ""}
+                                            onChange={(e) => handleComponentChange(index, "max_running_hours", e.target.value)}
+                                            placeholder="e.g., 20000"
                                         />
                                     </div>
+                                    {component.component_type === 'sensor' && (
+                                        <>
+                                            <div>
+                                                <label htmlFor={`min-${component.component_id}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Min Threshold
+                                                </label>
+                                                <input
+                                                    id={`min-${component.component_id}`}
+                                                    type="number"
+                                                    className="w-full border border-gray-300 rounded-md p-2.5 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                                                    value={component.min_threshold ?? ""}
+                                                    onChange={(e) => handleComponentChange(index, "min_threshold", e.target.value)}
+                                                    placeholder="e.g., 0"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor={`max-${component.component_id}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Max Threshold
+                                                </label>
+                                                <input
+                                                    id={`max-${component.component_id}`}
+                                                    type="number"
+                                                    className="w-full border border-gray-300 rounded-md p-2.5 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                                                    value={component.max_threshold ?? ""}
+                                                    onChange={(e) => handleComponentChange(index, "max_threshold", e.target.value)}
+                                                    placeholder="e.g., 100"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
-                                <div className="text-right">
+                                <div className="text-right space-x-2">
+                                    {/* The reset button is now conditionally rendered */}
+                                    {component.current_running_hours > 0 && (
+                                        <button
+                                            onClick={() => handleResetComponent(index)}
+                                            className="px-5 py-2.5 text-sm font-medium rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300"
+                                        >
+                                            Reset
+                                        </button>
+                                    )}
                                     <button
-                                        onClick={() => handleSaveSensor(index)}
+                                        onClick={() => handleSaveComponent(index)}
                                         className="px-5 py-2.5 text-sm font-medium rounded-md text-white bg-green-500 hover:bg-green-700"
                                     >
                                         Save
@@ -128,7 +175,7 @@ const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({ isOpen, devic
                     </div>
                 ) : (
                     <div className="flex-grow flex items-center justify-center p-8 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-gray-600 text-lg font-medium">No sensors available for this device.</p>
+                        <p className="text-gray-600 text-lg font-medium">No components with settings available for this device.</p>
                     </div>
                 )}
 

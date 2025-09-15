@@ -2,17 +2,11 @@
 import {Location} from "../types/location.ts";
 import {ComponentInfo} from "../types/device.ts";
 
-export interface LocationsSectionProps {
-    locationsData: LocationData[];
-    onViewDeviceDetails: (device: DeviceInfo) => void;
-    onEditDeviceSettings: (device: DeviceInfo) => void;
-    onDeviceCommandSend?: (device: DeviceInfo, command: string) => void;
-}
 
 
 export interface DeviceInfo {
     device_id: string;
-    last_seen?: string;
+    last_seen: Date;
     location?: Location; // Location might be fetched separately or included
     status?: string;
     created_at?: string;

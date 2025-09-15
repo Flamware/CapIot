@@ -1,12 +1,19 @@
 import React from 'react';
-import { LocationsSectionProps } from "./Props";
+import {DeviceInfo, LocationData} from "./Props";
 import LocationCard from "./locationCard";
+
+export interface LocationsSectionProps {
+    locationsData: LocationData[];
+    onViewDeviceDetails: (device: DeviceInfo) => void;
+    onEditDeviceSettings: (device: DeviceInfo) => void;
+    onDeviceCommandSend?: (device: DeviceInfo, command: string) => void;
+}
 
 const LocationsSection: React.FC<LocationsSectionProps> = ({
                                                                locationsData,
                                                                onEditDeviceSettings,
                                                                onViewDeviceDetails,
-    onDeviceCommandSend
+    onDeviceCommandSend,
                                                            }) => {
 
     if (!locationsData || locationsData.length === 0) {

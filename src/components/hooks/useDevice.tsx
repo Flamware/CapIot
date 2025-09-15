@@ -35,36 +35,36 @@ export const useDeviceApi = () => {
     }, [api]);
 
     const fetchDeviceFromLocation = useCallback(async (locationId: number): Promise<DeviceInfo[]> => {
-        setLoadingDevices(true);
-        setApiError(null);
-        try {
-            const response = await api.get<DeviceInfo[]>(`/location/${locationId}/devices`);
-            return response.data || [];
-        } catch (error) {
-            setApiError(error);
-            setLoadingDevices(false);
-            throw error;
-        } finally {
-            setLoadingDevices(false);
+            setLoadingDevices(true);
+            setApiError(null);
+            try {
+                const response = await api.get<DeviceInfo[]>(`/location/${locationId}/devices`);
+                return response.data || [];
+            } catch (error) {
+                setApiError(error);
+                setLoadingDevices(false);
+                throw error;
+            } finally {
+                setLoadingDevices(false);
+            }
         }
-    }
-    , [api]);
+        , [api]);
 
     const fetchComponentsFromDevice = useCallback(async (deviceId: string): Promise<ComponentInfo[]> => {
-        setLoadingDevices(true);
-        setApiError(null);
-        try {
-            const response = await api.get<ComponentInfo[]>(`/devices/${deviceId}/components`);
-            return response.data;
-        } catch (error) {
-            setApiError(error);
-            setLoadingDevices(false);
-            throw error;
-        } finally {
-            setLoadingDevices(false);
+            setLoadingDevices(true);
+            setApiError(null);
+            try {
+                const response = await api.get<ComponentInfo[]>(`/devices/${deviceId}/components`);
+                return response.data;
+            } catch (error) {
+                setApiError(error);
+                setLoadingDevices(false);
+                throw error;
+            } finally {
+                setLoadingDevices(false);
+            }
         }
-    }
-    , [api]);
+        , [api]);
 
     const assignLocationToDevice = useCallback(async (deviceId: string, locationId: number) => {
         setApiError(null);
@@ -78,22 +78,26 @@ export const useDeviceApi = () => {
             setLoadingDevices(false);
             throw error;
         }
-        // if successful, update the device's location in state
     }, [api]);
 
-    const changeDeviceRange= useCallback(async (deviceId: string, componentInfo: ComponentInfo) => {
-        setApiError(null);
-        try {
-            await api.patch(`/devices/${deviceId}/components/${componentInfo.component_id}/range`,
-                { min_threshold: componentInfo.min_threshold, max_threshold: componentInfo.max_threshold });
-            // if successful, update the device's component range in state
+    // This function handles sending configuration updates, including min/max thresholds and running hours.
+    const changeDeviceConfig = useCallback(async (deviceId: string, componentInfo: ComponentInfo) => {
+            setApiError(null);
+            try {
+                await api.patch(`/devices/${deviceId}/components/${componentInfo.component_id}`,
+                    {
+                        min_threshold: componentInfo.min_threshold,
+                        max_threshold: componentInfo.max_threshold,
+                        max_running_hours: componentInfo.max_running_hours
+                    });
 
-        } catch (error) {
-            setApiError(error);
-            throw error;
+            } catch (error) {
+                setApiError(error);
+                throw error;
+            }
         }
-    }
-    , [api]);
+        , [api]);
+
 
     const deleteDevice = useCallback(async (deviceId: string) => {
         setApiError(null);
@@ -115,21 +119,31 @@ export const useDeviceApi = () => {
         }
     }, [api]);
 
-    const fetchDeviceSensors = useCallback(async (deviceId: string) => {
-        setLoadingDevices(true);
+    const commandComponent = useCallback(async (deviceId: string, componentId: string, command: string) => {
         setApiError(null);
         try {
-            const response = await api.get<ComponentInfo[]>(`/devices/${deviceId}/sensors`);
-            return response.data;
+            await api.post(`/devices/${deviceId}/components/${componentId}/command`, { command });
         } catch (error) {
             setApiError(error);
-            setLoadingDevices(false);
             throw error;
-        } finally {
-            setLoadingDevices(false);
         }
-    }
-    , [api]);
+    }, [api]);
+
+    const fetchDeviceSensors = useCallback(async (deviceId: string) => {
+            setLoadingDevices(true);
+            setApiError(null);
+            try {
+                const response = await api.get<ComponentInfo[]>(`/devices/${deviceId}/sensors`);
+                return response.data;
+            } catch (error) {
+                setApiError(error);
+                setLoadingDevices(false);
+                throw error;
+            } finally {
+                setLoadingDevices(false);
+            }
+        }
+        , [api]);
 
     return {
         loadingDevices,
@@ -140,8 +154,9 @@ export const useDeviceApi = () => {
         fetchComponentsFromDevice,
         fetchDeviceSensors,
         assignLocationToDevice,
-        changeDeviceRange,
+        changeDeviceConfig,
         commandDevice,
+        commandComponent,
         deleteDevice,
     };
 };

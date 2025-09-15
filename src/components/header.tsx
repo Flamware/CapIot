@@ -14,14 +14,15 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from './hooks/useAuth';
 import { useNotifications } from './hooks/useNotifications';
-import { useIsMobile } from './hooks/useIsMobile'; // ✅ import your custom hook
+import { useIsMobile } from './hooks/useIsMobile';
 
 interface HeaderProps {
-    onToggleSidebar?: () => void;
+    onToggleSidebar: () => void;
+    onCloseSidebar: () => void;
     isSidebarOpen?: boolean;
 }
 
-const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }) => {
+const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onCloseSidebar, isSidebarOpen }) => {
     const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -29,10 +30,7 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
     const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
     const accountMenuRef = useRef<HTMLDivElement>(null);
     const notificationMenuRef = useRef<HTMLDivElement>(null);
-
-    // ✅ use custom hook instead of resize listener
     const isMobile = useIsMobile(900);
-
     const {
         notifications,
         fetchNotifications,
@@ -44,12 +42,13 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
 
     const handleGoBack = () => {
         navigate(-1);
+        onCloseSidebar(); // ✅ Corrected: Close sidebar on back navigation
     };
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
         setIsAccountMenuOpen(false);
+        onCloseSidebar();
     };
 
     const handleBellClick = () => {
@@ -59,11 +58,6 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
         setIsNotificationsOpen(!isNotificationsOpen);
     };
 
-    useEffect(() => {
-        fetchNotifications(1, 1);
-    }, []);
-
-    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
@@ -76,6 +70,12 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchNotifications(1, 1);
+        }
+    }, [isAuthenticated]);
 
     const renderSidebarToggle = () =>
         onToggleSidebar && (
@@ -90,9 +90,9 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
 
     const renderHeaderTitle = (title: string, isAccent: boolean = false) => (
         <div className="flex items-center space-x-4">
-            {isMobile && onToggleSidebar && renderSidebarToggle()}
+            {isMobile && renderSidebarToggle()}
             <button
-                onClick={handleGoBack}
+                onClick={handleGoBack} // ✅ The `handleGoBack` function now calls `onCloseSidebar()`
                 className="text-gray-500 hover:text-green-500 focus:outline-none transition duration-200"
                 aria-label="Go back"
             >
@@ -129,8 +129,8 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                             <img className="block h-8 w-auto" src={logo} alt="CapIot Logo" />
                             <FontAwesomeIcon icon={faChartLine} className="text-green-500 text-2xl" />
                             <span className="text-xl font-semibold text-gray-800">
-                Cap<span className="text-green-500">Iot</span>
-              </span>
+                                Cap<span className="text-green-500">Iot</span>
+                            </span>
                         </div>
                     </div>
                 );
@@ -140,11 +140,9 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
     return (
         <div className="bg-white shadow-sm py-2 px-4 flex items-center justify-between sticky top-0 z-50 border-b border-gray-200">
             {renderHeaderContent()}
-
             <div className="flex items-center space-x-4">
                 {isAuthenticated ? (
                     <>
-                        {/* Notifications */}
                         <div className="relative" ref={notificationMenuRef}>
                             <button
                                 onClick={handleBellClick}
@@ -156,8 +154,8 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                                 <FontAwesomeIcon icon={faBell} className="h-5 w-5" />
                                 {totalNotifications > 0 && (
                                     <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    {totalNotifications}
-                  </span>
+                                        {totalNotifications}
+                                    </span>
                                 )}
                             </button>
                             {isNotificationsOpen && (
@@ -170,7 +168,10 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                                     <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                                         <h3 className="font-semibold text-gray-800">Notifications</h3>
                                         <button
-                                            onClick={() => navigate('/notifications')}
+                                            onClick={() => {
+                                                navigate('/notifications');
+                                                onCloseSidebar(); // ✅ Corrected: Close sidebar on navigation
+                                            }}
                                             className="text-sm text-green-600 hover:underline"
                                         >
                                             See All
@@ -217,16 +218,16 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                                                     role="menuitem"
                                                 >
                                                     <div className="flex justify-between items-center">
-                            <span
-                                className={`text-sm font-semibold ${
-                                    notif.log_read ? 'text-gray-600' : 'text-gray-900'
-                                }`}
-                            >
-                              {notif.component_name} de {notif.site_name}
-                            </span>
+                                                        <span
+                                                            className={`text-sm font-semibold ${
+                                                                notif.log_read ? 'text-gray-600' : 'text-gray-900'
+                                                            }`}
+                                                        >
+                                                            {notif.component_name} de {notif.site_name}
+                                                        </span>
                                                         <span className="text-xs text-gray-400">
-                              {new Date(notif.log_timestamp).toLocaleDateString()}
-                            </span>
+                                                            {new Date(notif.log_timestamp).toLocaleDateString()}
+                                                        </span>
                                                     </div>
                                                     <p
                                                         className={`mt-1 text-xs ${
@@ -262,8 +263,6 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                                 </div>
                             )}
                         </div>
-
-                        {/* Account */}
                         <div className="relative" ref={accountMenuRef}>
                             <button
                                 onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
@@ -274,8 +273,8 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                             >
                                 <FontAwesomeIcon icon={faUserCircle} className="h-7 w-7 text-green-500" />
                                 <span className="font-medium text-sm hidden sm:block">
-                  {user?.name || 'User'}
-                </span>
+                                    {user?.name || 'User'}
+                                </span>
                             </button>
                             {isAccountMenuOpen && (
                                 <div
@@ -286,6 +285,7 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                                         onClick={() => {
                                             navigate('/profile');
                                             setIsAccountMenuOpen(false);
+                                            onCloseSidebar(); // ✅ Corrected: Close sidebar on navigation
                                         }}
                                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                                         role="menuitem"
@@ -305,7 +305,10 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, isSidebarOpen }
                     </>
                 ) : (
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => {
+                            navigate('/login');
+                            onCloseSidebar(); // ✅ Corrected: Close sidebar on login navigation
+                        }}
                         className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition duration-200 text-sm font-medium"
                     >
                         Login

@@ -12,29 +12,33 @@ import LocationManagement from "./pages/admin/LocationManagement.tsx";
 import {UserManagement} from "./pages/admin/UserManagement.tsx";
 import {useAuth} from "./components/hooks/useAuth.tsx";
 import NoRolePage from "./pages/norole.tsx";
-import Notifications from "./pages/Notifications.tsx";
 import {AuthProvider} from "./AuthContext.tsx";
 import {useState} from "react";
+import Notifications from "./pages/notifications.tsx";
 
 const App = () => {
-    const { isAuthenticated, user } = useAuth();
-    const role = user?.roles;
+    const { isAuthenticated} = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
+    const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
+
+    const closeSidebar = () => setIsSidebarOpen(false);
+
 
     return (
         <BrowserRouter>
             <AuthProvider>
                 <div className="relative flex flex-col md:flex-row h-screen bg-gray-50 overflow-hidden">
                     {isAuthenticated && (
-                        <SideBar role={role} isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
+                        <SideBar  isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
                     )}
 
                     <div className="flex-1 overflow-y-auto">
-                        <ContentHeader isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
+                        <ContentHeader
+                            isSidebarOpen={isSidebarOpen}
+                            onToggleSidebar={toggleSidebar}
+                            onCloseSidebar={closeSidebar}   // 👈 new prop
+                        />
                         <main className="container mx-auto p-4">
                             <Routes>
                                 <Route path="/no-role" element={<NoRolePage />} />

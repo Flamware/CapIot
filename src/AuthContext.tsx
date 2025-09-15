@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('customJwt'); // Also remove the JWT
-        console.log('User logged out');
     };
 
     useEffect(() => {

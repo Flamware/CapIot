@@ -42,37 +42,35 @@ const getComponentIcon = (subtype?: ComponentSubtype) => {
             return faQuestionCircle;
     }
 };
+const getStatusColorClass = (deviceStatus: string | undefined) => {
+    switch (deviceStatus?.toLowerCase()) {
+        case 'running':
+        case 'online':
+        case 'ok':
+            return 'bg-green-100 text-green-800 border border-green-200';
+        case 'offline':
+        case 'fault':
+        case 'faulty':
+            return 'bg-red-100 text-red-800 border border-red-200';
+        case 'idle':
+            return 'bg-blue-100 text-blue-800 border border-blue-200';
+        case 'warning':
+            return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+        case 'alert':
+            return 'bg-orange-100 text-orange-800 border border-orange-200';
+        default:
+            return 'bg-gray-100 text-gray-700 border border-gray-200';
+    }
+};
 
 const LocationCard: React.FC<LocationCardProps> = ({
                                                        location_name,
                                                        devices,
                                                        lastUpdated,
-                                                       status,
                                                        onEditDeviceSettings,
                                                        onViewDeviceDetails,
                                                        onDeviceCommandSend,
                                                    }) => {
-    // Helper function to determine the badge color based on the device or location status.
-    const getStatusColorClass = (deviceStatus: string | undefined) => {
-        switch (deviceStatus?.toLowerCase()) {
-            case 'running':
-            case 'online':
-            case 'ok':
-                return 'bg-green-100 text-green-800 border border-green-200';
-            case 'offline':
-            case 'fault':
-            case 'faulty':
-                return 'bg-red-100 text-red-800 border border-red-200';
-            case 'idle':
-                return 'bg-blue-100 text-blue-800 border border-blue-200';
-            case 'warning':
-                return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
-            case 'alert':
-                return 'bg-orange-100 text-orange-800 border border-orange-200';
-            default:
-                return 'bg-gray-100 text-gray-700 border border-gray-200';
-        }
-    };
 
     return (
         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden">
@@ -82,11 +80,6 @@ const LocationCard: React.FC<LocationCardProps> = ({
                     <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xl mr-3 flex-shrink-0 text-green-700" />
                     <h3 className="font-extrabold text-2xl text-gray-800 truncate" title={location_name}>{location_name}</h3>
                 </div>
-                {status && (
-                    <span className={`ml-3 text-xs font-semibold px-3 py-1 rounded-full capitalize flex-shrink-0 ${getStatusColorClass(status)}`}>
-                        {status}
-                    </span>
-                )}
             </div>
 
             {/* Last Updated Info */}
@@ -118,22 +111,22 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                         </div>
                                         {/* Updated Action Buttons Section */}
                                         <div className="flex space-x-2 flex-shrink-0">
-                                            {onDeviceCommandSend && (device.status === 'Online' || device.status === 'Running' || device.status === 'Idle') && (
+                                            {onDeviceCommandSend && (device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'running' || device.status?.toLowerCase() === 'idle') && (
                                                 <button
-                                                    onClick={() => onDeviceCommandSend(device, device.status === 'Online' ? 'Start' : 'Stop')}
+                                                    onClick={() => onDeviceCommandSend(device, device.status?.toLowerCase() === 'online' ? 'Start' : 'Stop')}
                                                     className={`
                                                         w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300
                                                         shadow-md hover:shadow-lg transform hover:scale-105
                                                         focus:outline-none focus:ring-4 focus:ring-opacity-50
-                                                        ${device.status === 'Online'
+                                                        ${device.status?.toLowerCase() === 'online'
                                                         ? 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-300'
                                                         : 'bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-300'
                                                     }
                                                     `}
-                                                    title={device.status === 'Online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
-                                                    aria-label={device.status === 'Online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                                    title={device.status?.toLowerCase() === 'online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                                    aria-label={device.status?.toLowerCase() === 'online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
                                                 >
-                                                    <FontAwesomeIcon icon={device.status === 'Online' ? faPlay : faPause} className="text-sm" />
+                                                    <FontAwesomeIcon icon={device.status?.toLowerCase() === 'online' ? faPlay : faPause} className="text-sm" />
                                                 </button>
                                             )}
                                             {/* Info button for component details */}

@@ -8,8 +8,8 @@ import { useSites } from "../components/hooks/useSite.tsx";
 import {useEffect, useState} from "react";
 import { DeviceInfo, LocationData } from "../components/location/Props.tsx";
 import {PaginationControls} from "../components/admin/PaginationControls.tsx";
-import DeviceSettingsModal from "../components/dashboard/DeviceSettingModal.tsx";
 import {ComponentInfo} from "../components/types/device.ts";
+import DeviceSettingsModal from "../components/dashboard/DeviceSettingModal.tsx";
 
 const Dashboard = () => {
     // Hooks and state
@@ -31,8 +31,9 @@ const Dashboard = () => {
         fetchDeviceFromLocation,
         fetchComponentsFromDevice,
         setApiError: setDeviceApiError,
-        changeDeviceRange,
         commandDevice,
+        commandComponent,
+        changeDeviceConfig
     } = useDeviceApi();
 
     const { sites: userSites, fetchMySites } = useSites();
@@ -120,7 +121,7 @@ const Dashboard = () => {
     const handleSaveDeviceSettings = async (updatedComponent: ComponentInfo, deviceId: string, ) => {
         try {
             // Assume we have an API function to save component settings
-            await changeDeviceRange(deviceId, updatedComponent);
+            await changeDeviceConfig(deviceId,updatedComponent)
             // update local state to reflect changes
             if (selectedDevice) {
                 setLocationWithDevices((prevLocations) =>
@@ -141,8 +142,6 @@ const Dashboard = () => {
                     }))
                 );
             }
-            setIsDeviceSettingsModalOpen(false);
-            setSelectedDevice(null);
         } catch (error) {
             setSaveError("Failed to save device settings. Please try again.");
         }
@@ -157,21 +156,47 @@ const Dashboard = () => {
         setSelectedDevice(device);
         setIsDeviceInfoModalOpen(true);
     };
-    const handleDeviceCommand = (device: DeviceInfo, command: string) => {
-        // Corrected logic to update state based on command
-        const newStatus = command === 'Start' ? 'Running' : 'Online';
-        commandDevice(device.device_id, command);
-        setLocationWithDevices((prevLocations) =>
-            prevLocations.map((loc) => ({
-                ...loc,
-                devices: loc.devices.map((dev) =>
-                    dev.device_id === device.device_id
-                        ? { ...dev, status: newStatus }
-                        : dev
+    const handleDeviceCommand = async (device: DeviceInfo, command: string) => {
+        try {
+            await commandDevice(device.device_id, command);
+            setLocationWithDevices((prevLocations) =>
+                prevLocations.map((loc) => ({
+                    ...loc,
+                    devices: loc.devices.map((dev) =>
+                        dev.device_id === device.device_id
+                            ? { ...dev, status: command === 'Start' ? 'Running' : command === 'Stop' ? 'Online'
+                                : dev.status }
+                            : dev
+                    ),
+                }))
+            );
+        } catch (error) {
+            setSaveError("Failed to send command to device. Please try again.");
+        }
+    }
+
+
+    const handleCommandComponent = (device: DeviceInfo, command: string, componentInfo: ComponentInfo) => {
+        commandComponent(device.device_id, componentInfo.component_id, command);
+        if (command === 'reset' && selectedDevice) {
+            setSelectedDevice({
+                ...selectedDevice,
+                components: selectedDevice.components?.map((comp) =>
+                    comp.component_id === componentInfo.component_id
+                        ? { ...comp, current_running_hours: 0 }
+                        : comp
                 ),
-            }))
-        );
+            });
+        }
     };
+
+    const handleResetComponent = async (component: ComponentInfo) => {
+        try {
+            await handleCommandComponent(selectedDevice as DeviceInfo, 'reset', component);
+        } catch (error) {
+            setSaveError("Failed to reset component. Please try again.");
+        }
+    }
 
     return (
         <div className="p-8 bg-gray-50 min-h-screen font-sans antialiased">
@@ -274,6 +299,7 @@ const Dashboard = () => {
                         setIsDeviceInfoModalOpen(false);
                         setSelectedDevice(null);
                     }}
+                    onResetComponent={handleResetComponent}
                 />
             )}
             {
@@ -288,6 +314,7 @@ const Dashboard = () => {
                             setIsDeviceSettingsModalOpen(false);
                             setSelectedDevice(null);
                         }}
+                        onReset={handleResetComponent}
                     />
                 )
             }

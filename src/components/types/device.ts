@@ -69,7 +69,7 @@ export type ComponentInfo = {
     min_threshold?: number;
     max_threshold?: number;
     max_running_hours?: number;
-    current_running_hours?: number;
+    current_running_hours: number;
 }
 
 export type DevicesWithLocation = Device & {

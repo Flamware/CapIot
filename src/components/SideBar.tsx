@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp, Bell, X } from 'lucide-react';
 import { NavLink } from "react-router-dom";
+import {useAuth} from "./hooks/useAuth.tsx";
 
 // Define the shape of a menu item for clarity
 interface MenuItem {
@@ -12,14 +13,13 @@ interface MenuItem {
 
 // Define the props for the SideBar component, ensuring role is an array of strings
 interface SideBarProps {
-    role?: string[];
     onToggleSidebar: () => void;
     isSidebarOpen: boolean;
 }
 
-export function SideBar({ role = [], onToggleSidebar, isSidebarOpen }: SideBarProps) {
+export function SideBar({  onToggleSidebar, isSidebarOpen }: SideBarProps) {
     const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
-
+    const {user}=useAuth()
     // Inline SVG for the chart icon
     const ChartLineIcon = () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor" className="text-green-300 text-2xl">
@@ -51,9 +51,9 @@ export function SideBar({ role = [], onToggleSidebar, isSidebarOpen }: SideBarPr
     ];
 
     // Helper variables for conditional rendering based on user role
-    const isAdmin = role.includes('admin');
-    const isGestionnaire = role.includes('gestionnaire');
-    const isOperateur = role.includes('operateur');
+    const isAdmin = user?.roles?.includes("admin")
+    const isGestionnaire = user?.roles?.includes('gestionnaire');
+    const isOperateur = user?.roles?.includes('operateur');
 
     const toggleAdminDropdown = () => {
         setIsAdminDropdownOpen(!isAdminDropdownOpen);
