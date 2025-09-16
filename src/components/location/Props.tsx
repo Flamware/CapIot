@@ -1,6 +1,7 @@
 // src/components/location/Props.tsx
 import {Location} from "../types/location.ts";
-import {ComponentInfo} from "../types/device.ts";
+import {Component} from "../types/device.ts";
+import {RecurringSchedule} from "../types/schedule.tsx";
 
 
 
@@ -10,7 +11,8 @@ export interface DeviceInfo {
     location?: Location; // Location might be fetched separately or included
     status?: string;
     created_at?: string;
-    components?: ComponentInfo[]; // sensors might be fetched separately or included
+    components?: Component[]; // sensors might be fetched separately or included
+    schedule?: RecurringSchedule[]; // schedules might be fetched separately or included
 }
 
 export interface LocationData {

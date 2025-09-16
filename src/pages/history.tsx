@@ -10,7 +10,7 @@ import {
 import {useSites} from "../components/hooks/useSite.tsx";
 import {useDeviceApi} from "../components/hooks/useDevice.tsx";
 import {useLocations} from "../components/hooks/useLocation.tsx";
-import {useIsMobile} from "../components/hooks/useIsMobile.ts";
+import {useIsMobile} from "../components/hooks/useIsMobile.tsx";
 import {Device} from "../components/types/device.ts";
 
 const History: React.FC = () => {
@@ -82,9 +82,9 @@ const History: React.FC = () => {
                     baseLocations.map(async (location) => {
                         const devices = await fetchDeviceFromLocation(location.location_id);
                         const devicesWithSensors: Device[] = await Promise.all(
-                            (devices || []).map(async (device) => {
+                            devices.map(async (device) => {
                                 const sensors = await fetchDeviceSensors(device.device_id);
-                                return { ...device, components: sensors || [] };
+                                return { ...device, components: sensors || []};
                             })
                         );
                         return { ...location, devices: devicesWithSensors };

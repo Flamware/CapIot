@@ -7,6 +7,7 @@ export interface LocationsSectionProps {
     onViewDeviceDetails: (device: DeviceInfo) => void;
     onEditDeviceSettings: (device: DeviceInfo) => void;
     onDeviceCommandSend?: (device: DeviceInfo, command: string) => void;
+    onDeviceScheduleSettings?: (device: DeviceInfo) => void;
 }
 
 const LocationsSection: React.FC<LocationsSectionProps> = ({
@@ -14,6 +15,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
                                                                onEditDeviceSettings,
                                                                onViewDeviceDetails,
     onDeviceCommandSend,
+    onDeviceScheduleSettings,
                                                            }) => {
 
     if (!locationsData || locationsData.length === 0) {
@@ -38,6 +40,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
                             onEditDeviceSettings={(device) => onEditDeviceSettings(device)}
                             onViewDeviceDetails={(device) => onViewDeviceDetails(device)}
                             onDeviceCommandSend={onDeviceCommandSend}
+                            onDeviceScheduleSettings={onDeviceScheduleSettings}
                         />
                     ))}
                 </div>

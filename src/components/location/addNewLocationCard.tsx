@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
-import {createApi} from '../../axios/api'; // Corrected import
+import {useApi} from "../hooks/useApi.tsx";
 
 interface AddNewLocationCardProps {
     onLocationCreated: () => void; // Callback to notify parent of successful creation
@@ -12,7 +12,7 @@ const AddNewLocationCard: React.FC<AddNewLocationCardProps> = ({ onLocationCreat
     const [newLocationName, setNewLocationName] = useState('');
     const [newLocationDescription, setNewLocationDescription] = useState('');
     const [creationError, setCreationError] = useState<string | null>(null);
-    const api = createApi();
+    const api = useApi();
 
     const openModal = () => {
         setIsModalOpen(true);

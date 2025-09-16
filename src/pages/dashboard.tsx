@@ -8,8 +8,11 @@ import { useSites } from "../components/hooks/useSite.tsx";
 import {useEffect, useState} from "react";
 import { DeviceInfo, LocationData } from "../components/location/Props.tsx";
 import {PaginationControls} from "../components/admin/PaginationControls.tsx";
-import {ComponentInfo} from "../components/types/device.ts";
+import {Component} from "../components/types/device.ts";
 import DeviceSettingsModal from "../components/dashboard/DeviceSettingModal.tsx";
+import DeviceScheduleSettingModal from "../components/dashboard/DeviceScheduleSettingModal.tsx";
+import { RecurringSchedule } from "../components/types/schedule.tsx";
+import {useScheduleApi} from "../components/hooks/useSchedule.tsx";
 
 const Dashboard = () => {
     // Hooks and state
@@ -36,13 +39,24 @@ const Dashboard = () => {
         changeDeviceConfig
     } = useDeviceApi();
 
-    const { sites: userSites, fetchMySites } = useSites();
+    const {
+        loading: loadingSchedule,
+        error: scheduleError,
+        createRecurringSchedule,
+        setError: setScheduleError
+    } = useScheduleApi();
+
+    const {sites: userSites, fetchMySites} = useSites();
 
     const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
     const [loadingDevicesAndSensors, setLoadingDevicesAndSensors] = useState(false);
     const [isDeviceInfoModalOpen, setIsDeviceInfoModalOpen] = useState(false);
     const [isDeviceSettingsModalOpen, setIsDeviceSettingsModalOpen] = useState(false);
-    const [saveError, setSaveError] = useState<string | null>(null);
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
+    // Consolidate all errors into a single state
+    const [apiError, setApiError] = useState<any>(null);
+
     const [locationWithDevices, setLocationWithDevices] = useState<LocationData[]>([]);
     pagination.pageSize = 3; // Set page size to 3 for locations
 
@@ -65,7 +79,6 @@ const Dashboard = () => {
             if (selectedSiteId) {
                 await fetchLocationsBySiteIds([selectedSiteId]);
             } else {
-                // Clear locations if no site is selected, or initial state
                 setLocationWithDevices([]);
             }
         };
@@ -95,14 +108,14 @@ const Dashboard = () => {
                     for (const device of devices) {
                         try {
                             const sensors = await fetchComponentsFromDevice(device.device_id);
-                            devicesWithSensors.push({ ...device, components: sensors });
+                            devicesWithSensors.push({...device, components: sensors});
                         } catch {
-                            devicesWithSensors.push({ ...device, components: [] });
+                            devicesWithSensors.push({...device, components: []});
                         }
                     }
-                    locationsWithDeviceData.push({ ...location, devices: devicesWithSensors });
+                    locationsWithDeviceData.push({...location, devices: devicesWithSensors});
                 } catch {
-                    locationsWithDeviceData.push({ ...location, devices: [] });
+                    locationsWithDeviceData.push({...location, devices: []});
                 }
             }
             setLocationWithDevices(locationsWithDeviceData);
@@ -110,19 +123,20 @@ const Dashboard = () => {
         };
 
         fetchDevicesAndSensors();
-    }, [baseLocations]);
+    }, [baseLocations, fetchDeviceFromLocation, fetchComponentsFromDevice]);
 
     const handleCloseApiErrorModal = () => {
-        setSaveError(null);
+        console.log("Closing error modal and clearing errors");
+        setApiError(null);
         setLocationError(null);
         setDeviceApiError(null);
+        setLocationError(null);
+        setScheduleError(null);
     };
 
-    const handleSaveDeviceSettings = async (updatedComponent: ComponentInfo, deviceId: string, ) => {
+    const handleSaveDeviceSettings = async (updatedComponent: Component, deviceId: string,) => {
         try {
-            // Assume we have an API function to save component settings
-            await changeDeviceConfig(deviceId,updatedComponent)
-            // update local state to reflect changes
+            await changeDeviceConfig(deviceId, updatedComponent)
             if (selectedDevice) {
                 setLocationWithDevices((prevLocations) =>
                     prevLocations.map((loc) => ({
@@ -133,7 +147,7 @@ const Dashboard = () => {
                                     ...dev,
                                     components: dev.components?.map((comp) =>
                                         comp.component_id === updatedComponent.component_id
-                                            ? { ...comp, ...updatedComponent }
+                                            ? {...comp, ...updatedComponent}
                                             : comp
                                     ),
                                 }
@@ -143,14 +157,17 @@ const Dashboard = () => {
                 );
             }
         } catch (error) {
-            setSaveError("Failed to save device settings. Please try again.");
         }
     }
-    // FIX: Define handlers for devices
     const handleEditDeviceSettings = (device: DeviceInfo) => {
         setSelectedDevice(device);
         setIsDeviceSettingsModalOpen(true);
     };
+
+    const handleScheduleSettings = (device: DeviceInfo) => {
+        setSelectedDevice(device);
+        setIsScheduleModalOpen(true);
+    }
 
     const handleInfoDevice = (device: DeviceInfo) => {
         setSelectedDevice(device);
@@ -164,45 +181,58 @@ const Dashboard = () => {
                     ...loc,
                     devices: loc.devices.map((dev) =>
                         dev.device_id === device.device_id
-                            ? { ...dev, status: command === 'Start' ? 'Running' : command === 'Stop' ? 'Online'
-                                : dev.status }
+                            ? {
+                                ...dev, status: command === 'Start' ? 'Running' : command === 'Stop' ? 'Online'
+                                    : dev.status
+                            }
                             : dev
                     ),
                 }))
             );
         } catch (error) {
-            setSaveError("Failed to send command to device. Please try again.");
+            setApiError("Failed to send command to device. Please try again.");
         }
     }
 
 
-    const handleCommandComponent = (device: DeviceInfo, command: string, componentInfo: ComponentInfo) => {
+    const handleCommandComponent = (device: DeviceInfo, command: string, componentInfo: Component) => {
         commandComponent(device.device_id, componentInfo.component_id, command);
         if (command === 'reset' && selectedDevice) {
             setSelectedDevice({
                 ...selectedDevice,
                 components: selectedDevice.components?.map((comp) =>
                     comp.component_id === componentInfo.component_id
-                        ? { ...comp, current_running_hours: 0 }
+                        ? {...comp, current_running_hours: 0}
                         : comp
                 ),
             });
         }
     };
 
-    const handleResetComponent = async (component: ComponentInfo) => {
+    const handleResetComponent = async (component: Component) => {
         try {
             await handleCommandComponent(selectedDevice as DeviceInfo, 'reset', component);
         } catch (error) {
-            setSaveError("Failed to reset component. Please try again.");
         }
     }
+
+    const handleSaveSchedule = async (schedules: Partial<RecurringSchedule>[], deviceId: string) => {
+        try {
+            for (const schedule of schedules) {
+                await createRecurringSchedule(deviceId, schedule);
+            }
+        } catch (error) {
+        }
+    };
+
+    // Combine all potential errors into one variable for the modal
+    const currentError = apiError || locationError || deviceApiError || scheduleError;
 
     return (
         <div className="p-8 bg-gray-50 min-h-screen font-sans antialiased">
             <ApiErrorModal
-                isOpen={!!(deviceApiError || locationError || saveError)}
-                error={deviceApiError || locationError || saveError}
+                isOpen={!!currentError}
+                error={currentError}
                 onClose={handleCloseApiErrorModal}
             />
 
@@ -210,7 +240,8 @@ const Dashboard = () => {
             <div className="sites-section mb-12">
                 <div className="mb-8 text-center">
                     <h1 className="text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">Vos Sites</h1>
-                    <p className="text-gray-600 text-lg max-w-2xl mx-auto">Sélectionnez un site pour gérer ses emplacements et ses appareils.</p>
+                    <p className="text-gray-600 text-lg max-w-2xl mx-auto">Sélectionnez un site pour gérer ses
+                        emplacements et ses appareils.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -243,17 +274,18 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <hr className="my-10 border-gray-200" />
+            <hr className="my-10 border-gray-200"/>
 
             {/* Locations Section */}
             <div className="locations-section mt-12">
                 {selectedSiteId ? (
-                    loadingLocations || loadingDeviceData || loadingDevicesAndSensors ? (
+                    loadingLocations || loadingDeviceData || loadingDevicesAndSensors || loadingSchedule ? (
                         <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-lg">
-                            <Loader2 className="animate-spin h-10 w-10 text-green-500 mb-4" />
-                            <p className="text-gray-500 text-lg font-medium">Chargement des lieux, des appareils et des capteurs...</p>
+                            <Loader2 className="animate-spin h-10 w-10 text-green-500 mb-4"/>
+                            <p className="text-gray-500 text-lg font-medium">Chargement des lieux, des appareils et des
+                                capteurs...</p>
                         </div>
-                    ): (
+                    ) : (
                         <div className="mb-8">
                             <h2 className="text-3xl font-bold text-gray-900 mb-4">Emplacements du Site</h2>
                             <LocationsSection
@@ -261,6 +293,7 @@ const Dashboard = () => {
                                 onEditDeviceSettings={handleEditDeviceSettings}
                                 onViewDeviceDetails={handleInfoDevice}
                                 onDeviceCommandSend={handleDeviceCommand}
+                                onDeviceScheduleSettings={handleScheduleSettings}
                             />
                         </div>
                     )
@@ -275,7 +308,8 @@ const Dashboard = () => {
 
             {/* Pagination at the bottom */}
             {selectedSiteId && !loadingLocations && !loadingDeviceData && !loadingDevicesAndSensors && baseLocations.length > 0 && (
-                <div className="flex flex-col sm:flex-row h-b justify-between items-center mt-8 p-4 bg-white rounded-xl shadow-lg">
+                <div
+                    className="flex flex-col sm:flex-row h-b justify-between items-center mt-8 p-4 bg-white rounded-xl shadow-lg">
                     <PaginationControls
                         pagination={pagination}
                         onGoToPage={goToPage}
@@ -318,6 +352,17 @@ const Dashboard = () => {
                     />
                 )
             }
+            {selectedDevice && (
+                <DeviceScheduleSettingModal
+                    isOpen={isScheduleModalOpen}
+                    device={selectedDevice}
+                    onClose={() => {
+                        setIsScheduleModalOpen(false);
+                        setSelectedDevice(null);
+                    }}
+                    onSaveSchedule={handleSaveSchedule}
+                />
+            )}
         </div>
     );
 };

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {DeviceInfo} from "../location/Props.tsx";
-import {ComponentInfo} from "../types/device.ts";
+import {Component} from "../types/device.ts";
 
 interface DeviceSettingsModalProps {
     isOpen: boolean;
     device: DeviceInfo | null;
     onClose: () => void;
-    onSave: (updatedComponent: ComponentInfo, deviceId: string) => void;
-    onReset: (componentInfo: ComponentInfo) => void;
+    onSave: (updatedComponent: Component, deviceId: string) => void;
+    onReset: (componentInfo: Component) => void;
 }
 
 const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({ isOpen, device, onClose, onSave, onReset }) => {

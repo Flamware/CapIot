@@ -1,8 +1,7 @@
 // index.tsx (or your main entry point)
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import App from './App'; // The App component that already includes BrowserRouter and AuthProvider
 import './index.css';
-import { AuthProvider } from './AuthContext'; // Importez votre AuthProvider
 import React from 'react';
 
 const root = ReactDOM.createRoot(
@@ -11,8 +10,7 @@ const root = ReactDOM.createRoot(
 
 root.render(
     <React.StrictMode>
-        <AuthProvider> {/* Enveloppez votre App avec l'AuthProvider */}
-            <App />
-        </AuthProvider>
+        {/* Only render your top-level App component here */}
+        <App />
     </React.StrictMode>
 );

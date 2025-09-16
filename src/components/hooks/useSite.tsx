@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo } from "react";
-import { createApi } from "../../axios/api.tsx";
+import { useState, useCallback } from "react";
 import { Pagination } from "../types/pagination.ts";
 import { SitesResponse, Site, LocationsResponse, Location } from "../types/location.ts";
 import {AxiosError} from "axios";
+import {useApi} from "./useApi.tsx";
 
 export const useSites = () => {
+    const api = useApi();
     const [sites, setSites] = useState<Site[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(true);
@@ -16,8 +17,6 @@ export const useSites = () => {
         totalItems: 0,
         totalPages: 1,
     });
-
-    const api = useMemo(() => createApi(), []);
 
     // Function to fetch paginated sites and their locations
     const fetchSitesAndLocations = useCallback(async (page: number, limit: number, query?: string) => {

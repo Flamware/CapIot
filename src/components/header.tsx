@@ -72,10 +72,10 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onCloseSidebar,
     }, []);
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (user && isAuthenticated) {
             fetchNotifications(1, 1);
         }
-    }, [isAuthenticated]);
+    }, [user]);
 
     const renderSidebarToggle = () =>
         onToggleSidebar && (

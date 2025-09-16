@@ -1,9 +1,11 @@
-import { useState, useCallback, useMemo } from "react";
-import { createApi } from "../../axios/api.tsx";
+import { useState, useCallback } from "react";
 import { LocationsResponse, Location } from "../types/location.ts";
 import {Pagination} from "../types/pagination.ts";
+import {useApi} from "./useApi.tsx";
 
 export const useLocations = () => {
+       const api = useApi();
+
     const [locations, setLocations] = useState<Location[]>([]);
     const [loadingLocations, setLoadingLocations] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -14,7 +16,6 @@ export const useLocations = () => {
         totalItems: 0,
         totalPages: 1,
     });
-    const api = useMemo(() => createApi(), []);
 
     const fetchMeLocations = useCallback(async () => {
         setLoadingLocations(true);

@@ -1,12 +1,12 @@
-import { useState, useCallback } from 'react';
+import {useState, useCallback} from 'react';
 import { User } from "@auth0/auth0-react";
-import { createApi } from "../../axios/api.tsx";
 import { UsersLocationsResponse, UserWithLocations } from "../types/user.ts";
 import { Pagination } from "../types/pagination.ts";
 import { Site } from "../types/location.ts";
+import {useApi} from "./useApi.tsx";
 
 export function useUsersApi() {
-    const api = createApi();
+       const api = useApi();
     const [usersLocations, setUsersLocations] = useState<UserWithLocations[]>([]);
     const [loading, setLoading] = useState(true);
     const [apiError, setApiError] = useState<any | null>(null);

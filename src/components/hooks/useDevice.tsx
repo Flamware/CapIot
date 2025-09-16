@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
-import { createApi } from "../../axios/api.tsx";
-import {ComponentInfo, DevicesLocationsResponse, DevicesWithLocation} from "../types/device.ts";
+import {Component, DevicesLocationsResponse, DevicesWithLocation} from "../types/device.ts";
 import { Pagination } from "../types/pagination.ts";
 import {DeviceInfo} from "../location/Props.tsx";
+import {useApi} from "./useApi.tsx";
 
 export const useDeviceApi = () => {
-    const api = createApi();
+    const api = useApi();
 
     const [loadingDevices, setLoadingDevices] = useState(false);
     const [apiError, setApiError] = useState<any | null>(null);
@@ -50,11 +50,11 @@ export const useDeviceApi = () => {
         }
         , [api]);
 
-    const fetchComponentsFromDevice = useCallback(async (deviceId: string): Promise<ComponentInfo[]> => {
+    const fetchComponentsFromDevice = useCallback(async (deviceId: string): Promise<Component[]> => {
             setLoadingDevices(true);
             setApiError(null);
             try {
-                const response = await api.get<ComponentInfo[]>(`/devices/${deviceId}/components`);
+                const response = await api.get<Component[]>(`/devices/${deviceId}/components`);
                 return response.data;
             } catch (error) {
                 setApiError(error);
@@ -81,7 +81,7 @@ export const useDeviceApi = () => {
     }, [api]);
 
     // This function handles sending configuration updates, including min/max thresholds and running hours.
-    const changeDeviceConfig = useCallback(async (deviceId: string, componentInfo: ComponentInfo) => {
+    const changeDeviceConfig = useCallback(async (deviceId: string, componentInfo: Component) => {
             setApiError(null);
             try {
                 await api.patch(`/devices/${deviceId}/components/${componentInfo.component_id}`,
@@ -133,7 +133,7 @@ export const useDeviceApi = () => {
             setLoadingDevices(true);
             setApiError(null);
             try {
-                const response = await api.get<ComponentInfo[]>(`/devices/${deviceId}/sensors`);
+                const response = await api.get<Component[]>(`/devices/${deviceId}/sensors`);
                 return response.data;
             } catch (error) {
                 setApiError(error);

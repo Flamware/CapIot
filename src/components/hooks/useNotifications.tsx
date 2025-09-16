@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { createApi } from "../../axios/api.tsx";
+import {useState} from "react";
 import { Notification, NotificationsResponse } from "../types/notification.ts";
+import {useApi} from "./useApi.tsx";
 
 export function useNotifications() {
-    const api = createApi();
+       const api = useApi();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [apiError, setApiError] = useState<any | null>(null);
@@ -29,7 +29,10 @@ export function useNotifications() {
                 totalPages: response.data.totalPages,
             });
         } catch (error: any) {
+            console.error("Authentication expired. The interceptor is handling the logout.");
+            console.log(error);
             setApiError(error);
+            setNotifications([]);
         } finally {
             setLoading(false);
         }

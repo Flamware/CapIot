@@ -25,6 +25,7 @@ interface LocationCardProps {
     onEditDeviceSettings: (device: DeviceInfo) => void;
     onViewDeviceDetails: (device: DeviceInfo) => void;
     onDeviceCommandSend?: (device: DeviceInfo, command: string) => void;
+    onDeviceScheduleSettings?: (device: DeviceInfo) => void;
 }
 
 // Helper function to get the appropriate FontAwesome icon based on the component subtype.
@@ -70,6 +71,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                        onEditDeviceSettings,
                                                        onViewDeviceDetails,
                                                        onDeviceCommandSend,
+                                                       onDeviceScheduleSettings,
                                                    }) => {
 
     return (
@@ -151,6 +153,17 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                 aria-label="Modifier les paramètres de l'appareil"
                                             >
                                                 <FontAwesomeIcon icon={faPen} className="text-base" />
+                                            </button>
+                                            <button
+                                                onClick={() => onDeviceScheduleSettings && onDeviceScheduleSettings(device)}
+                                                className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300
+                                                text-purple-500 bg-gray-100 border border-gray-200 hover:bg-gray-200
+                                                shadow-md hover:shadow-lg transform hover:scale-105
+                                                focus:outline-none focus:ring-2 focus:ring-purple-300"
+                                                title="Configurer le planning de l'appareil"
+                                                aria-label="Configurer le planning de l'appareil"
+                                            >
+                                                <FontAwesomeIcon icon={faMicrochip} className="text-base" />
                                             </button>
                                         </div>
                                     </div>

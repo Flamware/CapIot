@@ -1,9 +1,9 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { createApi } from '../axios/api';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../AuthContext'; // Ensure correct path
 import { jwtDecode } from 'jwt-decode';
-import {User} from "../components/types/user.ts"; // Import jwt-decode library
+import {User} from "../components/types/user.ts";
+import {useApi} from "../components/hooks/useApi.tsx"; // Import jwt-decode library
 
 // Define API endpoints as constants
 const API_ENDPOINTS = {
@@ -37,9 +37,10 @@ const Login: React.FC = () => {
     const [registerLoading, setRegisterLoading] = useState(false);
     const [passwordStrengthErrors, setPasswordStrengthErrors] = useState<string[]>([]);
 
-    // --- Hooks ---
-    const authContext = useContext(AuthContext); // Get the context value
+    // --- Hooks (Correct Placement) ---
+    const authContext = useContext(AuthContext);
     const navigate = useNavigate();
+    const api = useApi(); // 👈 Call the hook here
 
     // --- Effects ---
     // Throw error if context is not available (used outside provider)
@@ -59,7 +60,6 @@ const Login: React.FC = () => {
 
         setLoginError(null);
         setLoginLoading(true);
-        const api = createApi();
 
         try {
             const response = await api.post(API_ENDPOINTS.LOGIN, { email: loginEmail, password: loginPassword });
@@ -128,7 +128,6 @@ const Login: React.FC = () => {
         }
 
         setRegisterLoading(true);
-        const api = createApi();
 
         try {
             const response = await api.post(API_ENDPOINTS.REGISTER, {

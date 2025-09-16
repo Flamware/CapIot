@@ -18,14 +18,18 @@
     "@tailwindcss/vite": "^4.0.17",
     "axios": "^1.8.4",
     "daisyui": "^5.0.27",
+    "date-fns": "^4.1.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.499.0",
     "react": "^19.0.0",
+    "react-big-calendar": "^1.19.4",
+    "react-calendar": "^6.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.4.0",
-    "redux-persist": "^6.0.0"
+    "redux-persist": "^6.0.0",
+    "rrule": "^2.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
@@ -33,6 +37,7 @@
     "@tailwindcss/postcss": "^4.0.17",
     "@types/node": "^22.13.14",
     "@types/react": "^19.0.10",
+    "@types/react-big-calendar": "^1.16.3",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
