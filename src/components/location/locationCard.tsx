@@ -12,24 +12,45 @@ import {
     faInfoCircle,
     faPlay,
     faPause,
+    faCalendarAlt
 } from '@fortawesome/free-solid-svg-icons';
-import { DeviceInfo } from './Props.tsx';
-import { ComponentSubtype } from '../types/device.ts';
+
+// Dummy interfaces to make the file runnable as a single component
+const ComponentSubtype = {
+    Temperature: 'temperature',
+    Humidity: 'humidity',
+    Fan: 'fan',
+    LED: 'LED'
+};
+
+const ComponentType = {
+    Sensor: 'sensor',
+    Actuator: 'actuator',
+    Indicator: 'indicator'
+};
+
+// Interface for the DeviceInfo
+const DeviceInfo = {
+    device_id: '',
+    status: '',
+    components: [],
+    last_communication: ''
+};
 
 // Interface for the LocationCard component props.
-interface LocationCardProps {
-    location_name: string;
-    devices: DeviceInfo[];
-    lastUpdated: string;
-    status: string;
-    onEditDeviceSettings: (device: DeviceInfo) => void;
-    onViewDeviceDetails: (device: DeviceInfo) => void;
-    onDeviceCommandSend?: (device: DeviceInfo, command: string) => void;
-    onDeviceScheduleSettings?: (device: DeviceInfo) => void;
-}
+const LocationCardProps = {
+    location_name: '',
+    devices: [],
+    lastUpdated: '',
+    status: '',
+    onEditDeviceSettings: () => {},
+    onViewDeviceDetails: () => {},
+    onDeviceCommandSend: () => {},
+    onDeviceScheduleSettings: () => {},
+};
 
 // Helper function to get the appropriate FontAwesome icon based on the component subtype.
-const getComponentIcon = (subtype?: ComponentSubtype) => {
+const getComponentIcon = (subtype) => {
     switch (subtype) {
         case ComponentSubtype.Temperature:
             return faThermometerHalf;
@@ -43,17 +64,21 @@ const getComponentIcon = (subtype?: ComponentSubtype) => {
             return faQuestionCircle;
     }
 };
-const getStatusColorClass = (deviceStatus: string | undefined) => {
+
+const getStatusColorClass = (deviceStatus) => {
     switch (deviceStatus?.toLowerCase()) {
         case 'running':
         case 'online':
         case 'ok':
             return 'bg-green-100 text-green-800 border border-green-200';
+        case 'running_plan':
+            return 'bg-teal-100 text-teal-800 border border-teal-200';
         case 'offline':
         case 'fault':
         case 'faulty':
             return 'bg-red-100 text-red-800 border border-red-200';
         case 'idle':
+        case 'stopped_plan':
             return 'bg-blue-100 text-blue-800 border border-blue-200';
         case 'warning':
             return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
@@ -64,16 +89,15 @@ const getStatusColorClass = (deviceStatus: string | undefined) => {
     }
 };
 
-const LocationCard: React.FC<LocationCardProps> = ({
-                                                       location_name,
-                                                       devices,
-                                                       lastUpdated,
-                                                       onEditDeviceSettings,
-                                                       onViewDeviceDetails,
-                                                       onDeviceCommandSend,
-                                                       onDeviceScheduleSettings,
-                                                   }) => {
-
+const LocationCard = ({
+                          location_name,
+                          devices,
+                          lastUpdated,
+                          onEditDeviceSettings,
+                          onViewDeviceDetails,
+                          onDeviceCommandSend,
+                          onDeviceScheduleSettings,
+                      }) => {
     return (
         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden">
             {/* Location Header Section */}
@@ -96,8 +120,8 @@ const LocationCard: React.FC<LocationCardProps> = ({
                 {devices.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4">
                         {devices.map((device) => {
-                            const sensors = device.components?.filter(comp => comp.component_type === 'sensor') || [];
-                            const otherComponents = device.components?.filter(comp => comp.component_type !== 'sensor') || [];
+                            const sensors = device.components?.filter(comp => comp.component_type === ComponentType.Sensor) || [];
+                            const otherComponents = device.components?.filter(comp => comp.component_type !== ComponentType.Sensor) || [];
                             return (
                                 <div key={device.device_id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col">
                                     {/* Device ID and Status */}
@@ -113,24 +137,41 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                         </div>
                                         {/* Updated Action Buttons Section */}
                                         <div className="flex space-x-2 flex-shrink-0">
-                                            {onDeviceCommandSend && (device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'running' || device.status?.toLowerCase() === 'idle') && (
+                                            {onDeviceCommandSend && (device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'running_plan' || device.status?.toLowerCase() === 'running' || device.status?.toLowerCase() === 'stopped_plan') && (
                                                 <button
-                                                    onClick={() => onDeviceCommandSend(device, device.status?.toLowerCase() === 'online' ? 'Start' : 'Stop')}
+                                                    onClick={() => onDeviceCommandSend(device, (device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? 'Start' : 'Stop')}
                                                     className={`
                                                         w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300
                                                         shadow-md hover:shadow-lg transform hover:scale-105
                                                         focus:outline-none focus:ring-4 focus:ring-opacity-50
-                                                        ${device.status?.toLowerCase() === 'online'
+                                                        ${(device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan')
                                                         ? 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-300'
                                                         : 'bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-300'
                                                     }
                                                     `}
-                                                    title={device.status?.toLowerCase() === 'online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
-                                                    aria-label={device.status?.toLowerCase() === 'online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                                    title={(device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                                    aria-label={(device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
                                                 >
-                                                    <FontAwesomeIcon icon={device.status?.toLowerCase() === 'online' ? faPlay : faPause} className="text-sm" />
+                                                    <FontAwesomeIcon icon={(device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? faPlay : faPause} className="text-sm" />
                                                 </button>
                                             )}
+
+                                            {/* Follow_Schedule button: Only visible for manual statuses */}
+                                            {onDeviceCommandSend && (device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'running') && (
+                                                <button
+                                                    onClick={() => onDeviceCommandSend(device, 'Follow_Schedule')}
+                                                    className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300
+                                                        shadow-md hover:shadow-lg transform hover:scale-105
+                                                        focus:outline-none focus:ring-4 focus:ring-opacity-50
+                                                        bg-purple-500 hover:bg-purple-600 text-white focus:ring-purple-300
+                                                    "
+                                                    title="Suivre le planning"
+                                                    aria-label="Suivre le planning"
+                                                >
+                                                    <FontAwesomeIcon icon={faCalendarAlt} className="text-sm" />
+                                                </button>
+                                            )}
+
                                             {/* Info button for component details */}
                                             <button
                                                 onClick={() => onViewDeviceDetails(device)}
@@ -163,7 +204,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                 title="Configurer le planning de l'appareil"
                                                 aria-label="Configurer le planning de l'appareil"
                                             >
-                                                <FontAwesomeIcon icon={faMicrochip} className="text-base" />
+                                                <FontAwesomeIcon icon={faCalendarAlt} className="text-base" />
                                             </button>
                                         </div>
                                     </div>

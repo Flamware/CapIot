@@ -1,5 +1,7 @@
+// src/components/schedule/ScheduleForm.tsx
+
 import React, { useState, useEffect } from 'react';
-import { X, Loader2, Trash2 } from 'lucide-react';
+import { X, Loader2, Trash2, List, CalendarDays } from 'lucide-react';
 import { DeviceInfo } from "../location/Props.tsx";
 import { Component } from "../types/device.ts";
 import { RecurringSchedule } from "../types/schedule.tsx";
@@ -18,6 +20,9 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
     const [isResetting, setIsResetting] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState<number | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [showAllSchedules, setShowAllSchedules] = useState(false);
+    const [displayedMonth, setDisplayedMonth] = useState(new Date().getMonth());
+    const [displayedYear, setDisplayedYear] = useState(new Date().getFullYear());
 
     useEffect(() => {
         if (isOpen && device?.device_id) {
@@ -47,110 +52,145 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
             setSchedules(prev => prev.filter(s => s.recurring_schedule_id !== id));
         } finally {
             setIsDeleting(null);
-            // After deletion, refresh the selected date's schedules
             if (selectedDate) {
-                setSelectedDate(selectedDate);
+                setSelectedDate(new Date(selectedDate.getTime()));
             }
         }
     };
 
     const formatTime = (isoString: string): string => {
-        const date = new Date(isoString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return "N/A";
+        }
+    };
+    const handlePrevMonth = () => {
+        if (displayedMonth === 0) {
+            setDisplayedMonth(11);
+            setDisplayedYear(prev => prev - 1);
+        } else {
+            setDisplayedMonth(prev => prev - 1);
+        }
     };
 
-    const groupSchedules = (schedules: RecurringSchedule[]) => {
-        const dailySchedule = schedules.find(s => s.recurrence_rule.includes('FREQ=DAILY'));
-        const monthlySchedules = schedules.filter(s => s.recurrence_rule.includes('FREQ=MONTHLY'));
-        const weeklySchedules = schedules.filter(s => s.recurrence_rule.includes('FREQ=WEEKLY'));
-        return { dailySchedule, monthlySchedules, weeklySchedules };
+    const handleNextMonth = () => {
+        if (displayedMonth === 11) {
+            setDisplayedMonth(0);
+            setDisplayedYear(prev => prev + 1);
+        } else {
+            setDisplayedMonth(prev => prev + 1);
+        }
     };
 
-    const { dailySchedule, monthlySchedules, weeklySchedules } = groupSchedules(schedules);
-
-    // Helper to get the day of the week in RRule format
     const getRRuleDay = (date: Date): string => {
         const days = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
         return days[date.getDay()];
     };
 
-    // Helper to determine the schedule type for a given date
-    const getScheduleTypeForDate = (date: Date) => {
-        const hasMonthly = monthlySchedules.some(schedule => {
-            const startDate = new Date(schedule.start_date);
-            const endDate = new Date(schedule.end_date);
-            return date >= startDate && date <= endDate;
-        });
-
-        const hasWeekly = weeklySchedules.some(schedule => schedule.recurrence_rule.includes(`BYDAY=${getRRuleDay(date)}`));
-
-        const hasDaily = dailySchedule !== undefined;
-
-        return { isMonthly: hasMonthly, isWeekly: hasWeekly, isDaily: hasDaily };
-    };
-
-    // New helper to get all schedules for a given date
-    const getSchedulesForDate = (date: Date): RecurringSchedule[] => {
-        const rruleDay = getRRuleDay(date);
-        const schedulesForDay: RecurringSchedule[] = [];
-
-        // Check for exception schedules first to prioritize
-        const exceptionSchedules = schedules.filter(s => s.is_exception);
-
-        exceptionSchedules.forEach(schedule => {
-            if (schedule.recurrence_rule.includes('FREQ=MONTHLY')) {
-                const startDate = new Date(schedule.start_date);
-                const endDate = new Date(schedule.end_date);
-                if (date >= startDate && date <= endDate) {
-                    schedulesForDay.push(schedule);
-                }
-            } else if (schedule.recurrence_rule.includes('FREQ=WEEKLY')) {
-                if (schedule.recurrence_rule.includes(`BYDAY=${rruleDay}`)) {
-                    schedulesForDay.push(schedule);
-                }
-            } else if (schedule.recurrence_rule.includes('FREQ=DAILY')) {
-                schedulesForDay.push(schedule);
-            }
-        });
-
-        // Add regular schedules only if no exceptions are found for the day
-        if (schedulesForDay.length === 0) {
-            monthlySchedules.filter(s => !s.is_exception).forEach(schedule => {
-                const startDate = new Date(schedule.start_date);
-                const endDate = new Date(schedule.end_date);
-                if (date >= startDate && date <= endDate) {
-                    schedulesForDay.push(schedule);
-                }
-            });
-
-            weeklySchedules.filter(s => !s.is_exception).forEach(schedule => {
-                if (schedule.recurrence_rule.includes(`BYDAY=${rruleDay}`)) {
-                    schedulesForDay.push(schedule);
-                }
-            });
-
-            if (dailySchedule && !dailySchedule.is_exception) {
-                schedulesForDay.push(dailySchedule);
-            }
-        }
-
-        // Return unique schedules
-        return [...new Map(schedulesForDay.map(s => [s.recurring_schedule_id, s])).values()];
-    };
-
     const handleDayClick = (day: number | null) => {
-        if (day) {
-            const clickedDate = new Date(new Date().getFullYear(), new Date().getMonth(), day);
+        if (day !== null) {
+            const clickedDate = new Date(displayedYear, displayedMonth, day);
             setSelectedDate(clickedDate);
         }
     };
 
+    const getSchedulesForDate = (date: Date): RecurringSchedule[] => {
+        const rruleDay = getRRuleDay(date); // 'MO', 'TU', etc.
+        const schedulesForDay: RecurringSchedule[] = [];
+        const checkedScheduleIds = new Set<number>();
+
+        // Priority 1: Specific day schedules (FREQ=ONCE)
+        schedules.forEach(schedule => {
+            if (schedule.recurrence_rule.includes('FREQ=ONCE')) {
+                const scheduleDate = new Date(schedule.start_date);
+                if (
+                    date.getUTCFullYear() === scheduleDate.getUTCFullYear() &&
+                    date.getUTCMonth() === scheduleDate.getUTCMonth() &&
+                    date.getUTCDate() === scheduleDate.getUTCDate()
+                ) {
+                    schedulesForDay.push(schedule);
+                    console.log("Matched specific day schedule:", schedule);
+                    checkedScheduleIds.add(schedule.recurring_schedule_id);
+                }
+            }
+        });
+
+        if (schedulesForDay.length > 0) return schedulesForDay;
+
+        // Priority 2: Exception schedules
+        schedules.forEach(schedule => {
+            if (schedule.is_exception && !checkedScheduleIds.has(schedule.recurring_schedule_id)) {
+                const startDate = new Date(schedule.start_date);
+                const endDate = schedule.end_date ? new Date(schedule.end_date) : null;
+
+                if (schedule.recurrence_rule.includes('FREQ=DAILY')) {
+                    schedulesForDay.push(schedule);
+                    checkedScheduleIds.add(schedule.recurring_schedule_id);
+                } else if (schedule.recurrence_rule.includes('FREQ=WEEKLY')) {
+                    if (schedule.recurrence_rule.includes(`BYDAY=${rruleDay}`)) {
+                        schedulesForDay.push(schedule);
+                        checkedScheduleIds.add(schedule.recurring_schedule_id);
+                    }
+                } else if (schedule.recurrence_rule.includes('FREQ=MONTHLY')) {
+                    if (endDate) {
+                        const startUTC = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+                        const endUTC = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate());
+                        const currentUTC = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+                        if (currentUTC >= startUTC && currentUTC <= endUTC) {
+                            schedulesForDay.push(schedule);
+                            checkedScheduleIds.add(schedule.recurring_schedule_id);
+                        }
+                    } else if (date.getUTCDate() === startDate.getUTCDate()) {
+                        schedulesForDay.push(schedule);
+                        checkedScheduleIds.add(schedule.recurring_schedule_id);
+                    }
+                }
+            }
+        });
+
+        if (schedulesForDay.length > 0) return schedulesForDay;
+
+        // Priority 3: Regular schedules
+        schedules.forEach(schedule => {
+            if (!schedule.is_exception && !checkedScheduleIds.has(schedule.recurring_schedule_id)) {
+                const startDate = new Date(schedule.start_date);
+                const endDate = schedule.end_date ? new Date(schedule.end_date) : null;
+
+                if (schedule.recurrence_rule.includes('FREQ=DAILY')) {
+                    schedulesForDay.push(schedule);
+                } else if (schedule.recurrence_rule.includes('FREQ=WEEKLY')) {
+                    if (schedule.recurrence_rule.includes(`BYDAY=${rruleDay}`)) {
+                        schedulesForDay.push(schedule);
+                    }
+                } else if (schedule.recurrence_rule.includes('FREQ=MONTHLY')) {
+                    if (endDate) {
+                        const startUTC = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+                        const endUTC = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate());
+                        const currentUTC = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+                        if (currentUTC >= startUTC && currentUTC <= endUTC) {
+                            schedulesForDay.push(schedule);
+                            checkedScheduleIds.add(schedule.recurring_schedule_id);
+                        }
+                    } else if (date.getUTCDate() === startDate.getUTCDate()) {
+                        schedulesForDay.push(schedule);
+                        checkedScheduleIds.add(schedule.recurring_schedule_id);
+                    }
+                }
+            }
+        });
+
+        return Array.from(new Set(schedulesForDay));
+    };
+
+
     const renderCombinedScheduleCalendar = () => {
         if (schedules.length === 0) return null;
 
-        const referenceDate = new Date(); // Use current month as reference
-        const startMonth = referenceDate.getMonth();
-        const startYear = referenceDate.getFullYear();
+        const referenceDate = new Date();
+        const startMonth = displayedMonth;
+        const startYear = displayedYear;
 
         const daysInMonth = new Date(startYear, startMonth + 1, 0).getDate();
         const firstDayOfMonth = new Date(startYear, startMonth, 1).getDay();
@@ -164,11 +204,21 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
             days.push(i);
         }
 
+
         return (
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h4 className="font-semibold text-gray-800">
-                    Schedules for {referenceDate.toLocaleString('default', { month: 'long' })} {startYear}
-                </h4>
+                <div className="flex justify-between items-center mb-2">
+                    <button onClick={handlePrevMonth}
+                            className="px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300">◀
+                    </button>
+                    <h4 className="font-semibold text-gray-800">
+                        Schedules
+                        for {new Date(startYear, startMonth).toLocaleString('default', {month: 'long'})} {startYear}
+                    </h4>
+                    <button onClick={handleNextMonth}
+                            className="px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300">▶
+                    </button>
+                </div>
                 <table className="w-full text-center text-sm mt-2">
                     <thead>
                     <tr className="text-gray-500 text-xs">
@@ -178,15 +228,19 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                     </tr>
                     </thead>
                     <tbody>
-                    {Array.from({ length: Math.ceil(days.length / 7) }).map((_, weekIndex) => (
+                    {Array.from({length: Math.ceil(days.length / 7)}).map((_, weekIndex) => (
                         <tr key={weekIndex}>
                             {days.slice(weekIndex * 7, (weekIndex + 1) * 7).map((day, dayIndex) => {
                                 const fullDate = day ? new Date(startYear, startMonth, day) : null;
                                 const schedulesForDay = fullDate ? getSchedulesForDate(fullDate) : [];
-
                                 let cellClass = 'w-8 h-8 rounded-full flex items-center justify-center text-gray-700';
                                 if (schedulesForDay.length > 0) {
-                                    if (schedulesForDay.some(s => s.is_exception)) {
+                                    const hasSpecific = schedulesForDay.some(s => s.recurrence_rule.includes('FREQ=ONCE'));
+                                    const hasException = schedulesForDay.some(s => s.is_exception);
+
+                                    if (hasSpecific) {
+                                        cellClass = 'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-cyan-500 cursor-pointer hover:bg-cyan-600';
+                                    } else if (hasException) {
                                         cellClass = 'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-red-500 cursor-pointer hover:bg-red-600';
                                     } else {
                                         const hasMonthly = schedulesForDay.some(s => s.recurrence_rule.includes('FREQ=MONTHLY'));
@@ -235,13 +289,67 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                         <p className="text-gray-600">Daily Schedule</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 inline-block rounded-full bg-purple-500"></span>
-                        <p className="text-gray-600">Both Monthly & Weekly Schedules</p>
+                        <span className="w-4 h-4 inline-block rounded-full bg-cyan-500"></span>
+                        <p className="text-gray-600">Specific Day Schedule</p>
                     </div>
                     <div className="flex items-center space-x-2">
                         <span className="w-4 h-4 inline-block rounded-full bg-red-500"></span>
                         <p className="text-gray-600">Exception Schedule</p>
                     </div>
+                </div>
+
+            </div>
+        );
+    };
+
+    const renderAllSchedulesList = () => {
+        if (schedules.length === 0) return <p className="text-gray-500">No schedules found for this device.</p>;
+
+        return (
+            <div className="max-h-96 overflow-y-auto">
+                <div className="space-y-4">
+                    {schedules.map((schedule) => {
+                        const isException = schedule.is_exception;
+                        const recurrenceType = schedule.recurrence_rule.includes('FREQ=MONTHLY') ? 'Monthly' :
+                            schedule.recurrence_rule.includes('FREQ=WEEKLY') ? 'Weekly' :
+                                schedule.recurrence_rule.includes('FREQ=ONCE') ? 'Specific' :
+                                    schedule.recurrence_rule.includes('FREQ=DAILY') ? 'Daily' : 'Unknown';
+
+                        const recurrenceDetails = recurrenceType === 'Specific' ? new Date(schedule.start_date).toLocaleDateString() :
+                            recurrenceType === 'Weekly' ? schedule.recurrence_rule.split('BYDAY=')[1] :
+                                recurrenceType;
+
+                        return (
+                            <div
+                                key={schedule.recurring_schedule_id}
+                                className={`flex justify-between items-center p-3 rounded-md transition-colors ${
+                                    isException ? 'bg-red-100 text-red-700' : 'bg-gray-100'
+                                }`}
+                            >
+                                <div>
+                                    <p className="font-semibold">{isException ? `❌ Exception: ${schedule.schedule_name}` : schedule.schedule_name}</p>
+                                    <p className="text-sm">
+                                        Time: {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        Type: {recurrenceType} {recurrenceType !== 'Daily' && recurrenceType !== 'Monthly' && `(${recurrenceDetails})`}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => handleDeleteClick(device.device_id, schedule.recurring_schedule_id)}
+                                    disabled={isDeleting === schedule.recurring_schedule_id}
+                                    className="text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Delete Schedule"
+                                >
+                                    {isDeleting === schedule.recurring_schedule_id ? (
+                                        <Loader2 className="animate-spin h-4 w-4" />
+                                    ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                    )}
+                                </button>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -280,7 +388,8 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                                             </p>
                                             <p className="text-xs text-gray-500">
                                                 {schedule.recurrence_rule.includes('FREQ=MONTHLY') ? 'Monthly' :
-                                                    schedule.recurrence_rule.includes('FREQ=WEEKLY') ? 'Weekly' : 'Daily'}
+                                                    schedule.recurrence_rule.includes('FREQ=WEEKLY') ? 'Weekly' :
+                                                        schedule.recurrence_rule.includes('FREQ=ONCE') ? 'Specific' : 'Daily'}
                                             </p>
                                         </div>
                                         <button
@@ -408,7 +517,23 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
 
                 {/* Schedules Section */}
                 <div className="space-y-4 mt-6">
-                    <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Schedules</h3>
+                    <div className="flex justify-between items-center border-b pb-2">
+                        <h3 className="text-xl font-bold text-gray-800">Schedules</h3>
+                        <button
+                            onClick={() => setShowAllSchedules(!showAllSchedules)}
+                            className="px-4 py-2 text-sm text-white bg-gray-600 rounded-md hover:bg-gray-700 flex items-center gap-1"
+                        >
+                            {showAllSchedules ? (
+                                <>
+                                    <CalendarDays size={16} /> Show Calendar
+                                </>
+                            ) : (
+                                <>
+                                    <List size={16} /> Show All
+                                </>
+                            )}
+                        </button>
+                    </div>
                     {loading ? (
                         <div className="flex justify-center items-center py-4">
                             <Loader2 className="animate-spin h-6 w-6 text-gray-500" />
@@ -418,8 +543,8 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                         <p className="text-red-500">Failed to load schedules: {error.message}</p>
                     ) : (
                         <>
-                            {renderCombinedScheduleCalendar()}
-                            {dailySchedule === undefined && monthlySchedules.length === 0 && weeklySchedules.length === 0 && (
+                            {showAllSchedules ? renderAllSchedulesList() : renderCombinedScheduleCalendar()}
+                            {schedules.length === 0 && !showAllSchedules && (
                                 <p className="text-gray-500">No schedules found for this device.</p>
                             )}
                         </>
