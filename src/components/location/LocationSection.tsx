@@ -1,6 +1,7 @@
 import React from 'react';
 import {DeviceInfo, LocationData} from "./Props";
 import LocationCard from "./locationCard";
+import {useIsMobile} from "../hooks/useIsMobile.tsx";
 
 export interface LocationsSectionProps {
     locationsData: LocationData[];
@@ -18,6 +19,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
     onDeviceScheduleSettings,
                                                            }) => {
 
+    const isMobile = useIsMobile(1100);
     if (!locationsData || locationsData.length === 0) {
         return (
             <div className="text-center py-10 text-gray-600 text-lg">
@@ -28,7 +30,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
 
     return (
 
-                <div className="flex    gap-6">
+                <div className="flex    ">
                     {locationsData.map((location) => (
                         <LocationCard
                             key={location.location_id}

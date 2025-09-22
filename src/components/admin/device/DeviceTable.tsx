@@ -33,8 +33,8 @@ const TrashIcon = () => <span>🗑️</span>;
 
 interface DeviceTableProps {
     devices: DevicesWithLocation[];
-    onUpdate: (deviceId: string, location: Location | null) => void;
-    onDelete: (deviceId: string) => void;
+    onUpdate: (deviceID: string, location: Location | null) => void;
+    onDelete: (deviceID: string) => void;
     onDeviceCommandSend?: (device: DevicesWithLocation, command: string) => void;
 }
 

@@ -48,9 +48,9 @@ const createInfluxApi = (): AxiosInstance => {
 
     influxdbApi.interceptors.request.use(
         (config) => {
-            const influxToken = import.meta.env.VITE_INFLUXDB_TOKEN;
-            if (influxToken) {
-                config.headers['Authorization'] = `Token ${influxToken}`;
+            const token = localStorage.getItem('customJwt');
+            if (token) {
+                config.headers['Authorization'] = `Bearer ${token}`;
             }
             return config;
         },

@@ -9,8 +9,8 @@ import {useEffect, useState} from "react";
 import {Location} from "../../components/types/location.ts";
 
 interface DeviceManagementProps {
-    onDeviceDeleted?: (deviceId: string) => void;
-    onLocationAssigned?: (deviceId: string, locationId: number) => void;
+    onDeviceDeleted?: (deviceID: string) => void;
+    onLocationAssigned?: (deviceID: string, locationID: number) => void;
 }
 
 export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: DeviceManagementProps) {
@@ -63,16 +63,16 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
     const goToPreviousPage = () => goToPage(pagination.currentPage - 1);
     const goToNextPage = () => goToPage(pagination.currentPage + 1);
 
-    const handleDeviceUpdate = async (deviceId: string, newLocation: Location | null) => {
+    const handleDeviceUpdate = async (deviceID: string, newLocation: Location | null) => {
         try {
             if (newLocation) {
-                await assignLocationToDevice(deviceId, newLocation.location_id);
-                if (onLocationAssigned) onLocationAssigned(deviceId, newLocation.location_id);
+                await assignLocationToDevice(deviceID, newLocation.location_id);
+                if (onLocationAssigned) onLocationAssigned(deviceID, newLocation.location_id);
             }
             // Update local state after successful update
             setDevicesLocations(prevDevices =>
                 prevDevices.map(device =>
-                    device.device_id === deviceId
+                    device.device_id === deviceID
                         ? {
                             ...device,
                             location: newLocation || device.location
@@ -88,11 +88,11 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
     };
 
 
-    const handleDeleteDevice = async (deviceId: string) => {
-        if (window.confirm(`Are you sure you want to delete device with ID: ${deviceId}?`)) {
+    const handleDeleteDevice = async (deviceID: string) => {
+        if (window.confirm(`Are you sure you want to delete device with ID: ${deviceID}?`)) {
             try {
-                await deleteDevice(deviceId);
-                if (onDeviceDeleted) onDeviceDeleted(deviceId);
+                await deleteDevice(deviceID);
+                if (onDeviceDeleted) onDeviceDeleted(deviceID);
             } catch (error: any) {
                 console.error("Error deleting device:", error.message);
                 setIsApiErrorModalOpen(true);

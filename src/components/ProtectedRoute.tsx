@@ -19,12 +19,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles }) => {
     // 2. If the user is authenticated but has no roles, redirect to the no-role page.
     // We check if the user object exists and if the roles array is present and not empty.
     const hasRoles = user?.roles && user.roles.length > 0;
+    console.log('User roles:', user?.roles);
     if (!hasRoles) {
+        console.log('Redirecting to no-role page due to missing roles.');
         return <Navigate to="/no-role" replace />;
     }
 
     // 3. If requiredRoles are specified, check if the user has at least one of them.
     if (requiredRoles && requiredRoles.length > 0) {
+        console.log('Required roles for this route:', requiredRoles);
         // Check if there is an intersection between the user's roles and the required roles.
         // The 'role' parameter is now explicitly typed as a string to resolve the TS7006 error.
         const hasRequiredRole = user.roles.some((role: string) => requiredRoles.includes(role));

@@ -1,68 +1,65 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { createInfluxApi } from "../axios/api";
+import React, { useState, useEffect } from "react";
 import SelectionTree from "../components/history/SelectionTree.tsx";
 import DateTimeInputs from "../components/commun/DateTimeInputs.tsx";
 import { Loader2, Menu, X } from "lucide-react";
-import {
-    LocationWithDevices,
-    SiteWithLocationAndDevices,
-} from "../components/types/location";
-import {useSites} from "../components/hooks/useSite.tsx";
-import {useDeviceApi} from "../components/hooks/useDevice.tsx";
-import {useLocations} from "../components/hooks/useLocation.tsx";
-import {useIsMobile} from "../components/hooks/useIsMobile.tsx";
-import {Device} from "../components/types/device.ts";
+import { LocationWithDevices, SiteWithLocationAndDevices } from "../components/types/location";
+import { useSites } from "../components/hooks/useSite.tsx";
+import { useDeviceApi } from "../components/hooks/useDevice.tsx";
+import { useLocations } from "../components/hooks/useLocation.tsx";
+import { useIsMobile } from "../components/hooks/useIsMobile.tsx";
+import { Component, Device } from "../components/types/device.ts";
+import DataGraph from "../components/history/DataGraph.tsx";
+import { useInfluxDB } from "../components/hooks/useInfluxDB.tsx";
+import ComponentStatsGraph from "../components/history/ComponentStatsGraph.tsx";
 
 const History: React.FC = () => {
-    // --- Selection states ---
-    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
-    const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
-    const [selectedSensorIds, setSelectedSensorIds] = useState<string[]>([]);
-    const [selectedSensorTypes, setSelectedSensorTypes] = useState<string[]>([]);
+    const [selectedlocationID, setSelectedlocationID] = useState<number | null>(null);
+    const [selecteddeviceID, setSelecteddeviceID] = useState<string | null>(null);
+    const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
+    const [selectedMetric, setSelectedMetric] = useState<('current' | 'voltage' | 'power')[]>([]);
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
+    const [expandedlocationID, setExpandedlocationID] = useState<number | null>(null);
+    const [expandeddeviceID, setExpandeddeviceID] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [isSidebarExplicitlyOpen, setIsSidebarExplicitlyOpen] = useState(false);
+    const [isFetchTriggered, setIsFetchTriggered] = useState(false);
 
-    // --- Data states from hooks ---
+    const isMobile = useIsMobile(1100);
+
     const { sites, loading: loadingSites, error: sitesError, fetchMySites } = useSites();
-    const { loadingDevices, apiError: deviceApiError, fetchDeviceFromLocation, fetchDeviceSensors } = useDeviceApi();
+    const { loadingDevices, apiError: deviceApiError, fetchDeviceFromLocation, fetchComponentsFromDevice } = useDeviceApi();
     const { fetchLocationsBySiteIds, locations: baseLocations } = useLocations();
 
     const [sitesWithLocations, setSitesWithLocations] = useState<SiteWithLocationAndDevices[]>([]);
-    const [monitoringData, setMonitoringData] = useState<Record<string, unknown> | null>(null);
 
-    // --- Influx states ---
-    const influxApi = useMemo(() => createInfluxApi(), []);
-    const [influxLoading, setInfluxLoading] = useState(false);
-    const [influxError, setInfluxError] = useState<Error | null>(null);
-    const [noInfluxData, setNoInfluxData] = useState(false);
-    const [validationError, setValidationError] = useState<string | null>(null);
-
-    // --- UI state ---
-    const [expandedLocationId, setExpandedLocationId] = useState<number | null>(null);
-    const [expandedDeviceId, setExpandedDeviceId] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    const isMobile = useIsMobile();
-    const [isSidebarExplicitlyOpen, setIsSidebarExplicitlyOpen] = useState(false);
+    // useInfluxDB hook
+    const {
+        monitoringData: influxData,
+        loading: influxLoading,
+        error: influxError,
+        validationError,
+        noData: noInfluxData,
+        getSensorData,
+        getMetrics
+    } = useInfluxDB();
 
     useEffect(() => {
         if (!isMobile) setIsSidebarExplicitlyOpen(false);
     }, [isMobile]);
 
-    // --- Helpers ---
     const resetSelections = () => {
-        setSelectedDeviceId(null);
-        setSelectedSensorIds([]);
-        setSelectedSensorTypes([]);
+        setSelecteddeviceID(null);
+        setSelectedComponents([]);
+        setSelectedMetric([]);
         setStartTime("");
         setEndTime("");
-        setMonitoringData(null);
-        setNoInfluxData(false);
-        setValidationError(null);
+        setIsFetchTriggered(false);
     };
 
-    // --- Fetch data ---
-    useEffect(() => { fetchMySites(); }, [fetchMySites]);
+    useEffect(() => {
+        fetchMySites();
+    }, [fetchMySites]);
 
     useEffect(() => {
         if (!sites || sites.length === 0) return;
@@ -74,7 +71,6 @@ const History: React.FC = () => {
 
         const fetchDevicesAndSensors = async () => {
             if (!baseLocations || baseLocations.length === 0) return;
-
             try {
                 setLoading(true);
 
@@ -83,8 +79,8 @@ const History: React.FC = () => {
                         const devices = await fetchDeviceFromLocation(location.location_id);
                         const devicesWithSensors: Device[] = await Promise.all(
                             devices.map(async (device) => {
-                                const sensors = await fetchDeviceSensors(device.device_id);
-                                return { ...device, components: sensors || []};
+                                const sensors = await fetchComponentsFromDevice(device.device_id);
+                                return { ...device, components: sensors || [] };
                             })
                         );
                         return { ...location, devices: devicesWithSensors };
@@ -108,71 +104,81 @@ const History: React.FC = () => {
         return () => { isCancelled = true; };
     }, [baseLocations]);
 
-    // --- Handlers ---
-    const handleLocationClick = (locationId: number) => {
-        setExpandedLocationId((prev) => (prev === locationId ? null : locationId));
-        setSelectedLocationId((prev) => (prev === locationId ? null : locationId));
+    const handleLocationClick = (locationID: number) => {
+        setExpandedlocationID(prev => prev === locationID ? null : locationID);
+        setSelectedlocationID(prev => prev === locationID ? null : locationID);
         resetSelections();
     };
 
-    const handleDeviceClick = (deviceId: string) => {
-        setExpandedDeviceId((prev) => (prev === deviceId ? null : deviceId));
-        setSelectedDeviceId((prev) => (prev === deviceId ? null : deviceId));
-        setSelectedSensorIds([]);
-        setSelectedSensorTypes([]);
-        setMonitoringData(null);
+    const handleDeviceClick = (deviceID: string) => {
+        setExpandeddeviceID(prev => prev === deviceID ? null : deviceID);
+        setSelecteddeviceID(prev => prev === deviceID ? null : deviceID);
+        setSelectedComponents([]);
+        setSelectedMetric([]);
+        setIsFetchTriggered(false);
     };
 
-    const handleSensorChange = (sensorId: string, sensorType: string) => {
-        setMonitoringData(null);
-        setNoInfluxData(false);
-        setValidationError(null);
-
-        setSelectedSensorIds((prev) =>
-            prev.includes(sensorId) ? prev.filter((id) => id !== sensorId) : [...prev, sensorId]
+    const handleComponentChange = (component: Component) => {
+        setSelectedComponents(prev =>
+            prev.some((c) => c.component_id === component.component_id)
+                ? prev.filter((c) => c.component_id !== component.component_id)
+                : [...prev, component]
         );
-
-        setSelectedSensorTypes((prev) =>
-            prev.includes(sensorType) ? prev.filter((type) => type !== sensorType) : [...prev, sensorType]
-        );
+        setSelectedMetric([]);
+        setIsFetchTriggered(false);
     };
 
-    const handleMonitor = async () => {
-        if (!selectedLocationId || !selectedDeviceId || selectedSensorIds.length === 0) {
-            setValidationError("Veuillez sélectionner une localisation, un appareil et au moins un capteur.");
+    const handleDeviceAndMetricClick = (deviceID: string, metric: 'current' | 'voltage' | 'power' | null) => {
+        setSelecteddeviceID(deviceID);
+        setSelectedComponents([]);
+        setIsFetchTriggered(false);
+
+        if (metric === null) {
+            setSelectedMetric([]);
+        } else {
+            setSelectedMetric(prevMetrics =>
+                prevMetrics.includes(metric) ? prevMetrics.filter(m => m !== metric) : [...prevMetrics, metric]
+            );
+        }
+    };
+
+    const handleSearchClick = () => {
+        setIsFetchTriggered(true);
+    };
+
+    // useEffect to fetch data when the search is triggered
+    useEffect(() => {
+        if (!isFetchTriggered || !selecteddeviceID) {
             return;
         }
 
-        setInfluxLoading(true);
-        setInfluxError(null);
-        setMonitoringData(null);
-        setNoInfluxData(false);
-
-        try {
-            const queryParams = {
-                locationId: selectedLocationId,
-                deviceId: selectedDeviceId,
-                sensorType: selectedSensorTypes,
-                measurement: "sensor_data",
-                timeRangeStart: startTime ? new Date(startTime).toISOString() : undefined,
-                timeRangeStop: endTime ? new Date(endTime).toISOString() : undefined,
-                windowPeriod: "10s",
-            };
-
-            const { data } = await influxApi.get("/query", { params: queryParams });
-
-            if (data && Object.keys(data).length > 0) setMonitoringData(data);
-            else setNoInfluxData(true);
-        } catch (err: any) {
-            setInfluxError(err);
-            console.error("Error fetching data from InfluxDB:", err);
-        } finally {
-            setInfluxLoading(false);
+        if (selectedComponents.length > 0 && selectedMetric.length > 0) {
+            console.warn("Both components and a metric are selected. This is not supported. Please choose one.");
+            setIsFetchTriggered(false);
+            return;
         }
-    };
 
-    // --- Conditional renders ---
-    if (loadingSites || loadingDevices || loading) {
+        if (selectedMetric.length > 0) {
+            getMetrics({
+                device_id: selecteddeviceID,
+                metric: selectedMetric,
+                startTime: startTime || undefined,
+                endTime: endTime || undefined,
+            });
+        } else if (selectedComponents.length > 0) {
+            getSensorData({
+                selectedlocationID: selectedlocationID!,
+                selecteddeviceID: selecteddeviceID,
+                selectedComponents: selectedComponents,
+                startTime: startTime || undefined,
+                endTime: endTime || undefined,
+            });
+        }
+
+        setIsFetchTriggered(false);
+    }, [isFetchTriggered, selecteddeviceID, selectedComponents, selectedMetric, startTime, endTime, selectedlocationID, getMetrics, getSensorData]);
+
+    if ( loading || loadingSites || loadingDevices) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
                 <Loader2 className="animate-spin h-10 w-10 text-green-500 mr-3" />
@@ -194,26 +200,17 @@ const History: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex font-sans antialiased">
-            {/* Mobile Menu Button */}
-            {isMobile && (
-                <button
-                    onClick={() => setIsSidebarExplicitlyOpen(true)}
-                    className="fixed top-15 left-4 z-50 p-2 bg-white rounded-full shadow-md text-gray-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                    <Menu size={24} />
-                </button>
-            )}
+        <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans antialiased">
 
             {/* Sidebar */}
             <aside
-                className={`fixed md:static inset-y-0 left-0 z-40 w-80 transform transition-transform duration-300 bg-white shadow-xl rounded-r-2xl p-6 overflow-y-auto
-                    ${isMobile ? (isSidebarExplicitlyOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0"}
-                `}
+                className={`transform transition-transform duration-300 bg-white shadow-xl rounded-r-2xl p-6 overflow-y-auto ${
+                    isMobile ? 'fixed inset-y-0 left-0 z-40 w-full ' + (isSidebarExplicitlyOpen ? 'translate-x-0' : '-translate-x-full') : 'relative w-80 translate-x-0'
+                }`}
             >
                 {isMobile && (
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-gray-800">Sélectionner</h2>
+                        <h2 className="text-2xl font-bold text-gray-800">Sélectionner</h2>
                         <button
                             onClick={() => setIsSidebarExplicitlyOpen(false)}
                             className="p-2 text-gray-600 rounded-full hover:bg-gray-200"
@@ -229,97 +226,128 @@ const History: React.FC = () => {
                 )}
                 <SelectionTree
                     sitesWithLocations={sitesWithLocations}
-                    selectedLocationId={selectedLocationId}
-                    selectedDeviceId={selectedDeviceId}
-                    selectedSensorIds={selectedSensorIds}
-                    expandedLocationId={expandedLocationId}
-                    expandedDeviceId={expandedDeviceId}
+                    selectedlocationID={selectedlocationID}
+                    selecteddeviceID={selecteddeviceID}
+                    selectedComponents={selectedComponents}
+                    expandedlocationID={expandedlocationID}
+                    expandeddeviceID={expandeddeviceID}
                     onLocationClick={handleLocationClick}
                     onDeviceClick={handleDeviceClick}
-                    onSensorChange={handleSensorChange}
+                    onComponentChange={handleComponentChange}
+                    selectedMetric={selectedMetric}
+                    onDeviceAndMetricClick={handleDeviceAndMetricClick}
                 />
             </aside>
 
-            {/* Mobile overlay */}
+            {/* Mobile Overlay */}
             {isMobile && isSidebarExplicitlyOpen && (
                 <div
-                    onClick={() => setIsSidebarExplicitlyOpen(!isSidebarExplicitlyOpen)}
+                    onClick={() => setIsSidebarExplicitlyOpen(false)}
                     className="fixed inset-0 bg-black bg-opacity-40 z-30"
                 />
             )}
 
-            {/* Main content */}
-            <main className="flex-1 p-4 md:p-8">
-                <div className="bg-white rounded-xl md:rounded-3xl shadow-lg p-6 md:p-8">
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">
+            {/* Main Content */}
+            <main className="flex-1 p-6">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h1 className="text-2xl font-extrabold text-gray-900 mb-4 tracking-tight">
                         Historique de Monitoring
                     </h1>
 
-                    <DateTimeInputs
-                        startTime={startTime}
-                        endTime={endTime}
-                        onStartTimeChange={(e) => setStartTime(e.target.value)}
-                        onEndTimeChange={(e) => setEndTime(e.target.value)}
-                    />
 
-                    {selectedLocationId && selectedDeviceId && selectedSensorIds.length > 0 && (
+                    { !selectedComponents.some(c => c.component_type !== 'sensor') && (
+                    <div className="mt-6">
+                        <DateTimeInputs
+                            startTime={startTime}
+                            endTime={endTime}
+                            onStartTimeChange={(e) => setStartTime(e.target.value)}
+                            onEndTimeChange={(e) => setEndTime(e.target.value)}
+                        />
                         <button
-                            onClick={handleMonitor}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md mt-6 flex items-center justify-center"
-                            disabled={influxLoading}
+                            onClick={handleSearchClick}
+                            className={`w-full py-3 px-6 rounded-xl font-semibold text-lg transition-colors duration-200 ${
+                                selecteddeviceID && (selectedComponents.length > 0 || selectedMetric.length > 0)
+                                    ? 'bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                            disabled={!selecteddeviceID || (selectedComponents.length === 0 && selectedMetric.length === 0)}
                         >
-                            {influxLoading ? (
-                                <>
+                            {influxLoading  ? (
+                                <span className="flex items-center justify-center">
                                     <Loader2 className="animate-spin h-5 w-5 mr-3" />
                                     Chargement...
-                                </>
+                                </span>
                             ) : (
-                                "Afficher les Données"
+                                "Rechercher les données"
                             )}
                         </button>
+                    </div>
+                    )}
+
+                    {validationError && (
+                        <div className="bg-red-100 text-red-800 rounded-xl p-4 font-medium border border-red-200 text-sm mt-8">
+                            {validationError}
+                        </div>
+                    )}
+                    {influxError && (
+                        <div className="bg-red-100 text-red-800 rounded-xl p-4 font-medium border border-red-200 text-sm mt-8">
+                            {influxError.message}
+                        </div>
+                    )}
+                    {noInfluxData && (
+                        <div className="bg-yellow-100 text-yellow-800 rounded-xl p-4 font-medium border border-yellow-200 text-sm mt-8">
+                            Aucune donnée de monitoring trouvée pour la sélection et la période spécifiées.
+                        </div>
                     )}
 
                     <div className="mt-8 space-y-4">
-                        {validationError && (
-                            <div className="bg-red-100 text-red-800 rounded-xl p-4 font-medium border border-red-200 text-sm">
-                                {validationError}
-                            </div>
-                        )}
-                        {influxError && (
-                            <div className="bg-red-100 text-red-800 rounded-xl p-4 font-medium border border-red-200 text-sm">
-                                Erreur lors de la récupération des données d'InfluxDB: {influxError.message}
-                            </div>
-                        )}
-                        {noInfluxData && (
-                            <div className="bg-yellow-100 text-yellow-800 rounded-xl p-4 font-medium border border-yellow-200 text-sm">
-                                Aucune donnée de monitoring trouvée pour la sélection et la période spécifiées.
-                            </div>
-                        )}
-
-                        {!selectedLocationId && !sitesError && (
+                        {!selectedlocationID && !sitesError && (
                             <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
                                 <p className="text-base mb-2">Bienvenue sur l'historique de monitoring.</p>
                                 <p>Pour commencer, veuillez sélectionner une localisation.</p>
                             </div>
                         )}
-                        {selectedLocationId && !selectedDeviceId && (
+                        {selectedlocationID && !selecteddeviceID && (
                             <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
                                 <p>Veuillez sélectionner un appareil.</p>
                             </div>
                         )}
-                        {selectedDeviceId && selectedSensorIds.length === 0 && (
+                        {selecteddeviceID && selectedComponents.length === 0 && selectedMetric.length === 0 && (
                             <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
-                                <p>Veuillez sélectionner au moins un capteur.</p>
+                                <p>Veuillez sélectionner au moins un capteur ou une métrique (courant, tension, puissance).</p>
                             </div>
                         )}
                     </div>
 
-                    {monitoringData && Object.keys(monitoringData).length > 0 && (
-                        <div className="bg-gray-50 rounded-xl shadow-inner p-4 md:p-6 mt-8">
-                            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Données de Monitoring</h2>
+                    {/* GRAPHIQUE DES DONNÉES INFLUXDB */}
+                    {influxData && influxData.length > 0 && (
+                        <DataGraph
+                            monitoringData={influxData}
+                            selectedComponents={selectedComponents}
+                            startTime={startTime}
+                            endTime={endTime}
+                        />
+                    )}
+
+                    {/* GRAPHIQUE DES STATISTIQUES DES COMPOSANTS */}
+                    {selectedComponents.length > 0 && (
+                        <div className="mt-8">
+                            <ComponentStatsGraph components={selectedComponents} />
                         </div>
                     )}
+
                 </div>
+
+                {/* Hamburger menu for mobile only */}
+                {isMobile && (
+                    <button
+                        onClick={() => setIsSidebarExplicitlyOpen(!isSidebarExplicitlyOpen)}
+                        className="fixed bottom-4 right-4 z-50 p-3 bg-green-500 text-white rounded-full shadow-lg transition-transform duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300"
+                        aria-label="Open sidebar"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+                )}
             </main>
         </div>
     );

@@ -134,15 +134,15 @@ const Dashboard = () => {
         setScheduleError(null);
     };
 
-    const handleSaveDeviceSettings = async (updatedComponent: Component, deviceId: string,) => {
+    const handleSaveDeviceSettings = async (updatedComponent: Component, deviceID: string,) => {
         try {
-            await changeDeviceConfig(deviceId, updatedComponent)
+            await changeDeviceConfig(deviceID, updatedComponent)
             if (selectedDevice) {
                 setLocationWithDevices((prevLocations) =>
                     prevLocations.map((loc) => ({
                         ...loc,
                         devices: loc.devices.map((dev) =>
-                            dev.device_id === deviceId
+                            dev.device_id === deviceID
                                 ? {
                                     ...dev,
                                     components: dev.components?.map((comp) =>
@@ -216,10 +216,10 @@ const Dashboard = () => {
         }
     }
 
-    const handleSaveSchedule = async (schedules: Partial<RecurringSchedule>[], deviceId: string) => {
+    const handleSaveSchedule = async (schedules: Partial<RecurringSchedule>[], deviceID: string) => {
         try {
             for (const schedule of schedules) {
-                await createRecurringSchedule(deviceId, schedule);
+                await createRecurringSchedule(deviceID, schedule);
             }
         } catch (error) {
         }

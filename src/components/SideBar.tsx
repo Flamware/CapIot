@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp, Bell, X } from 'lucide-react';
+import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp, Bell, X, Menu } from 'lucide-react';
 import { NavLink } from "react-router-dom";
-import {useAuth} from "./hooks/useAuth.tsx";
+import { useAuth } from "./hooks/useAuth.tsx";
 
 // Define the shape of a menu item for clarity
 interface MenuItem {
@@ -15,11 +15,14 @@ interface MenuItem {
 interface SideBarProps {
     onToggleSidebar: () => void;
     isSidebarOpen: boolean;
+    isMobile?: boolean;
 }
 
-export function SideBar({  onToggleSidebar, isSidebarOpen }: SideBarProps) {
+export function SideBar({ isSidebarOpen, onToggleSidebar, isMobile }: SideBarProps) {
+
     const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
-    const {user}=useAuth()
+    const { user } = useAuth();
+
     // Inline SVG for the chart icon
     const ChartLineIcon = () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor" className="text-green-300 text-2xl">
@@ -51,7 +54,7 @@ export function SideBar({  onToggleSidebar, isSidebarOpen }: SideBarProps) {
     ];
 
     // Helper variables for conditional rendering based on user role
-    const isAdmin = user?.roles?.includes("admin")
+    const isAdmin = user?.roles?.includes("admin");
     const isGestionnaire = user?.roles?.includes('gestionnaire');
     const isOperateur = user?.roles?.includes('operateur');
 
@@ -65,42 +68,35 @@ export function SideBar({  onToggleSidebar, isSidebarOpen }: SideBarProps) {
     return (
         <>
             {/* Mobile overlay, visible when sidebar is open */}
-            {isSidebarOpen && (
+            {isMobile && isSidebarOpen && (
                 <div
-                    className="fixed inset-0 z-30 lg:hidden bg-black opacity-50 transition-opacity duration-300"
+                    className="fixed inset-0 z-30 bg-black opacity-50 transition-opacity duration-300"
                     onClick={onToggleSidebar}
                     aria-hidden="true"
                 ></div>
             )}
+
             {/* Sidebar container with responsive classes */}
-            <div className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 lg:static lg:flex lg:flex-col lg:w-64 lg:shadow-lg bg-white
-                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+            <div className={`fixed top-0 left-0 h-full w-64 z-40 shadow-lg bg-white
+                transform transition-transform duration-300 ease-in-out
+                ${isMobile ? (isSidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'} lg:relative lg:translate-x-0`}>
                 <div className="flex flex-col justify-start pt-6">
                     {/* Logo and close button for mobile */}
-                    <div className="flex items-center justify-between px-4 mb-8 lg:hidden">
+                    <div className="flex items-center justify-between px-4 mb-8">
                         <NavLink to="/" className="flex items-center space-x-2" onClick={onToggleSidebar}>
                             <ChartLineIcon />
                             <span className="text-xl font-semibold text-gray-800">
                                 Cap<span className="text-green-300">Iot</span>
                             </span>
                         </NavLink>
-                        <button onClick={onToggleSidebar} className="p-2 rounded-full hover:bg-gray-100" aria-label="Close sidebar">
-                            <X className="w-6 h-6" />
-                        </button>
-                    </div>
-
-                    {/* Logo for large screens */}
-                    <div className="hidden lg:flex items-center justify-center px-4 mb-8">
-                        <NavLink to="/" className="flex items-center space-x-2">
-                            <ChartLineIcon />
-                            <span className="text-xl font-semibold text-gray-800">
-                                Cap<span className="text-green-300">Iot</span>
-                            </span>
-                        </NavLink>
+                        {isMobile && (
+                            <button onClick={onToggleSidebar} className="p-2 rounded-full hover:bg-gray-100" aria-label="Close sidebar">
+                                <X className="w-6 h-6" />
+                            </button>
+                        )}
                     </div>
 
                     {/* General Navigation based on role */}
-                    {/* Render general navigation links if the user is an admin, gestionnaire, or operateur */}
                     {(isAdmin || isGestionnaire || isOperateur) && (
                         <div className="w-full">
                             <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -127,7 +123,6 @@ export function SideBar({  onToggleSidebar, isSidebarOpen }: SideBarProps) {
                     )}
 
                     {/* Admin Section (Dropdown) - only for 'admin' role */}
-                    {/* This section is only rendered if the user has the 'admin' role */}
                     {isAdmin && (
                         <div className="w-full mt-4">
                             <div
@@ -161,6 +156,7 @@ export function SideBar({  onToggleSidebar, isSidebarOpen }: SideBarProps) {
                     )}
                 </div>
             </div>
+
         </>
     );
 }

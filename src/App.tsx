@@ -15,22 +15,23 @@ import NoRolePage from "./pages/norole.tsx";
 import {AuthProvider} from "./AuthContext.tsx";
 import {useState} from "react";
 import Notifications from "./pages/notifications.tsx";
+import {useIsMobile} from "./components/hooks/useIsMobile.tsx";
 
 const App = () => {
     // This is the problem. useAuth will not work as expected because it's not
     // a child of AuthProvider.
     const { isAuthenticated} = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+    const isMobile = useIsMobile(1100);
     const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
     const closeSidebar = () => setIsSidebarOpen(false);
 
     // To fix this, we'll create a new component that uses the hooks
     // and is a child of the provider.
     return (
-        <div className="relative flex flex-col md:flex-row h-screen bg-gray-50 overflow-hidden">
+        <div className="relative flex flex-row h-screen bg-gray-50 overflow-hidden">
             {isAuthenticated && (
-                <SideBar  isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
+                <SideBar  isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} isMobile={isMobile} />
             )}
 
             <div className="flex-1 overflow-y-auto">
@@ -38,12 +39,13 @@ const App = () => {
                     isSidebarOpen={isSidebarOpen}
                     onToggleSidebar={toggleSidebar}
                     onCloseSidebar={closeSidebar}
+                    isMobile={isMobile}
                 />
                 <main className="container mx-auto p-4">
                     <Routes>
                         <Route path="/no-role" element={<NoRolePage />} />
                         <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
-                        <Route element={<ProtectedRoute requiredRoles={['user', 'admin', 'operateur', 'guest']} />}>
+                        <Route element={<ProtectedRoute requiredRoles={['user', 'admin', 'operateur', 'gestionnaire']} />}>
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/history" element={<History />} />

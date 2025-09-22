@@ -34,11 +34,11 @@ export const useDeviceApi = () => {
         }
     }, [api]);
 
-    const fetchDeviceFromLocation = useCallback(async (locationId: number): Promise<DeviceInfo[]> => {
+    const fetchDeviceFromLocation = useCallback(async (locationID: number): Promise<DeviceInfo[]> => {
             setLoadingDevices(true);
             setApiError(null);
             try {
-                const response = await api.get<DeviceInfo[]>(`/location/${locationId}/devices`);
+                const response = await api.get<DeviceInfo[]>(`/location/${locationID}/devices`);
                 return response.data || [];
             } catch (error) {
                 setApiError(error);
@@ -50,11 +50,11 @@ export const useDeviceApi = () => {
         }
         , [api]);
 
-    const fetchComponentsFromDevice = useCallback(async (deviceId: string): Promise<Component[]> => {
+    const fetchComponentsFromDevice = useCallback(async (deviceID: string): Promise<Component[]> => {
             setLoadingDevices(true);
             setApiError(null);
             try {
-                const response = await api.get<Component[]>(`/devices/${deviceId}/components`);
+                const response = await api.get<Component[]>(`/devices/${deviceID}/components`);
                 return response.data;
             } catch (error) {
                 setApiError(error);
@@ -66,12 +66,12 @@ export const useDeviceApi = () => {
         }
         , [api]);
 
-    const assignLocationToDevice = useCallback(async (deviceId: string, locationId: number) => {
+    const assignLocationToDevice = useCallback(async (deviceID: string, locationID: number) => {
         setApiError(null);
         try {
             await api.post(`/assign-device`, {
-                device_id: deviceId,
-                location_id: locationId,
+                device_id: deviceID,
+                location_id: locationID,
             });
         } catch (error) {
             setApiError(error);
@@ -81,10 +81,10 @@ export const useDeviceApi = () => {
     }, [api]);
 
     // This function handles sending configuration updates, including min/max thresholds and running hours.
-    const changeDeviceConfig = useCallback(async (deviceId: string, componentInfo: Component) => {
+    const changeDeviceConfig = useCallback(async (deviceID: string, componentInfo: Component) => {
             setApiError(null);
             try {
-                await api.patch(`/devices/${deviceId}/components/${componentInfo.component_id}`,
+                await api.patch(`/devices/${deviceID}/components/${componentInfo.component_id}`,
                     {
                         min_threshold: componentInfo.min_threshold,
                         max_threshold: componentInfo.max_threshold,
@@ -99,41 +99,41 @@ export const useDeviceApi = () => {
         , [api]);
 
 
-    const deleteDevice = useCallback(async (deviceId: string) => {
+    const deleteDevice = useCallback(async (deviceID: string) => {
         setApiError(null);
         try {
-            await api.delete(`/device/${deviceId}`);
+            await api.delete(`/device/${deviceID}`);
         } catch (error) {
             setApiError(error);
             throw error;
         }
     }, [api]);
 
-    const commandDevice = useCallback(async (deviceId: string, command: string) => {
+    const commandDevice = useCallback(async (deviceID: string, command: string) => {
         setApiError(null);
         try {
-            await api.post(`/devices/${deviceId}/command`, { command });
+            await api.post(`/devices/${deviceID}/command`, { command });
         } catch (error) {
             setApiError(error);
             throw error;
         }
     }, [api]);
 
-    const commandComponent = useCallback(async (deviceId: string, componentId: string, command: string) => {
+    const commandComponent = useCallback(async (deviceID: string, componentId: string, command: string) => {
         setApiError(null);
         try {
-            await api.post(`/devices/${deviceId}/components/${componentId}/command`, { command });
+            await api.post(`/devices/${deviceID}/components/${componentId}/command`, { command });
         } catch (error) {
             setApiError(error);
             throw error;
         }
     }, [api]);
 
-    const fetchDeviceSensors = useCallback(async (deviceId: string) => {
+    const fetchDeviceSensors = useCallback(async (deviceID: string) => {
             setLoadingDevices(true);
             setApiError(null);
             try {
-                const response = await api.get<Component[]>(`/devices/${deviceId}/sensors`);
+                const response = await api.get<Component[]>(`/devices/${deviceID}/sensors`);
                 return response.data;
             } catch (error) {
                 setApiError(error);

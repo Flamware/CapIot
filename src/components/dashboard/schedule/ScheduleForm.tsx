@@ -21,7 +21,6 @@ const ScheduleForm: React.FC<Props> = ({
                                            dailySchedule,
                                            weeklySchedule,
                                            monthlySchedule,
-                                           selectedDateRange,
                                            onChange,
                                            color,
                                            selectRange,
@@ -94,7 +93,6 @@ const ScheduleForm: React.FC<Props> = ({
                     <div className="p-4 bg-white rounded-lg shadow-lg">
                         <Calendar
                             onChange={onChange.monthlyDate}
-                            value={selectedDateRange}
                             selectRange={selectRange}
                             className="w-full max-w-sm font-sans"
                         />

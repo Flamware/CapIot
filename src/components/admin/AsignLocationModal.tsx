@@ -5,10 +5,10 @@ import {ChevronLeft, ChevronRight} from "lucide-react";
 
 interface AssignLocationModalProps {
     isOpen: boolean;
-    deviceId: string | null;
+    deviceID: string | null;
     availableLocations: Location[];
-    selectedLocationId: number | null;
-    onLocationSelected: (locationId: number) => void;
+    selectedlocationID: number | null;
+    onLocationSelected: (locationID: number) => void;
     onAssign: () => void;
     onCancel: () => void;
     loadingLocations: boolean;
@@ -21,9 +21,9 @@ interface AssignLocationModalProps {
 
 export const AssignLocationModal: React.FC<AssignLocationModalProps> = ({
                                                                             isOpen,
-                                                                            deviceId,
+                                                                            deviceID,
                                                                             availableLocations,
-                                                                            selectedLocationId,
+                                                                            selectedlocationID,
                                                                             onLocationSelected,
                                                                             onAssign,
                                                                             onCancel,
@@ -34,14 +34,14 @@ export const AssignLocationModal: React.FC<AssignLocationModalProps> = ({
                                                                             onGoToPreviousLocationPage,
                                                                             onGoToNextLocationPage,
                                                                         }) => {
-    if (!isOpen || !deviceId) {
+    if (!isOpen || !deviceID) {
         return null;
     }
 
     return (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-20">
             <div className="bg-white p-6 rounded-md shadow-lg w-96">
-                <h2 className="text-lg font-semibold mb-4">Assign Location to Device: {deviceId}</h2>
+                <h2 className="text-lg font-semibold mb-4">Assign Location to Device: {deviceID}</h2>
                 {loadingLocations ? (
                     <p className="text-gray-500 mb-4">Fetching locations...</p>
                 ) : errorLocations ? (
@@ -54,7 +54,7 @@ export const AssignLocationModal: React.FC<AssignLocationModalProps> = ({
                         <select
                             id="location"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                            value={selectedLocationId || ""}
+                            value={selectedlocationID || ""}
                             onChange={(e) => onLocationSelected(Number(e.target.value))}
                         >
                             <option value="" disabled>Select a location</option>
@@ -103,7 +103,7 @@ export const AssignLocationModal: React.FC<AssignLocationModalProps> = ({
                     <button onClick={onCancel}
                             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md">Cancel
                     </button>
-                    <button onClick={onAssign} disabled={selectedLocationId === null}
+                    <button onClick={onAssign} disabled={selectedlocationID === null}
                             className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed">Assign
                     </button>
                 </div>

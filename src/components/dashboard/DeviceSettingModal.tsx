@@ -6,7 +6,7 @@ interface DeviceSettingsModalProps {
     isOpen: boolean;
     device: DeviceInfo | null;
     onClose: () => void;
-    onSave: (updatedComponent: Component, deviceId: string) => void;
+    onSave: (updatedComponent: Component, deviceID: string) => void;
     onReset: (componentInfo: Component) => void;
 }
 

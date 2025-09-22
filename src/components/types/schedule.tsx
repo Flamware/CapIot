@@ -4,8 +4,6 @@ export interface RecurringSchedule {
     schedule_name: string;
     start_time: string;
     end_time: string;
-    start_date: string;
-    end_date: string;
     recurrence_rule: string;
     is_exception: boolean;
 }

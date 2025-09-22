@@ -28,6 +28,7 @@
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.4.0",
+    "recharts": "^3.2.1",
     "redux-persist": "^6.0.0",
     "rrule": "^2.8.1"
   },

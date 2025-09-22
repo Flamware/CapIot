@@ -17,7 +17,7 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
                                                                     onSave,
                                                                 }) => {
     const [selectedSiteId, setSelectedSiteId] = useState<number | null>(device.location?.location_id || null);
-    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(device.location?.location_id || null);
+    const [selectedlocationID, setSelectedlocationID] = useState<number | null>(device.location?.location_id || null);
 
     const [siteSearch, setSiteSearch] = useState("");
     const [locationSearch, setLocationSearch] = useState("");
@@ -46,12 +46,12 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
             }
 
         } else {
-            setSelectedLocationId(null);
+            setSelectedlocationID(null);
         }
     }, [selectedSiteId, locationSearch]);
 
     const handleSave = () => {
-        const selectedLoc = locations.find(loc => loc.location_id === selectedLocationId) || null;
+        const selectedLoc = locations.find(loc => loc.location_id === selectedlocationID) || null;
 
         const newLoc: Location | null = selectedLoc
             ? {
@@ -105,8 +105,8 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
                             className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-1"
                         />
                         <select
-                            value={selectedLocationId || ""}
-                            onChange={(e) => setSelectedLocationId(e.target.value ? Number(e.target.value) : null)}
+                            value={selectedlocationID || ""}
+                            onChange={(e) => setSelectedlocationID(e.target.value ? Number(e.target.value) : null)}
                             className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                         >
                             <option value="">Non assigné</option>

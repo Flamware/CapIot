@@ -1,5 +1,6 @@
 import { Pagination } from "./pagination.ts";
-import {Location} from "./location.ts";
+import { Location } from "./location.ts";
+import { ReadingPoint } from "../history/DataGraph.tsx";
 
 export interface Site {
     site_id: number;
@@ -37,6 +38,9 @@ export interface Device {
     created_at?: string;
     status?: string;
     location?: Location;
+    current: number;
+    voltage: number;
+    power: number;
 }
 
 export type DeviceWithComponentsAndLocation = Device & {
@@ -49,4 +53,10 @@ export type DevicesLocationsResponse = Pagination & {
 
 export type DevicesWithLocation = Device & {
     location: Location; // now includes site inside location
+}
+export interface DeviceReadings {
+    deviceID: string;
+    readings: {
+        [key: string]: ReadingPoint[];
+    };
 }

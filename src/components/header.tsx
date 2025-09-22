@@ -20,9 +20,10 @@ interface HeaderProps {
     onToggleSidebar: () => void;
     onCloseSidebar: () => void;
     isSidebarOpen?: boolean;
+    isMobile: boolean;
 }
 
-const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onCloseSidebar, isSidebarOpen }) => {
+const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onCloseSidebar, isSidebarOpen,isMobile }) => {
     const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -30,7 +31,6 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onCloseSidebar,
     const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
     const accountMenuRef = useRef<HTMLDivElement>(null);
     const notificationMenuRef = useRef<HTMLDivElement>(null);
-    const isMobile = useIsMobile(900);
     const {
         notifications,
         fetchNotifications,

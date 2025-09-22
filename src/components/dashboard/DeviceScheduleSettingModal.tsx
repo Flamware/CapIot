@@ -9,7 +9,7 @@ interface Props {
     isOpen: boolean;
     device: DeviceInfo;
     onClose: () => void;
-    onSaveSchedule: (schedules: Partial<RecurringSchedule>[], deviceId: string) => void;
+    onSaveSchedule: (schedules: Partial<RecurringSchedule>[], deviceID: string) => void;
 }
 
 const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, onSaveSchedule }) => {
@@ -95,7 +95,6 @@ const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, 
     const handleSave = () => {
         const schedulesToSave: Partial<RecurringSchedule>[] = [];
         const isException = isExceptionMode;
-
         const today = new Date();
 
         if (currentRecurrenceType === 'daily') {
@@ -119,27 +118,48 @@ const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, 
                 }
             });
         } else if (currentRecurrenceType === 'monthly') {
-            if (currentSelectedDateRange && Array.isArray(currentSelectedDateRange) && currentSelectedDateRange.length === 2) {
+            if (
+                currentSelectedDateRange &&
+                Array.isArray(currentSelectedDateRange) &&
+                currentSelectedDateRange.length === 2
+            ) {
                 const [start, end] = currentSelectedDateRange;
-                schedulesToSave.push({
-                    start_time: formatDateForGo(start, currentMonthly.start_time),
-                    end_time: formatDateForGo(end, currentMonthly.end_time),
-                    start_date: start.toISOString(),
-                    end_date: end.toISOString(),
-                    recurrence_rule: `RRULE:FREQ=MONTHLY`,
-                    is_exception: isException,
-                    schedule_name: `Monthly from ${start.toLocaleDateString()} to ${end.toLocaleDateString()}`,
-                });
+
+                // ✅ Prevent double save when start == end
+                if (start.toDateString() !== end.toDateString()) {
+                    schedulesToSave.push({
+                        start_time: formatDateForGo(start, currentMonthly.start_time),
+                        end_time: formatDateForGo(end, currentMonthly.end_time),
+                        recurrence_rule: `RRULE:FREQ=MONTHLY`,
+                        is_exception: isException,
+                        schedule_name: `Monthly from ${start.toLocaleDateString()} to ${end.toLocaleDateString()}`,
+                    });
+                } else {
+                    // Treat as single-day schedule
+                    schedulesToSave.push({
+                        start_time: formatDateForGo(start, currentMonthly.start_time),
+                        end_time: formatDateForGo(start, currentMonthly.end_time),
+                        recurrence_rule: `RRULE:FREQ=MONTHLY`,
+                        is_exception: isException,
+                        schedule_name: `Monthly: ${start.toLocaleDateString()}`,
+                    });
+                }
             }
         } else if (currentRecurrenceType === 'specific') {
             if (currentSelectedDateRange) {
-                const dates = Array.isArray(currentSelectedDateRange) ? currentSelectedDateRange : [currentSelectedDateRange];
-                dates.forEach(date => {
+                const dates = Array.isArray(currentSelectedDateRange)
+                    ? currentSelectedDateRange
+                    : [currentSelectedDateRange];
+
+                // ✅ Deduplicate dates
+                const uniqueDates = Array.from(
+                    new Set(dates.map((d) => d.toDateString()))
+                ).map((str) => new Date(str));
+
+                uniqueDates.forEach((date) => {
                     schedulesToSave.push({
                         start_time: formatDateForGo(date, currentMonthly.start_time),
                         end_time: formatDateForGo(date, currentMonthly.end_time),
-                        start_date: date.toISOString(),
-                        end_date: date.toISOString(),
                         recurrence_rule: 'RRULE:FREQ=ONCE',
                         is_exception: isException,
                         schedule_name: `Specific day: ${date.toLocaleDateString()}`,
@@ -150,6 +170,7 @@ const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, 
 
         if (schedulesToSave.length > 0) {
             onSaveSchedule(schedulesToSave, device.device_id);
+            console.log("Schedules to save:", schedulesToSave);
         } else {
             console.error("No schedules to save. Check your selected options.");
         }
@@ -199,8 +220,7 @@ const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, 
                     selectedDateRange={currentSelectedDateRange}
                     onChange={currentOnChange}
                     color={isExceptionMode ? "red" : "green"}
-                    selectRange={isExceptionMode || (!isExceptionMode && currentRecurrenceType === 'monthly')}
-
+                    selectRange={true}
                 />
 
                 <div className="flex justify-end gap-4 mt-6">

@@ -7,11 +7,11 @@ export const useScheduleApi = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any | null>(null);
 
-    const createRecurringSchedule = useCallback(async (deviceId: string, schedule: Partial<RecurringSchedule>) => {
+    const createRecurringSchedule = useCallback(async (deviceID: string, schedule: Partial<RecurringSchedule>) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.post(`/devices/${deviceId}/schedules`, schedule);
+            const response = await api.post(`/devices/${deviceID}/schedules`, schedule);
             setLoading(false);
             return response.data;
         } catch (err) {
@@ -21,11 +21,11 @@ export const useScheduleApi = () => {
         }
     }, [api]);
 
-    const getRecurringSchedules = useCallback(async (deviceId: string) => {
+    const getRecurringSchedules = useCallback(async (deviceID: string) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get<RecurringSchedule[]>(`/devices/${deviceId}/schedules`);
+            const response = await api.get<RecurringSchedule[]>(`/devices/${deviceID}/schedules`);
             setLoading(false);
             return response.data;
         } catch (err) {
@@ -35,11 +35,11 @@ export const useScheduleApi = () => {
         }
     }, [api]);
 
-    const updateRecurringSchedule = useCallback(async (deviceId: string, scheduleId: number, schedule: Partial<RecurringSchedule>) => {
+    const updateRecurringSchedule = useCallback(async (deviceID: string, scheduleId: number, schedule: Partial<RecurringSchedule>) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.put(`/devices/${deviceId}/schedules/${scheduleId}`, schedule);
+            const response = await api.put(`/devices/${deviceID}/schedules/${scheduleId}`, schedule);
             setLoading(false);
             return response.data;
         } catch (err) {
@@ -49,11 +49,11 @@ export const useScheduleApi = () => {
         }
     }, [api]);
 
-    const deleteRecurringSchedule = useCallback(async (deviceId: string, scheduleId: number) => {
+    const deleteRecurringSchedule = useCallback(async (deviceID: string, scheduleId: number) => {
         setLoading(true);
         setError(null);
         try {
-            await api.delete(`/devices/${deviceId}/schedules/${scheduleId}`);
+            await api.delete(`/devices/${deviceID}/schedules/${scheduleId}`);
             setLoading(false);
         } catch (err) {
             setLoading(false);

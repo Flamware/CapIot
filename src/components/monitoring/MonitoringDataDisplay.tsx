@@ -4,7 +4,7 @@ import SensorChart from './SensorChart';
 
 interface MonitoringDataDisplayProps {
     monitoringData: {
-        [deviceId: string]: {
+        [deviceID: string]: {
             readings: {
                 [sensorType: string]: { time: string; value: number }[];
             };
@@ -19,15 +19,15 @@ const MonitoringDataDisplay: React.FC<MonitoringDataDisplayProps> = ({ monitorin
 
     return (
         <div className="space-y-4">
-            {Object.keys(monitoringData).map((deviceId) => (
-                <div key={deviceId} className="mb-4 p-4 bg-gray-50 rounded-md shadow-sm">
-                    <h3 className="font-semibold text-lg mb-2">Device: {deviceId}</h3>
+            {Object.keys(monitoringData).map((deviceID) => (
+                <div key={deviceID} className="mb-4 p-4 bg-gray-50 rounded-md shadow-sm">
+                    <h3 className="font-semibold text-lg mb-2">Device: {deviceID}</h3>
                     <div className="space-y-4">
-                        {Object.keys(monitoringData[deviceId].readings).map((sensorType) => (
+                        {Object.keys(monitoringData[deviceID].readings).map((sensorType) => (
                             <SensorChart
-                                key={`${deviceId}-${sensorType}`}
+                                key={`${deviceID}-${sensorType}`}
                                 sensorType={sensorType}
-                                dataPoints={monitoringData[deviceId].readings[sensorType].map(reading => ({
+                                dataPoints={monitoringData[deviceID].readings[sensorType].map(reading => ({
                                     time: reading.time,
                                     value: reading.value,
                                 }))}
