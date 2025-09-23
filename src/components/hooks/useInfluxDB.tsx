@@ -39,9 +39,10 @@ export const useInfluxDB = () => {
         setValidationError(null);
 
         try {
+            // Corrected URL construction to match the Go server's path variables
+            const url = `/sensordata/${selecteddeviceID}/${selectedlocationID}`;
+
             const queryParams = {
-                locationID: selectedlocationID,
-                deviceID: selecteddeviceID,
                 sensorType: selectedComponents.map((comp) => comp.component_subtype),
                 measurement: "sensor_data",
                 timeRangeStart: startTime ? new Date(startTime).toISOString() : undefined,
@@ -49,7 +50,7 @@ export const useInfluxDB = () => {
                 windowPeriod: "10s",
             };
 
-            const { data } = await influxApi.get("/sensordata", { params: queryParams });
+            const { data } = await influxApi.get(url, { params: queryParams });
 
             if (data && Array.isArray(data) && data.length > 0) {
                 setMonitoringData(data as DeviceReadings[]);
