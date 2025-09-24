@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { DeviceInfo } from '../location/Props';
 import {RecurringSchedule} from "../types/schedule.tsx";
 import {Day, RecurrenceType, WeeklySchedule} from "../types/types.tsx";
 import ScheduleForm from "./schedule/ScheduleForm.tsx";
 import 'react-calendar/dist/Calendar.css';
+import {Device} from "../types/device.ts";
 
 interface Props {
     isOpen: boolean;
-    device: DeviceInfo;
+    device: Device;
     onClose: () => void;
     onSaveSchedule: (schedules: Partial<RecurringSchedule>[], deviceID: string) => void;
 }

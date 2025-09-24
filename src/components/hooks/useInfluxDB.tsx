@@ -19,7 +19,6 @@ interface GetMetricData {
 export const useInfluxDB = () => {
     const [monitoringData, setMonitoringData] = useState<DeviceReadings[] | null>(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<any>(null);
     const [validationError, setValidationError] = useState<string | null>(null);
     const [noData, setNoData] = useState(false);
     const influxApi = createInfluxApi();
@@ -33,24 +32,39 @@ export const useInfluxDB = () => {
         }
 
         setLoading(true);
-        setError(null);
         setMonitoringData(null);
         setNoData(false);
         setValidationError(null);
 
         try {
-            // Corrected URL construction to match the Go server's path variables
-            const url = `/sensordata/${selecteddeviceID}/${selectedlocationID}`;
+            // Use URLSearchParams to build the query string correctly
+            const queryParams = new URLSearchParams();
 
-            const queryParams = {
-                sensorType: selectedComponents.map((comp) => comp.component_subtype),
-                measurement: "sensor_data",
-                timeRangeStart: startTime ? new Date(startTime).toISOString() : undefined,
-                timeRangeStop: endTime ? new Date(endTime).toISOString() : undefined,
-                windowPeriod: "10s",
-            };
+            // Append each parameter to the query string
+            if (selectedlocationID) {
+                queryParams.append('location_id', selectedlocationID.toString());
+            }
+            if (selecteddeviceID) {
+                queryParams.append('device_id', selecteddeviceID);
+            }
+            if (selectedComponents && selectedComponents.length > 0) {
+                selectedComponents.forEach(comp => {
+                    queryParams.append('sensor_type', comp.component_subtype || '');
+                });
+            }
+            if (startTime) {
+                queryParams.append('time_range_start', new Date(startTime).toISOString());
+            }
+            if (endTime) {
+                queryParams.append('time_range_stop', new Date(endTime).toISOString());
+            }
+            queryParams.append('window_period', "10s");
 
-            const { data } = await influxApi.get(url, { params: queryParams });
+            // Construct the URL with query parameters
+            const url = `/sensordata?${queryParams.toString()}`;
+
+            // Make the GET request without a payload
+            const { data } = await influxApi.get(url);
 
             if (data && Array.isArray(data) && data.length > 0) {
                 setMonitoringData(data as DeviceReadings[]);
@@ -58,7 +72,6 @@ export const useInfluxDB = () => {
                 setNoData(true);
             }
         } catch (err: any) {
-            setError(err);
             console.error("Error fetching data from InfluxDB:", err);
         } finally {
             setLoading(false);
@@ -68,34 +81,39 @@ export const useInfluxDB = () => {
     const getMetrics = useCallback(async (params: GetMetricData) => {
         const { device_id, metric, startTime, endTime } = params;
 
-        // Use URLSearchParams to build the query string correctly
-        const queryParams = new URLSearchParams();
-
-        // Append device_id
-        if (device_id) {
-            queryParams.append('deviceID', device_id);
+        // Check if device_id is provided
+        if (!device_id || metric.length === 0) {
+            console.error("Device ID and metrics are required.");
+            throw new Error("Device ID and metrics are required.");
         }
 
-        // Append each metric individually
-        if (metric && Array.isArray(metric)) {
+        setLoading(true);
+        setMonitoringData(null);
+        setNoData(false);
+        setValidationError(null);
+
+        try {
+            // Use URLSearchParams to build the query string correctly
+            const queryParams = new URLSearchParams();
+
+            // Append each parameter to the query string
+            queryParams.append('device_id', device_id);
             metric.forEach(m => {
                 queryParams.append('metric', m);
             });
-        }
+            if (startTime) {
+                queryParams.append('time_range_start', new Date(startTime).toISOString());
+            }
+            if (endTime) {
+                queryParams.append('time_range_stop', new Date(endTime).toISOString());
+            }
 
-        // Append time range parameters
-        if (startTime) {
-            queryParams.append('time_range_start', new Date(startTime).toISOString());
-        }
-        if (endTime) {
-            queryParams.append('time_range_stop', new Date(endTime).toISOString());
-        }
-
-        try {
+            // Construct the URL with query parameters
             const url = `/metrics?${queryParams.toString()}`;
+
             console.log("Fetching metrics from URL:", url);
 
-            // Pass the constructed URL directly to the get method
+            // Make the GET request without a payload
             const { data } = await influxApi.get(url);
 
             console.log("Metrics data received:", data);
@@ -104,12 +122,13 @@ export const useInfluxDB = () => {
         } catch (err) {
             console.error("Error fetching metrics from InfluxDB:", err);
             throw err;
+        } finally {
+            setLoading(false);
         }
     }, []);
     return {
         monitoringData,
         loading,
-        error,
         validationError,
         noData,
         getSensorData,

@@ -8,7 +8,6 @@ export const useLocations = () => {
 
     const [locations, setLocations] = useState<Location[]>([]);
     const [loadingLocations, setLoadingLocations] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null);
     const [pagination, setPagination] = useState<Pagination>({
         currentPage: 1,
@@ -19,12 +18,10 @@ export const useLocations = () => {
 
     const fetchMeLocations = useCallback(async () => {
         setLoadingLocations(true);
-        setError(null);
         try {
             const response = await api.get<Location[]>(`/users/me/locations`);
             setLocations(response.data || []);
         } catch (err) {
-            setError("Erreur lors du chargement des emplacements.");
             setLoadingLocations(false);
         } finally {
             setLoadingLocations(false);
@@ -41,13 +38,10 @@ export const useLocations = () => {
             }
 
             setLoadingLocations(true);
-            setError(null);
-
             try {
                 // Backend API should accept page & limit params and return pagination info
-                const response = await api.get<LocationsResponse>(`/locations/sites`, {
+                const response = await api.get<LocationsResponse>(`/locations/sites/${ids}/`, {
                     params: {
-                        site_ids: ids.join(","),
                         page,
                         limit,
                         search: query
@@ -65,7 +59,6 @@ export const useLocations = () => {
                 }));
             } catch (err) {
                 console.error(err);
-                setError("Erreur lors du chargement des emplacements.");
             } finally {
                 setLoadingLocations(false);
             }
@@ -76,12 +69,10 @@ export const useLocations = () => {
 
     const fetchAllLocations = useCallback(async () => {
         setLoadingLocations(true);
-        setError(null);
         try {
             const response = await api.get<LocationsResponse>(`/locations`);
             setLocations(response.data.data || []);
         } catch (err) {
-            setError("Erreur lors du chargement des emplacements.");
             setLoadingLocations(false);
         } finally {
             setLoadingLocations(false);
@@ -91,7 +82,6 @@ export const useLocations = () => {
 
     const addLocation = useCallback(async (siteIds : number[], locationData: Partial<Location>): Promise<string | null> => {
         setLoadingLocations(true);
-        setError(null);
         try {
             await api.post<Location>(`/location/create`, locationData);
             // After adding, we refetch to ensure the list is up-to-date.
@@ -99,7 +89,6 @@ export const useLocations = () => {
             return null;
         } catch (err) {
             const errMsg = "Erreur lors de l'ajout de l'emplacement. Veuillez réessayer.";
-            setError(errMsg);
             setLoadingLocations(false);
             return errMsg;
         } finally {
@@ -109,7 +98,6 @@ export const useLocations = () => {
 
     const deleteLocation = useCallback(async (siteIds : number[], id: number): Promise<string | null> => {
         setLoadingLocations(true);
-        setError(null);
         try {
             await api.delete(`/admin/location/${id}`);
             await fetchLocationsBySiteIds(siteIds);
@@ -117,7 +105,6 @@ export const useLocations = () => {
         } catch (err) {
             console.error("Error deleting location:", err);
             const errMsg = "Erreur lors de la suppression de l'emplacement. Veuillez réessayer.";
-            setError(errMsg);
             return errMsg;
         } finally {
             setLoadingLocations(false);
@@ -126,7 +113,6 @@ export const useLocations = () => {
 
     const modifyLocation = useCallback(async (siteIds : number[],id: number, locationData: Partial<Location>): Promise<string | null> => {
         setLoadingLocations(true);
-        setError(null);
         try {
             await api.put<Location>(`/admin/location/${id}`, locationData);
             await fetchLocationsBySiteIds(siteIds);
@@ -134,7 +120,6 @@ export const useLocations = () => {
         } catch (err) {
             console.error("Error modifying location:", err);
             const errMsg = "Erreur lors de la modification de l'emplacement. Veuillez réessayer.";
-            setError(errMsg);
             return errMsg;
         } finally {
             setLoadingLocations(false);
@@ -156,14 +141,12 @@ export const useLocations = () => {
         locations,
         loadingLocations,
         pagination,
-        error,
         addLocation,
         deleteLocation,
         goToSitePage,
         modifyLocation,
         selectedSiteId,
         setSelectedSiteId,
-        setError,
         fetchMeLocations,
         fetchLocationsBySiteIds,
         fetchAllLocations

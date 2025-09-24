@@ -1,0 +1,5 @@
+// public/env-config.js
+window.env = {
+    VITE_API_URL: "VITE_API_URL_PLACEHOLDER",
+    VITE_INFLUXDB_URL: "VITE_INFLUXDB_URL_PLACEHOLDER"
+};

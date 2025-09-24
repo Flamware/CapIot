@@ -2,21 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, Trash2, List, CalendarDays } from 'lucide-react';
-import { DeviceInfo } from "../location/Props.tsx";
-import { Component } from "../types/device.ts";
+import {Component, Device} from "../types/device.ts";
 import { RecurringSchedule } from "../types/schedule.tsx";
 import { useScheduleApi } from "../hooks/useSchedule.tsx";
 
 interface DeviceInfoModalProps {
     isOpen: boolean;
-    device: DeviceInfo;
+    device: Device;
     onClose: () => void;
     onResetComponent: (component: Component) => Promise<void>;
 }
 
 const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClose, onResetComponent }) => {
     const [schedules, setSchedules] = useState<RecurringSchedule[]>([]);
-    const { getRecurringSchedules, loading, error, deleteRecurringSchedule } = useScheduleApi();
+    const { getRecurringSchedules, loading, deleteRecurringSchedule } = useScheduleApi();
     const [isResetting, setIsResetting] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState<number | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -139,9 +138,6 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
     };
 
     const getSchedulesForDate = (date: Date): RecurringSchedule[] => {
-        const schedulesForDay: RecurringSchedule[] = [];
-
-        // Priority 1: Specific ONCE
         const specific = schedules.filter(
             (s) => s.recurrence_rule.includes("FREQ=ONCE") && matchesSchedule(date, s)
         );
@@ -513,15 +509,10 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                             <Loader2 className="animate-spin h-6 w-6 text-gray-500" />
                             <p className="ml-2 text-gray-500">Loading schedules...</p>
                         </div>
-                    ) : error ? (
-                        <p className="text-red-500">Failed to load schedules: {error.message}</p>
+                    ) : showAllSchedules ? (
+                        renderAllSchedulesList()
                     ) : (
-                        <>
-                            {showAllSchedules ? renderAllSchedulesList() : renderCombinedScheduleCalendar()}
-                            {schedules.length === 0 && !showAllSchedules && (
-                                <p className="text-gray-500">No schedules found for this device.</p>
-                            )}
-                        </>
+                        renderCombinedScheduleCalendar()
                     )}
                 </div>
             </div>

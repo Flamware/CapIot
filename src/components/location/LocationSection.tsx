@@ -1,14 +1,15 @@
 import React from 'react';
-import {DeviceInfo, LocationData} from "./Props";
+import {LocationData} from "./Props";
 import LocationCard from "./locationCard";
 import {useIsMobile} from "../hooks/useIsMobile.tsx";
+import {Device} from "../types/device.ts";
 
 export interface LocationsSectionProps {
     locationsData: LocationData[];
-    onViewDeviceDetails: (device: DeviceInfo) => void;
-    onEditDeviceSettings: (device: DeviceInfo) => void;
-    onDeviceCommandSend?: (device: DeviceInfo, command: string) => void;
-    onDeviceScheduleSettings?: (device: DeviceInfo) => void;
+    onViewDeviceDetails: (device: Device) => void;
+    onEditDeviceSettings: (device: Device) => void;
+    onDeviceCommandSend?: (device: Device, command: string) => void;
+    onDeviceScheduleSettings?: (device: Device) => void;
 }
 
 const LocationsSection: React.FC<LocationsSectionProps> = ({
@@ -18,8 +19,7 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
     onDeviceCommandSend,
     onDeviceScheduleSettings,
                                                            }) => {
-
-    const isMobile = useIsMobile(1100);
+    useIsMobile(1100);
     if (!locationsData || locationsData.length === 0) {
         return (
             <div className="text-center py-10 text-gray-600 text-lg">
@@ -37,8 +37,6 @@ const LocationsSection: React.FC<LocationsSectionProps> = ({
                             location_name={location.location_name}
                             devices={location.devices}
                             lastUpdated={''}
-                            status={''}
-                            // Pass down both handler props to LocationCard
                             onEditDeviceSettings={(device) => onEditDeviceSettings(device)}
                             onViewDeviceDetails={(device) => onViewDeviceDetails(device)}
                             onDeviceCommandSend={onDeviceCommandSend}

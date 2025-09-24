@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
-import {Component, DevicesLocationsResponse, DevicesWithLocation} from "../types/device.ts";
+import {Component, Device, DevicesLocationsResponse, DevicesWithLocation} from "../types/device.ts";
 import { Pagination } from "../types/pagination.ts";
-import {DeviceInfo} from "../location/Props.tsx";
 import {useApi} from "./useApi.tsx";
 
 export const useDeviceApi = () => {
@@ -12,7 +11,6 @@ export const useDeviceApi = () => {
 
     const fetchDevices = useCallback(async (page: number, limit: number, query?: string): Promise<{ devices: DevicesWithLocation[], pagination: Pagination }> => {
         setLoadingDevices(true);
-        setApiError(null);
         try {
             const response = await api.get<DevicesLocationsResponse>(`/devices-components-locations`, {
                 params: { page, limit, search: query },
@@ -34,12 +32,12 @@ export const useDeviceApi = () => {
         }
     }, [api]);
 
-    const fetchDeviceFromLocation = useCallback(async (locationID: number): Promise<DeviceInfo[]> => {
+    const fetchDeviceFromLocation = useCallback(async (locationID: number): Promise<Device[]> => {
             setLoadingDevices(true);
             setApiError(null);
             try {
-                const response = await api.get<DeviceInfo[]>(`/location/${locationID}/devices`);
-                return response.data || [];
+                const response = await api.get<Device[]>(`/location/${locationID}/devices`);
+                return response.data;
             } catch (error) {
                 setApiError(error);
                 setLoadingDevices(false);
@@ -148,7 +146,6 @@ export const useDeviceApi = () => {
     return {
         loadingDevices,
         apiError,
-        setApiError,
         fetchDevices,
         fetchDeviceFromLocation,
         fetchComponentsFromDevice,

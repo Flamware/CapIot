@@ -21,14 +21,13 @@ const History: React.FC = () => {
     const [endTime, setEndTime] = useState("");
     const [expandedlocationID, setExpandedlocationID] = useState<number | null>(null);
     const [expandeddeviceID, setExpandeddeviceID] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
     const [isSidebarExplicitlyOpen, setIsSidebarExplicitlyOpen] = useState(false);
     const [isFetchTriggered, setIsFetchTriggered] = useState(false);
 
     const isMobile = useIsMobile(1100);
 
-    const { sites, loading: loadingSites, error: sitesError, fetchMySites } = useSites();
-    const { loadingDevices, apiError: deviceApiError, fetchDeviceFromLocation, fetchComponentsFromDevice } = useDeviceApi();
+    const { sites, fetchMySites } = useSites();
+    const {fetchDeviceFromLocation, fetchComponentsFromDevice } = useDeviceApi();
     const { fetchLocationsBySiteIds, locations: baseLocations } = useLocations();
 
     const [sitesWithLocations, setSitesWithLocations] = useState<SiteWithLocationAndDevices[]>([]);
@@ -37,7 +36,6 @@ const History: React.FC = () => {
     const {
         monitoringData: influxData,
         loading: influxLoading,
-        error: influxError,
         validationError,
         noData: noInfluxData,
         getSensorData,
@@ -72,7 +70,6 @@ const History: React.FC = () => {
         const fetchDevicesAndSensors = async () => {
             if (!baseLocations || baseLocations.length === 0) return;
             try {
-                setLoading(true);
 
                 const locationsWithDevices: LocationWithDevices[] = await Promise.all(
                     baseLocations.map(async (location) => {
@@ -96,7 +93,7 @@ const History: React.FC = () => {
             } catch (err) {
                 console.error("Error fetching devices/sensors:", err);
             } finally {
-                if (!isCancelled) setLoading(false);
+                if (!isCancelled) {}
             }
         };
 
@@ -178,27 +175,6 @@ const History: React.FC = () => {
         setIsFetchTriggered(false);
     }, [isFetchTriggered, selecteddeviceID, selectedComponents, selectedMetric, startTime, endTime, selectedlocationID, getMetrics, getSensorData]);
 
-    if ( loading || loadingSites || loadingDevices) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
-                <Loader2 className="animate-spin h-10 w-10 text-green-500 mr-3" />
-                <p className="text-gray-500 text-lg font-medium">Chargement des données...</p>
-            </div>
-        );
-    }
-
-    if (sitesError || deviceApiError) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-red-100 p-8">
-                <div className="bg-white p-6 rounded-xl shadow-lg text-red-800">
-                    <p className="font-semibold text-lg">Erreur de connexion</p>
-                    <p className="text-sm mt-1">Impossible de charger les données. Veuillez vérifier votre connexion et réessayer.</p>
-                    <p className="text-xs mt-2 text-gray-500">Détails de l'erreur: {sitesError || deviceApiError}</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans antialiased">
 
@@ -219,10 +195,16 @@ const History: React.FC = () => {
                         </button>
                     </div>
                 )}
-                {!isMobile && (
+                {!isMobile &&  (
                     <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b border-gray-200 pb-2">
                         Sélectionner
                     </h2>
+                )}
+                {baseLocations.length === 0 && (
+                    <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm mb-4">
+                        <p className="text-base mb-2">Aucune localisation n'est encore disponible.</p>
+                        <p>Veuillez d'abord créer des localisations et y ajouter des appareils.</p>
+                    </div>
                 )}
                 <SelectionTree
                     sitesWithLocations={sitesWithLocations}
@@ -289,11 +271,6 @@ const History: React.FC = () => {
                             {validationError}
                         </div>
                     )}
-                    {influxError && (
-                        <div className="bg-red-100 text-red-800 rounded-xl p-4 font-medium border border-red-200 text-sm mt-8">
-                            {influxError.message}
-                        </div>
-                    )}
                     {noInfluxData && (
                         <div className="bg-yellow-100 text-yellow-800 rounded-xl p-4 font-medium border border-yellow-200 text-sm mt-8">
                             Aucune donnée de monitoring trouvée pour la sélection et la période spécifiées.
@@ -301,7 +278,7 @@ const History: React.FC = () => {
                     )}
 
                     <div className="mt-8 space-y-4">
-                        {!selectedlocationID && !sitesError && (
+                        {!selectedlocationID  && (
                             <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
                                 <p className="text-base mb-2">Bienvenue sur l'historique de monitoring.</p>
                                 <p>Pour commencer, veuillez sélectionner une localisation.</p>
@@ -324,8 +301,6 @@ const History: React.FC = () => {
                         <DataGraph
                             monitoringData={influxData}
                             selectedComponents={selectedComponents}
-                            startTime={startTime}
-                            endTime={endTime}
                         />
                     )}
 

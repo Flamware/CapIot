@@ -1,7 +1,6 @@
 import { DevicesWithLocation } from "../../components/types/device.ts";
 import { Pagination } from "../../components/types/pagination.ts";
 import { DeviceListHeader } from "../../components/admin/device/DeviceListHeader.tsx";
-import { ApiErrorModal } from "../../components/ApiErrorModal.tsx";
 import { DeviceTable } from "../../components/admin/device/DeviceTable.tsx";
 import { PaginationControls } from "../../components/admin/PaginationControls.tsx";
 import { useDeviceApi } from "../../components/hooks/useDevice.tsx";
@@ -14,10 +13,9 @@ interface DeviceManagementProps {
 }
 
 export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: DeviceManagementProps) {
-    const { apiError, fetchDevices, assignLocationToDevice, deleteDevice,commandDevice } = useDeviceApi();
+    const {fetchDevices, assignLocationToDevice, deleteDevice,commandDevice } = useDeviceApi();
     const [devicesLocations, setDevicesLocations] = useState<DevicesWithLocation[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [isApiErrorModalOpen, setIsApiErrorModalOpen] = useState(false);
     const [pagination, setPagination] = useState<Pagination>({ currentPage: 1, pageSize: 5, totalItems: 0, totalPages: 1 });
     const [totalDevicesPages, setTotalDevicesPages] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -40,7 +38,6 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
                 setTotalDevicesPages(Math.ceil(devicesResponse.pagination.totalPages));
             } catch (error: any) {
                 console.error("Error fetching initial data:", error);
-                setIsApiErrorModalOpen(true);
             } finally {
                 setLoading(false);
             }
@@ -83,7 +80,6 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
 
         } catch (error: any) {
             console.error("Error updating device:", error.message);
-            setIsApiErrorModalOpen(true);
         }
     };
 
@@ -93,9 +89,9 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
             try {
                 await deleteDevice(deviceID);
                 if (onDeviceDeleted) onDeviceDeleted(deviceID);
+                setDevicesLocations(prevDevices => prevDevices.filter(device => device.device_id !== deviceID));
             } catch (error: any) {
                 console.error("Error deleting device:", error.message);
-                setIsApiErrorModalOpen(true);
             }
         }
     };
@@ -113,9 +109,6 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
         );
     }
 
-    const handleCloseErrorModal = () => {
-        setIsApiErrorModalOpen(false);
-    };
 
     const filteredDevicesLocations = (devicesLocations || []).filter(deviceLocation =>
         deviceLocation?.device_id?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -128,11 +121,6 @@ export function DeviceManagement({ onDeviceDeleted, onLocationAssigned }: Device
     return (
         <div className="space-y-4">
             <DeviceListHeader searchTerm={searchTerm} onSearch={handleSearch} />
-            <ApiErrorModal
-                isOpen={isApiErrorModalOpen}
-                error={apiError}
-                onClose={handleCloseErrorModal}
-            />
             {loading ? (
                 <div role="status" className="flex justify-center items-center h-64">
                     <span>Loading...</span>

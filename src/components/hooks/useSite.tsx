@@ -9,7 +9,6 @@ export const useSites = () => {
     const [sites, setSites] = useState<Site[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [sitePagination, setSitePagination] = useState<Pagination>({
         currentPage: 1,
@@ -21,7 +20,6 @@ export const useSites = () => {
     // Function to fetch paginated sites and their locations
     const fetchSitesAndLocations = useCallback(async (page: number, limit: number, query?: string) => {
         setLoading(true);
-        setError(null);
         try {
             const sitesResponse = await api.get<SitesResponse>(`/sites`, {
                 params: {
@@ -51,9 +49,9 @@ export const useSites = () => {
         } catch (err) {
             console.error("Error fetching sites and locations:", err);
             if (err instanceof AxiosError && err.response?.data?.message) {
-                setError(err.response.data.message);
             } else {
-                setError("Erreur lors du chargement des sites et emplacements.");
+                setSites([]);
+                setLocations([]);
             }
         } finally {
             setLoading(false);
@@ -63,7 +61,6 @@ export const useSites = () => {
     // New: A dedicated function to fetch ALL sites (unpaginated)
     const fetchSites = useCallback(async (page: number, limit: number, query?: string) => {
         setLoading(true);
-        setError(null);
         try {
             const sitesResponse = await api.get<SitesResponse>(`/sites`, {
                 params: {
@@ -76,9 +73,8 @@ export const useSites = () => {
         } catch (err) {
             console.error("Error fetching all sites:", err);
             if (err instanceof AxiosError && err.response?.data?.message) {
-                setError(err.response.data.message);
             } else {
-                setError("Erreur lors du chargement des sites.");
+                setSites([]);
             }
             return [];
         } finally {
@@ -88,16 +84,14 @@ export const useSites = () => {
     , [api]);
     const fetchMySites = useCallback(async () => {
         setLoading(true);
-        setError(null);
         try {
             const response = await api.get<Site[]>(`/sites/me`);
             setSites(response.data || []);
         } catch (err) {
             console.error("Error fetching my sites:", err);
             if (err instanceof AxiosError && err.response?.data?.message) {
-                setError(err.response.data.message);
             } else {
-                setError("Erreur lors du chargement de vos sites.");
+                setSites([]);
             }
             return null;
         } finally {
@@ -108,7 +102,6 @@ export const useSites = () => {
 
     const addSite = useCallback(async (siteData: { site_name: string; site_address: string }): Promise<string | null> => {
         setLoading(true);
-        setError(null);
         try {
             await api.post(`/admin/site/create`, siteData);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
@@ -116,7 +109,6 @@ export const useSites = () => {
         } catch (err) {
             console.error("Error adding site:", err);
             const errMsg = "Erreur lors de l'ajout du site. Veuillez réessayer.";
-            setError(errMsg);
             return errMsg;
         } finally {
             setLoading(false);
@@ -125,7 +117,6 @@ export const useSites = () => {
 
     const deleteSite = useCallback(async (id: number): Promise<string | null> => {
         setLoading(true);
-        setError(null);
         try {
             await api.delete(`/admin/site/${id}`);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
@@ -133,7 +124,6 @@ export const useSites = () => {
         } catch (err) {
             console.error("Error deleting site:", err);
             const errMsg = "Erreur lors de la suppression du site. Assurez-vous qu'aucun emplacement n'y est associé.";
-            setError(errMsg);
             return errMsg;
         } finally {
             setLoading(false);
@@ -151,7 +141,6 @@ export const useSites = () => {
 
     const addLocation = useCallback(async (locationData: Partial<Location>): Promise<string | null> => {
         setLoading(true);
-        setError(null);
         try {
             await api.post<Location>(`/location/create`, locationData);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
@@ -159,7 +148,6 @@ export const useSites = () => {
         } catch (err) {
             console.error("Error adding location:", err);
             const errMsg = "Erreur lors de l'ajout de l'emplacement. Veuillez réessayer.";
-            setError(errMsg);
             return errMsg;
         } finally {
             setLoading(false);
@@ -168,7 +156,6 @@ export const useSites = () => {
 
     const deleteLocation = useCallback(async (id: number): Promise<string | null> => {
         setLoading(true);
-        setError(null);
         try {
             await api.delete(`/location/${id}`);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
@@ -176,7 +163,6 @@ export const useSites = () => {
         } catch (err) {
             console.error("Error deleting location:", err);
             const errMsg = "Erreur lors de la suppression de l'emplacement. Veuillez réessayer.";
-            setError(errMsg);
             return errMsg;
         } finally {
             setLoading(false);
@@ -185,7 +171,6 @@ export const useSites = () => {
 
     const modifyLocation = useCallback(async (id: number, locationData: Partial<Location>): Promise<string | null> => {
         setLoading(true);
-        setError(null);
         try {
             await api.put<Location>(`/location/${id}`, locationData);
             await fetchSitesAndLocations(sitePagination.currentPage, sitePagination.pageSize, searchTerm);
@@ -193,7 +178,6 @@ export const useSites = () => {
         } catch (err) {
             console.error("Error modifying location:", err);
             const errMsg = "Erreur lors de la modification de l'emplacement. Veuillez réessayer.";
-            setError(errMsg);
             return errMsg;
         } finally {
             setLoading(false);
@@ -204,7 +188,6 @@ export const useSites = () => {
         sites,
         locations,
         loading,
-        error,
         searchTerm,
         sitePagination,
         addSite,
@@ -212,7 +195,6 @@ export const useSites = () => {
         fetchMySites,
         handleSearch,
         goToSitePage,
-        setError,
         addLocation,
         deleteLocation,
         modifyLocation,

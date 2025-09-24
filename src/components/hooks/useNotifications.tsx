@@ -6,7 +6,6 @@ export function useNotifications() {
        const api = useApi();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
-    const [apiError, setApiError] = useState<any | null>(null);
     const [pagination, setPagination] = useState({
         currentPage: 1,
         pageSize: 10,
@@ -16,7 +15,6 @@ export function useNotifications() {
 
     const fetchNotifications = async (page: number, limit: number) => {
         setLoading(true);
-        setApiError(null);
         try {
             const response = await api.get<NotificationsResponse>("/notifications", {
                 params: { page, limit },
@@ -31,7 +29,6 @@ export function useNotifications() {
         } catch (error: any) {
             console.error("Authentication expired. The interceptor is handling the logout.");
             console.log(error);
-            setApiError(error);
             setNotifications([]);
         } finally {
             setLoading(false);
@@ -73,7 +70,7 @@ export function useNotifications() {
                 totalItems: 0,
             }));
         } catch (err: any) {
-            setApiError(err);
+            console.error("Failed to mark all notifications as read:", err);
         }
     };
 
@@ -96,7 +93,6 @@ export function useNotifications() {
         }
         catch (error) {
             console.error("Failed to delete notification:", error);
-            setApiError(error);
         }
     };
 
@@ -112,14 +108,12 @@ export function useNotifications() {
         }
         catch (error) {
             console.error("Failed to delete all notifications:", error);
-            setApiError(error);
         }
     };
 
     return {
         notifications,
         loading,
-        apiError,
         pagination,
         setPagination,
         fetchNotifications,

@@ -1,6 +1,5 @@
 // types/location.ts
 
-import {User} from "./user.ts";
 import {Device} from "./device.ts";
 import {Pagination} from "./pagination.ts";
 
@@ -29,12 +28,6 @@ export type SiteWithLocationAndDevices = Site & {
 export type LocationWithDevices = Location & {
     devices: Device[];
 }
-
-export type LocationWithUsersDevices = Device & User & Location
-
-export type LocationsWithUsersDevicesResponse = Pagination & {
-    data: LocationWithUsersDevices[];
-};
 
 export type LocationsResponse = Pagination & {
     data: Location[];

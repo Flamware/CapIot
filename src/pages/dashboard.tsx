@@ -1,14 +1,13 @@
 import { Loader2 } from "lucide-react";
 import { useLocations } from "../components/hooks/useLocation.tsx";
 import { useDeviceApi } from "../components/hooks/useDevice.tsx";
-import { ApiErrorModal } from "../components/ApiErrorModal.tsx";
 import LocationsSection from "../components/location/LocationSection.tsx";
 import DeviceInfoModal from "../components/dashboard/DeviceInfoModal.tsx";
 import { useSites } from "../components/hooks/useSite.tsx";
 import {useEffect, useState} from "react";
-import { DeviceInfo, LocationData } from "../components/location/Props.tsx";
+import {LocationData } from "../components/location/Props.tsx";
 import {PaginationControls} from "../components/admin/PaginationControls.tsx";
-import {Component} from "../components/types/device.ts";
+import {Component, Device} from "../components/types/device.ts";
 import DeviceSettingsModal from "../components/dashboard/DeviceSettingModal.tsx";
 import DeviceScheduleSettingModal from "../components/dashboard/DeviceScheduleSettingModal.tsx";
 import { RecurringSchedule } from "../components/types/schedule.tsx";
@@ -21,19 +20,15 @@ const Dashboard = () => {
         locations: baseLocations,
         pagination,
         goToSitePage: goToPage,
-        error: locationError,
         fetchLocationsBySiteIds,
-        setError: setLocationError,
         setSelectedSiteId,
         selectedSiteId
     } = useLocations();
 
     const {
         loadingDevices: loadingDeviceData,
-        apiError: deviceApiError,
         fetchDeviceFromLocation,
         fetchComponentsFromDevice,
-        setApiError: setDeviceApiError,
         commandDevice,
         commandComponent,
         changeDeviceConfig
@@ -41,21 +36,16 @@ const Dashboard = () => {
 
     const {
         loading: loadingSchedule,
-        error: scheduleError,
         createRecurringSchedule,
-        setError: setScheduleError
     } = useScheduleApi();
 
     const {sites: userSites, fetchMySites} = useSites();
 
-    const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
+    const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
     const [loadingDevicesAndSensors, setLoadingDevicesAndSensors] = useState(false);
     const [isDeviceInfoModalOpen, setIsDeviceInfoModalOpen] = useState(false);
     const [isDeviceSettingsModalOpen, setIsDeviceSettingsModalOpen] = useState(false);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-
-    // Consolidate all errors into a single state
-    const [apiError, setApiError] = useState<any>(null);
 
     const [locationWithDevices, setLocationWithDevices] = useState<LocationData[]>([]);
     pagination.pageSize = 3; // Set page size to 3 for locations
@@ -125,14 +115,6 @@ const Dashboard = () => {
         fetchDevicesAndSensors();
     }, [baseLocations, fetchDeviceFromLocation, fetchComponentsFromDevice]);
 
-    const handleCloseApiErrorModal = () => {
-        console.log("Closing error modal and clearing errors");
-        setApiError(null);
-        setLocationError(null);
-        setDeviceApiError(null);
-        setLocationError(null);
-        setScheduleError(null);
-    };
 
     const handleSaveDeviceSettings = async (updatedComponent: Component, deviceID: string,) => {
         try {
@@ -159,21 +141,21 @@ const Dashboard = () => {
         } catch (error) {
         }
     }
-    const handleEditDeviceSettings = (device: DeviceInfo) => {
+    const handleEditDeviceSettings = (device: Device) => {
         setSelectedDevice(device);
         setIsDeviceSettingsModalOpen(true);
     };
 
-    const handleScheduleSettings = (device: DeviceInfo) => {
+    const handleScheduleSettings = (device: Device) => {
         setSelectedDevice(device);
         setIsScheduleModalOpen(true);
     }
 
-    const handleInfoDevice = (device: DeviceInfo) => {
+    const handleInfoDevice = (device: Device) => {
         setSelectedDevice(device);
         setIsDeviceInfoModalOpen(true);
     };
-    const handleDeviceCommand = async (device: DeviceInfo, command: string) => {
+    const handleDeviceCommand = async (device: Device, command: string) => {
         try {
             await commandDevice(device.device_id, command);
             setLocationWithDevices((prevLocations) =>
@@ -190,12 +172,12 @@ const Dashboard = () => {
                 }))
             );
         } catch (error) {
-            setApiError("Failed to send command to device. Please try again.");
+            console.error("Error sending command to device:", error);
         }
     }
 
 
-    const handleCommandComponent = (device: DeviceInfo, command: string, componentInfo: Component) => {
+    const handleCommandComponent = (device: Device, command: string, componentInfo: Component) => {
         commandComponent(device.device_id, componentInfo.component_id, command);
         if (command === 'reset' && selectedDevice) {
             setSelectedDevice({
@@ -211,7 +193,7 @@ const Dashboard = () => {
 
     const handleResetComponent = async (component: Component) => {
         try {
-            await handleCommandComponent(selectedDevice as DeviceInfo, 'reset', component);
+            await handleCommandComponent(selectedDevice as Device, 'reset', component);
         } catch (error) {
         }
     }
@@ -225,17 +207,9 @@ const Dashboard = () => {
         }
     };
 
-    // Combine all potential errors into one variable for the modal
-    const currentError = apiError || locationError || deviceApiError || scheduleError;
 
     return (
         <div className="p-8 bg-gray-50 min-h-screen font-sans antialiased">
-            <ApiErrorModal
-                isOpen={!!currentError}
-                error={currentError}
-                onClose={handleCloseApiErrorModal}
-            />
-
             {/* Sites Section */}
             <div className="sites-section mb-12">
                 <div className="mb-8 text-center">

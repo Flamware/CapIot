@@ -1,6 +1,5 @@
 import { Pagination } from "./pagination.ts";
 import { Location } from "./location.ts";
-import { ReadingPoint } from "../history/DataGraph.tsx";
 
 export interface Site {
     site_id: number;
@@ -24,7 +23,7 @@ export enum ComponentSubtype {
 export interface Component {
     component_id: string;
     component_type: ComponentType;
-    component_subtype?: ComponentSubtype;
+    component_subtype: ComponentSubtype;
     max_running_hours?: number;
     min_threshold?: number;
     max_threshold?: number;
@@ -57,6 +56,9 @@ export type DevicesWithLocation = Device & {
 export interface DeviceReadings {
     deviceID: string;
     readings: {
-        [key: string]: ReadingPoint[];
+        [key: string]: Array<{
+            time: string; // ISO date string
+            value: number;
+        }>;
     };
 }

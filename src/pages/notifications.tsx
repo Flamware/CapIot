@@ -2,14 +2,13 @@ import { PaginationControls } from "../components/admin/PaginationControls.tsx";
 import { useNotifications } from "../components/hooks/useNotifications.tsx";
 import { BellRing, Loader2, Trash2, CheckCircle, MailOpen } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ApiErrorModal } from "../components/ApiErrorModal.tsx";
+import {useApiError} from "../components/hooks/useApiError.tsx";
 
 const NotificationsPage = () => {
     const {
         fetchNotifications,
         notifications,
         loading,
-        apiError,
         pagination,
         setPagination,
         markAsRead,
@@ -18,21 +17,20 @@ const NotificationsPage = () => {
         deleteAllNotifications
     } = useNotifications();
 
-    const [modalError, setModalError] = useState<any | null>(null);
     const [selectedNotifications, setSelectedNotifications] = useState<number[]>([]);
+    const { showError } = useApiError();
 
+    // fetch notifications when pagination changes
     useEffect(() => {
         const loadNotifications = async () => {
-            await fetchNotifications(pagination.currentPage, pagination.pageSize);
+            try {
+                await fetchNotifications(pagination.currentPage, pagination.pageSize);
+            } catch (err) {
+                showError(err);
+            }
         };
         loadNotifications();
     }, [pagination.currentPage, pagination.pageSize]);
-
-    useEffect(() => {
-        if (apiError) setModalError(apiError);
-    }, [apiError]);
-
-    const handleCloseApiErrorModal = () => setModalError(null);
 
     const handleGoToPage = (page: number) =>
         setPagination((prev) => ({ ...prev, currentPage: page }));
@@ -167,12 +165,6 @@ const NotificationsPage = () => {
 
     return (
         <div className=" max-w-7xl mx-auto font-sans">
-            <ApiErrorModal
-                isOpen={!!modalError}
-                error={modalError}
-                onClose={handleCloseApiErrorModal}
-            />
-
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <button
                         onClick={markAllAsRead}

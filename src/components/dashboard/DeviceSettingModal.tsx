@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
-import {DeviceInfo} from "../location/Props.tsx";
-import {Component} from "../types/device.ts";
+import {Component, Device} from "../types/device.ts";
 
 interface DeviceSettingsModalProps {
     isOpen: boolean;
-    device: DeviceInfo | null;
+    device: Device | null;
     onClose: () => void;
     onSave: (updatedComponent: Component, deviceID: string) => void;
     onReset: (componentInfo: Component) => void;
 }
 
 const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({ isOpen, device, onClose, onSave, onReset }) => {
-    const [editedDevice, setEditedDevice] = useState<DeviceInfo | null>(device);
+    const [editedDevice, setEditedDevice] = useState<Device | null>(device);
 
     useEffect(() => {
         if (isOpen && device) {

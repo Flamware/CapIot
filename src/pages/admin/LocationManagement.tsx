@@ -2,7 +2,6 @@ import React, {useState, useEffect} from "react";
 import { Globe, MapPin, Plus, Trash2 } from 'lucide-react';
 import { AddLocationModal } from "../../components/admin/location/AddLocationModal";
 import LocationTable from "../../components/admin/location/LocationTable.tsx";
-import { ApiErrorModal } from "../../components/ApiErrorModal.tsx";
 import { Site, Location } from "../../components/types/location.ts";
 import LocationListHeader from "../../components/admin/location/LocationListHeader.tsx";
 import { AddSiteModal } from "../../components/admin/location/AddSiteModal.tsx";
@@ -18,7 +17,6 @@ const LocationManagement: React.FC = () => {
     const {
         sites,
         locations,
-        error,
         searchTerm,
         sitePagination,
         addSite,
@@ -28,7 +26,6 @@ const LocationManagement: React.FC = () => {
         addLocation,
         deleteLocation,
         modifyLocation,
-        setError, // We will use this to clear the error state
         fetchSitesAndLocations // We need this to fetch the data
     } = useSites();
 
@@ -58,11 +55,6 @@ const LocationManagement: React.FC = () => {
 
     const closeAddSiteModal = () => {
         setIsAddSiteOpen(false);
-    };
-
-    // New handler to directly clear the error state from the hook
-    const handleCloseApiErrorModal = () => {
-        setError(null);
     };
 
     const handleAddLocation = async (locationData: Partial<Location>) => {
@@ -108,11 +100,6 @@ const LocationManagement: React.FC = () => {
                 onAddSite={openAddSiteModal}
             />
 
-            <ApiErrorModal
-                isOpen={!!error}
-                error={error}
-                onClose={handleCloseApiErrorModal}
-            />
             {loading ? (
 
                 <div role="status" className="flex justify-center items-center h-64">

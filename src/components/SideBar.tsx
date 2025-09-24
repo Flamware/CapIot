@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp, Bell, X, Menu } from 'lucide-react';
+import { Home, Users, Cpu, MapPin, Settings, ChevronDown, ChevronUp, Bell, X } from 'lucide-react';
 import { NavLink } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth.tsx";
 

@@ -14,7 +14,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from './hooks/useAuth';
 import { useNotifications } from './hooks/useNotifications';
-import { useIsMobile } from './hooks/useIsMobile';
 
 interface HeaderProps {
     onToggleSidebar: () => void;
