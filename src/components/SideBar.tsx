@@ -32,25 +32,25 @@ export function SideBar({ isSidebarOpen, onToggleSidebar, isMobile }: SideBarPro
 
     // Menu items visible to 'gestionnaire' and 'admin'
     const menuItems: MenuItem[] = [
-        { id: "dashboard", label: "Dashboard", icon: Home, path: "/dashboard" },
-        { id: "history", label: "History", icon: Users, path: "/history" },
-        { id: "profile", label: "Profile", icon: Cpu, path: "/profile" },
-        { id: "about", label: "About", icon: MapPin, path: "/about" },
+        { id: "dashboard", label: "Tableau de bord", icon: Home, path: "/dashboard" },
+        { id: "history", label: "Historique", icon: Users, path: "/history" },
+        { id: "profile", label: "Profil", icon: Cpu, path: "/profile" },
+        { id: "about", label: "À propos", icon: MapPin, path: "/about" },
         { id: "notifications", label: "Notifications", icon: Bell, path: "/notifications" },
     ];
 
     // Menu items specific to 'admin' role
     const adminMenuItems: MenuItem[] = [
-        { id: "admin-overview", label: "Overview", icon: Home, path: "/admin/overview" },
-        { id: "admin-users", label: "Users", icon: Users, path: "/admin/users" },
-        { id: "admin-devices", label: "Devices", icon: Cpu, path: "/admin/devices" },
-        { id: "admin-locations", label: "Locations", icon: MapPin, path: "/admin/locations" },
+        { id: "admin-overview", label: "Aperçu", icon: Home, path: "/admin/overview" },
+        { id: "admin-users", label: "Utilisateurs", icon: Users, path: "/admin/users" },
+        { id: "admin-devices", label: "Appareils", icon: Cpu, path: "/admin/devices" },
+        { id: "admin-locations", label: "Emplacements", icon: MapPin, path: "/admin/locations" },
     ];
 
     // Menu items specific to 'operateur' role
     const operateurMenuItems: MenuItem[] = [
-        { id: "devices", label: "Devices", icon: Cpu, path: "/admin/devices" },
-        { id: "locations", label: "Locations", icon: MapPin, path: "/admin/locations" },
+        { id: "devices", label: "Appareils", icon: Cpu, path: "/admin/devices" },
+        { id: "locations", label: "Emplacements", icon: MapPin, path: "/admin/locations" },
     ];
 
     // Helper variables for conditional rendering based on user role
@@ -90,7 +90,7 @@ export function SideBar({ isSidebarOpen, onToggleSidebar, isMobile }: SideBarPro
                             </span>
                         </NavLink>
                         {isMobile && (
-                            <button onClick={onToggleSidebar} className="p-2 rounded-full hover:bg-gray-100" aria-label="Close sidebar">
+                            <button onClick={onToggleSidebar} className="p-2 rounded-full hover:bg-gray-100" aria-label="Fermer la barre latérale">
                                 <X className="w-6 h-6" />
                             </button>
                         )}
@@ -100,7 +100,7 @@ export function SideBar({ isSidebarOpen, onToggleSidebar, isMobile }: SideBarPro
                     {(isAdmin || isGestionnaire || isOperateur) && (
                         <div className="w-full">
                             <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                {isOperateur ? "Services" : "General"}
+                                {isOperateur ? "Services" : "Général"}
                             </h3>
                             <nav>
                                 {displayMenuItems.map((item) => (
@@ -131,7 +131,7 @@ export function SideBar({ isSidebarOpen, onToggleSidebar, isMobile }: SideBarPro
                             >
                                 <div className="flex items-center">
                                     <Settings className="w-5 h-5 mr-2 text-red-600" />
-                                    <span className="font-semibold">Admin Section</span>
+                                    <span className="font-semibold">Section Admin</span>
                                 </div>
                                 {isAdminDropdownOpen ? <ChevronUp className="w-4 h-4 text-gray-600" /> : <ChevronDown className="w-4 h-4 text-gray-600" />}
                             </div>

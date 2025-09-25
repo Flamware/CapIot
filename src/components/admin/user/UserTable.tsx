@@ -73,8 +73,9 @@ export const UserTable: React.FC<UserTableProps> = ({
 
     return (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="bg-gray-100 grid grid-cols-4 items-center px-6 py-3 font-semibold text-gray-700 text-sm border-b border-gray-200">
+            <div className="bg-gray-100 grid grid-cols-5 items-center px-6 py-3 font-semibold text-gray-700 text-sm border-b border-gray-200">
                 <span>Nom de l'utilisateur</span>
+                <span>Email</span>
                 <span className="col-span-2">Sites assignés</span>
                 <span className="text-right">Actions</span>
             </div>
@@ -90,7 +91,7 @@ export const UserTable: React.FC<UserTableProps> = ({
             ) : (
                 <div className="divide-y divide-gray-200">
                     {users.map((user) => (
-                        <div key={user.id} className="grid grid-cols-4 items-center px-6 py-4 hover:bg-gray-50 transition-colors duration-200">
+                        <div key={user.id} className="grid grid-cols-5 items-center px-6 py-4 hover:bg-gray-50 transition-colors duration-200">
                             {/* User Name */}
                             <div className="font-medium text-gray-900 truncate" title={user.name}>
                                 {editingUserId === user.id ? (
@@ -104,7 +105,10 @@ export const UserTable: React.FC<UserTableProps> = ({
                                     user.name
                                 )}
                             </div>
-
+                            {/* User Email */}
+                            <div className="text-sm text-gray-600 truncate" title={user.email}>
+                                {user.email}
+                            </div>
                             {/* Sites */}
                             <div className="flex flex-wrap gap-2 col-span-2">
                                 {editingUserId === user.id ? (

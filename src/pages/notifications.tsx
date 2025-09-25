@@ -2,7 +2,6 @@ import { PaginationControls } from "../components/admin/PaginationControls.tsx";
 import { useNotifications } from "../components/hooks/useNotifications.tsx";
 import { BellRing, Loader2, Trash2, CheckCircle, MailOpen } from "lucide-react";
 import { useEffect, useState } from "react";
-import {useApiError} from "../components/hooks/useApiError.tsx";
 
 const NotificationsPage = () => {
     const {
@@ -18,7 +17,6 @@ const NotificationsPage = () => {
     } = useNotifications();
 
     const [selectedNotifications, setSelectedNotifications] = useState<number[]>([]);
-    const { showError } = useApiError();
 
     // fetch notifications when pagination changes
     useEffect(() => {
@@ -26,7 +24,7 @@ const NotificationsPage = () => {
             try {
                 await fetchNotifications(pagination.currentPage, pagination.pageSize);
             } catch (err) {
-                showError(err);
+                console.error(err);
             }
         };
         loadNotifications();

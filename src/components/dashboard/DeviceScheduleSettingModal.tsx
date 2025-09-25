@@ -1,3 +1,5 @@
+// src/components/schedule/DeviceScheduleSettingModal.tsx
+
 import React, { useState } from 'react';
 import {RecurringSchedule} from "../types/schedule.tsx";
 import {Day, RecurrenceType, WeeklySchedule} from "../types/types.tsx";
@@ -67,22 +69,40 @@ const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, 
     const currentSelectedDateRange = isExceptionMode ? selectedExceptionDateRange : selectedScheduleDateRange;
     const currentSetRecurrenceType = isExceptionMode ? setExceptionRecurrenceType : setScheduleRecurrenceType;
 
-    // Define the onChange handlers based on the mode
-    const currentOnChange = isExceptionMode ? {
-        dailyStart: (e: any) => setDailyException(prev => ({ ...prev, start_hour: e.target.value })),
-        dailyEnd: (e: any) => setDailyException(prev => ({ ...prev, end_hour: e.target.value })),
-        toggleWeekDay: (day: Day) => setWeeklyException(prev => ({ ...prev, [day]: { ...prev[day], isSelected: !prev[day].isSelected } })),
-        weeklyTimeChange: (day: Day, type: 'start' | 'end', value: string) => setWeeklyException(prev => ({ ...prev, [day]: { ...prev[day], [type]: value } })),
-        monthlyDate: setSelectedExceptionDateRange,
-        monthlyTimeChange: (e: any) => setMonthlyException(prev => ({ ...prev, [e.target.name]: e.target.value })),
-    } : {
-        dailyStart: (e: any) => setDailySchedule(prev => ({ ...prev, start_hour: e.target.value })),
-        dailyEnd: (e: any) => setDailySchedule(prev => ({ ...prev, end_hour: e.target.value })),
-        toggleWeekDay: (day: Day) => setWeeklySchedule(prev => ({ ...prev, [day]: { ...prev[day], isSelected: !prev[day].isSelected } })),
-        weeklyTimeChange: (day: Day, type: 'start' | 'end', value: string) => setWeeklySchedule(prev => ({ ...prev, [day]: { ...prev[day], [type]: value } })),
-        monthlyDate: setSelectedScheduleDateRange,
-        monthlyTimeChange: (e: any) => setMonthlySchedule(prev => ({ ...prev, [e.target.name]: e.target.value })),
+
+    // Function to set all selected days to the same time range
+    const setAllDayHandler = (start: string, end: string) => {
+        if (currentRecurrenceType === 'daily') {
+            isExceptionMode ? setDailyException(prev => ({ ...prev, start_hour: start, end_hour: end })) : setDailySchedule(prev => ({ ...prev, start_hour: start, end_hour: end }));
+        } else if (currentRecurrenceType === 'weekly') {
+            const updateWeekly = (schedule: WeeklySchedule, setSchedule: (s: WeeklySchedule) => void) => {
+                const updatedWeeklySchedule = { ...schedule };
+                Object.keys(updatedWeeklySchedule).forEach(day => {
+                    if (updatedWeeklySchedule[day as Day].isSelected) {
+                        updatedWeeklySchedule[day as Day].start = start;
+                        updatedWeeklySchedule[day as Day].end = end;
+                    }
+                });
+                setSchedule(updatedWeeklySchedule);
+            };
+            isExceptionMode ? updateWeekly(weeklyException, setWeeklyException) : updateWeekly(weeklySchedule, setWeeklySchedule);
+        } else if (currentRecurrenceType === 'monthly' || currentRecurrenceType === 'specific') {
+            isExceptionMode ? setMonthlyException(prev => ({ ...prev, start_time: start, end_time: end })) : setMonthlySchedule(prev => ({ ...prev, start_time: start, end_time: end }));
+        }
     };
+
+
+    // Define the onChange handlers based on the mode
+    const currentOnChange = {
+        dailyStart: (e: any) => isExceptionMode ? setDailyException(prev => ({ ...prev, start_hour: e.target.value })) : setDailySchedule(prev => ({ ...prev, start_hour: e.target.value })),
+        dailyEnd: (e: any) => isExceptionMode ? setDailyException(prev => ({ ...prev, end_hour: e.target.value })) : setDailySchedule(prev => ({ ...prev, end_hour: e.target.value })),
+        toggleWeekDay: (day: Day) => isExceptionMode ? setWeeklyException(prev => ({ ...prev, [day]: { ...prev[day], isSelected: !prev[day].isSelected } })) : setWeeklySchedule(prev => ({ ...prev, [day]: { ...prev[day], isSelected: !prev[day].isSelected } })),
+        weeklyTimeChange: (day: Day, type: 'start' | 'end', value: string) => isExceptionMode ? setWeeklyException(prev => ({ ...prev, [day]: { ...prev[day], [type]: value } })) : setWeeklySchedule(prev => ({ ...prev, [day]: { ...prev[day], [type]: value } })),
+        monthlyDate: (dates: Date[] | Date | null) => isExceptionMode ? setSelectedExceptionDateRange(dates) : setSelectedScheduleDateRange(dates),
+        monthlyTimeChange: (e: any) => isExceptionMode ? setMonthlyException(prev => ({ ...prev, [e.target.name]: e.target.value })) : setMonthlySchedule(prev => ({ ...prev, [e.target.name]: e.target.value })),
+        setAllDay: setAllDayHandler,
+    };
+
 
     // Helper function to format a date string in YYYY-MM-DDTHH:mm:00Z format
     const formatDateForGo = (date: Date, time: string): string => {
@@ -176,7 +196,7 @@ const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, 
         }
         onClose();
     };
-    
+
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-2xl w-full max-w-2xl">

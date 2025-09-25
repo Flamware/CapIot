@@ -62,7 +62,7 @@ const getStatusColorClass = (deviceStatus: string) => {
 type LocationCardProps = {
     location_name: string;
     devices: Device[];
-    lastUpdated: string;
+    description?: string;
     onEditDeviceSettings: (device: Device) => void;
     onViewDeviceDetails: (device: Device) => void;
     onDeviceCommandSend?: (device: Device, command: 'Start' | 'Stop' | 'Follow_Schedule') => void;
@@ -72,7 +72,7 @@ type LocationCardProps = {
 const LocationCard: React.FC<LocationCardProps> = ({
                                                        location_name,
                                                        devices,
-                                                       lastUpdated,
+                                                       description,
                                                        onEditDeviceSettings,
                                                        onViewDeviceDetails,
                                                        onDeviceCommandSend,
@@ -97,13 +97,12 @@ const LocationCard: React.FC<LocationCardProps> = ({
             {/* Last Updated Info */}
             <div
                 className="bg-green-50 text-green-800 text-sm px-5 py-2 flex justify-between items-center border-b border-green-100">
-                <span>Dernière mise à jour :</span>
-                <span className="font-medium">{lastUpdated}</span>
+                <span>Description: {description ? description : <em className="text-gray-500">Aucune description</em>}</span>
             </div>
 
             {/* Devices Section */}
             <div className="p-5 flex-grow overflow-y-auto custom-scrollbar">
-                <h4 className="font-bold text-lg text-gray-800 mb-3 border-b pb-2">Appareils Connectés
+                <h4 className="font-bold text-lg text-gray-800 mb-3 border-b pb-2">Appareils Associé(s)
                     ({devices.length})</h4>
                 {devices.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4">
