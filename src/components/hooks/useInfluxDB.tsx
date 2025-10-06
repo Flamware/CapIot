@@ -8,12 +8,14 @@ interface GetSensorDataParams {
     selectedComponents: Component[];
     startTime?: string;
     endTime?: string;
+    windowPeriod?: string;
 }
 interface GetMetricData {
     device_id: string;
     metric: string[];
     startTime?: string;
     endTime?: string;
+    windowPeriod?: string;
 }
 
 export const useInfluxDB = () => {
@@ -58,7 +60,10 @@ export const useInfluxDB = () => {
             if (endTime) {
                 queryParams.append('time_range_stop', new Date(endTime).toISOString());
             }
-            queryParams.append('window_period', "10s");
+
+            if (params.windowPeriod) {
+                queryParams.append('window_period', params.windowPeriod);
+            }
 
             // Construct the URL with query parameters
             const url = `/sensordata?${queryParams.toString()}`;
@@ -108,6 +113,9 @@ export const useInfluxDB = () => {
                 queryParams.append('time_range_stop', new Date(endTime).toISOString());
             }
 
+            if (params.windowPeriod) {
+                queryParams.append('window_period', params.windowPeriod);
+            }
             // Construct the URL with query parameters
             const url = `/metrics?${queryParams.toString()}`;
 

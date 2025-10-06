@@ -9,8 +9,6 @@ export interface Site {
 
 export enum ComponentType {
     Sensor = "sensor",
-    Actuator = "actuator",
-    Indicator = "indicator"
 }
 
 export enum ComponentSubtype {

@@ -23,7 +23,7 @@ const History: React.FC = () => {
     const [expandeddeviceID, setExpandeddeviceID] = useState<string | null>(null);
     const [isSidebarExplicitlyOpen, setIsSidebarExplicitlyOpen] = useState(false);
     const [isFetchTriggered, setIsFetchTriggered] = useState(false);
-
+    const [selectedwindowPeriod, setSelectedwindowPeriod] = useState<string>("1h");
     const isMobile = useIsMobile(1100);
 
     const { sites, fetchMySites } = useSites();
@@ -161,6 +161,7 @@ const History: React.FC = () => {
                 metric: selectedMetric,
                 startTime: startTime || undefined,
                 endTime: endTime || undefined,
+                windowPeriod: selectedwindowPeriod,
             });
         } else if (selectedComponents.length > 0) {
             getSensorData({
@@ -169,6 +170,7 @@ const History: React.FC = () => {
                 selectedComponents: selectedComponents,
                 startTime: startTime || undefined,
                 endTime: endTime || undefined,
+                windowPeriod: selectedwindowPeriod,
             });
         }
 
@@ -240,10 +242,12 @@ const History: React.FC = () => {
                     { !selectedComponents.some(c => c.component_type !== 'sensor') && (
                     <div className="mt-6">
                         <DateTimeInputs
+                            windowPeriod={selectedwindowPeriod}
                             startTime={startTime}
                             endTime={endTime}
                             onStartTimeChange={(e) => setStartTime(e.target.value)}
                             onEndTimeChange={(e) => setEndTime(e.target.value)}
+                            onwindowPeriodChange={(e) => setSelectedwindowPeriod(e.target.value)}
                         />
                         <button
                             onClick={handleSearchClick}
