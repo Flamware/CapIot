@@ -1,5 +1,6 @@
 // src/services/api.ts
 import axios, { AxiosInstance, AxiosError } from "axios";
+import {redirect} from "react-router-dom";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const influxdbUrl = import.meta.env.VITE_INFLUXDB_URL;
@@ -45,6 +46,13 @@ const createApi = (logoutCallback: () => void): AxiosInstance => {
             if (error.response?.status === 401) {
                 console.warn("Unauthorized access. Token expired → logout");
                 logoutCallback();
+            }
+            // handle 403
+            else if (error.response?.status === 403) {
+                console.warn("Forbidden access. Redirecting to /no-role");
+                // Use the logout callback to handle any necessary cleanup
+                // Then redirect to /no-role
+                redirect("/unauthorized");
             }
 
             if (!error.response) {

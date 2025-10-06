@@ -2,8 +2,10 @@ import { PaginationControls } from "../components/admin/PaginationControls.tsx";
 import { useNotifications } from "../components/hooks/useNotifications.tsx";
 import { BellRing, Loader2, Trash2, CheckCircle, MailOpen } from "lucide-react";
 import { useEffect, useState } from "react";
+import {useParams} from "react-router-dom";
 
-const NotificationsPage = () => {
+const NotificationsPage: React.FC = () => {
+    const { deviceId } = useParams<{ deviceId?: string }>(); // ✅ get it from URL
     const {
         fetchNotifications,
         notifications,
@@ -13,22 +15,31 @@ const NotificationsPage = () => {
         markAsRead,
         markAllAsRead,
         deleteNotification,
+        fetchDeviceNotification,
         deleteAllNotifications
-    } = useNotifications();
-
+    } = useNotifications(deviceId); // Passage du deviceId au hook
     const [selectedNotifications, setSelectedNotifications] = useState<number[]>([]);
 
-    // fetch notifications when pagination changes
+    // fetch notifications when pagination or deviceId changes
     useEffect(() => {
         const loadNotifications = async () => {
-            try {
-                await fetchNotifications(pagination.currentPage, pagination.pageSize);
-            } catch (err) {
-                console.error(err);
+
+        if (deviceId === undefined) {
+                try {
+                    await fetchNotifications(pagination.currentPage, pagination.pageSize);
+                } catch (err) {
+                    console.error(err);
+                }
+            } else {
+                try {
+                    await fetchDeviceNotification(pagination.currentPage, pagination.pageSize);
+                } catch (err) {
+                    console.error(err);
+                }
             }
         };
-        loadNotifications();
-    }, [pagination.currentPage, pagination.pageSize]);
+        loadNotifications().then(r => console.log(r));
+    }, [pagination.currentPage, pagination.pageSize, deviceId]); // Ajout de deviceId comme dépendance
 
     const handleGoToPage = (page: number) =>
         setPagination((prev) => ({ ...prev, currentPage: page }));
@@ -78,6 +89,7 @@ const NotificationsPage = () => {
                 <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                     <BellRing className="w-16 h-16 mb-6 text-green-400" />
                     <p className="text-xl font-medium">Aucune nouvelle notification.</p>
+                    {deviceId && <p className="mt-2 text-sm">pour l'appareil **{deviceId}**</p>}
                 </div>
             );
         }
@@ -162,32 +174,36 @@ const NotificationsPage = () => {
     };
 
     return (
-        <div className=" max-w-7xl mx-auto font-sans">
+        <div className=" max-w-7xl mx-auto font-sans p-4">
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">
+                Notifications {deviceId ? `— Appareil : ${deviceId}` : "Globales"}
+            </h1>
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <button
+                    onClick={markAllAsRead}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-green-700 bg-white border border-green-500 rounded-lg hover:bg-green-50 transition-colors"
+                >
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Marquer tout comme lu</span>
+                </button>
+                <div className="flex gap-2">
                     <button
-                        onClick={markAllAsRead}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-green-700 bg-white border border-green-500 rounded-lg hover:bg-green-50 transition-colors"
+                        onClick={handleDeleteSelected}
+                        disabled={selectedNotifications.length === 0}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-700 bg-white border border-red-500 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 transition-colors"
                     >
-                        <CheckCircle className="h-4 w-4" />
-                        <span>Marquer tout comme lu</span>
+                        <Trash2 className="h-4 w-4" />
+                        <span>Supprimer sélectionné</span>
                     </button>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleDeleteSelected}
-                            disabled={selectedNotifications.length === 0}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-red-700 bg-white border border-red-500 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 transition-colors"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            <span>Supprimer sélectionné</span>
-                        </button>
-                        <button
-                            onClick={handleDeleteAll}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            <span>Supprimer tout</span>
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleDeleteAll}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        <span>Supprimer tout</span>
+                    </button>
+                </div>
             </div>
 
             {renderNotifications()}

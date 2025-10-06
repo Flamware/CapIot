@@ -69,7 +69,8 @@ const App = () => {
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/history" element={<History />} />
                             <Route path="/notifications" element={<Notifications />} />
-                        </Route>
+
+                            <Route path="/notifications/device/:deviceId" element={<Notifications />} />                        </Route>
 
                         {/* Admin/operateur routes */}
                         <Route

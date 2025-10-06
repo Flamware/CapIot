@@ -2,7 +2,7 @@ import {useState} from "react";
 import { Notification, NotificationsResponse } from "../types/notification.ts";
 import {useApi} from "./useApi.tsx";
 
-export function useNotifications() {
+export function useNotifications(deviceId?: string) {
        const api = useApi();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
@@ -34,6 +34,39 @@ export function useNotifications() {
             setLoading(false);
         }
     };
+
+    const fetchDeviceNotification = async (page: number, limit: number) => {
+    setLoading(true);
+    if (!deviceId) {
+        setNotifications([]);
+        setPagination({
+            currentPage: 1,
+            pageSize: limit,
+            totalItems: 0,
+            totalPages: 1,
+        });
+        setLoading(false);
+        return;
+    }
+    try {
+        const response = await api.get<NotificationsResponse>(`/notifications/device/${deviceId}`, {
+            params: { page, limit },
+        });
+        setNotifications(response.data.data || []);
+        setPagination({
+            currentPage: response.data.currentPage,
+            pageSize: response.data.pageSize,
+            totalItems: response.data.totalItems,
+            totalPages: response.data.totalPages,
+        });
+    } catch (error: any) {
+        console.error("Authentication expired. The interceptor is handling the logout.");
+        console.log(error);
+        setNotifications([]);
+    } finally {
+        setLoading(false);
+    }
+};
 
     const markAsRead = async (notificationID: number) => {
         try {
@@ -119,6 +152,7 @@ export function useNotifications() {
         fetchNotifications,
         deleteNotification,
         deleteAllNotifications,
+        fetchDeviceNotification,
         markAsRead,
         markAllAsRead,
     };

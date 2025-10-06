@@ -36,7 +36,7 @@ export function SideBar({ isSidebarOpen, onToggleSidebar, isMobile }: SideBarPro
         { id: "history", label: "Historique", icon: Users, path: "/history" },
         { id: "profile", label: "Profil", icon: Cpu, path: "/profile" },
         { id: "about", label: "À propos", icon: MapPin, path: "/about" },
-        { id: "notifications", label: "Notifications", icon: Bell, path: "/notifications" },
+        { id: "notifications", label: "Notifications", icon: Bell, path: "/notifications/" },
     ];
 
     // Menu items specific to 'admin' role

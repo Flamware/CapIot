@@ -4,6 +4,8 @@ import EditDeviceModal from "./EditDeviceModal";
 import {Location} from "../../types/location.ts";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
+// Suppression de l'importation de 'redirect' non utilisée et source d'erreur
+// import {redirect} from "react-router-dom"; // Remplacé par une navigation manuelle
 
 const getStatusColorClass = (deviceStatus?: string) => {
     switch (deviceStatus?.toLowerCase()) {
@@ -49,6 +51,13 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onD
     };
 
     const handleCancel = () => setEditingDevice(null);
+
+    // Fonction de navigation manuelle pour les notifications
+    const handleNotificationRedirect = (deviceId: string) => {
+        const url = `/notifications/device/${deviceId}/`;
+        // Utilisation de window.location.assign pour naviguer, cohérent avec NotificationButton.jsx
+        window.location.assign(url);
+    };
 
     return (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -136,6 +145,13 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onD
                                 </button>
                                 <button onClick={() => onDelete(device.device_id)} title="Supprimer">
                                     <TrashIcon />
+                                </button>
+                                <button
+                                    // Utilisation du gestionnaire de redirection corrigé
+                                    onClick={() => handleNotificationRedirect(device.device_id)}
+                                    title="Voir les notifications"
+                                >
+                                    📜
                                 </button>
                             </div>
                         </div>

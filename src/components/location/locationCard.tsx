@@ -13,7 +13,8 @@ import {
     faPause,
     faCalendarAlt,
     faBolt,
-    faChartLine
+    faChartLine,
+    faBell,
 } from '@fortawesome/free-solid-svg-icons';
 import {ComponentSubtype, ComponentType, Device} from "../types/device.ts";
 import React from "react";
@@ -79,7 +80,11 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                                        onDeviceScheduleSettings,
                                                    }) => {
 
-    const isMobile = useIsMobile(1100);
+    const isMobile = useIsMobile(1600);
+
+    function onViewDeviceNotifications(device_id: string) {
+        window.location.href = `/notifications/device/${device_id}`;
+    }
 
     return (
         <div
@@ -130,14 +135,17 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                         </div>
 
                                         {/* Action Buttons */}
-                                        <div className={`flex ${isMobile ? 'justify-start flex-wrap gap-2 pt-2' : 'space-x-2'} flex-shrink-0`}>
+                                        <div
+                                            className={`flex ${isMobile ? 'justify-start flex-wrap gap-2 pt-2' : 'space-x-2'} flex-shrink-0`}>
                                             {onDeviceCommandSend && (device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'running_plan' || device.status?.toLowerCase() === 'running' || device.status?.toLowerCase() === 'stopped_plan') && (
                                                 <button
                                                     onClick={() => onDeviceCommandSend(device, (device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? 'Start' : 'Stop')}
                                                     className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-opacity-50 ${(device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-300' : 'bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-300'}`}
                                                     title={(device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
                                                 >
-                                                    <FontAwesomeIcon icon={(device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? faPlay : faPause} className="text-sm"/>
+                                                    <FontAwesomeIcon
+                                                        icon={(device.status?.toLowerCase() === 'online' || device.status?.toLowerCase() === 'stopped_plan') ? faPlay : faPause}
+                                                        className="text-sm"/>
                                                 </button>
                                             )}
 
@@ -174,14 +182,25 @@ const LocationCard: React.FC<LocationCardProps> = ({
                                             >
                                                 <FontAwesomeIcon icon={faCalendarAlt} className="text-base"/>
                                             </button>
+                                            <button
+                                                onClick={() => onViewDeviceNotifications(device.device_id)}
+                                                className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300 text-orange-500 bg-gray-100 border border-gray-200 hover:bg-gray-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                                                title="Voir les notifications de l'appareil"
+                                            >
+                                                {/* You may want to import faBell instead of faInfoCircle */}
+                                                <FontAwesomeIcon icon={faBell} className="text-base"/>
+                                            </button>
+
                                         </div>
                                     </div>
 
                                     {/* Consumption */}
                                     <div className="mt-4">
                                         <h6 className="font-semibold text-gray-700 text-sm mb-2">Consommation :</h6>
-                                        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-2 text-center`}>
-                                            <div className="bg-white p-3 rounded-md shadow-sm border border-gray-100 flex flex-col items-center">
+                                        <div
+                                            className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-2 text-center`}>
+                                            <div
+                                                className="bg-white p-3 rounded-md shadow-sm border border-gray-100 flex flex-col items-center">
                                                 <FontAwesomeIcon icon={faBolt} className="text-blue-500 text-lg"/>
                                                 <span className="text-gray-700 text-sm font-medium mt-1">Voltage</span>
                                                 <span className="text-gray-900 font-bold">{device?.voltage != null ? device.voltage.toFixed(2) + ' V' : 'N/A'}</span>
