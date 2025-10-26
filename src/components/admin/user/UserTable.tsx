@@ -180,7 +180,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                         {/* Edit Button */}
                                         <button
                                             onClick={() => handleEditClick(user)}
-                                            className="p-2 rounded-full text-blue-500 hover:bg-blue-100 transition-colors"
+                                            className="p-2 rounded-full text-blue-500 hover:bg-green-100 transition-colors"
                                             title="Modifier l'utilisateur"
                                         >
                                             <Pencil className="h-4 w-4" />

@@ -26,7 +26,7 @@ interface DateTimeInputsProps {
 }
 
 const DateTimeInputs: React.FC<DateTimeInputsProps> = ({ windowPeriod, startTime, endTime, onStartTimeChange, onEndTimeChange, onwindowPeriodChange }) => {
-    const MAX_POINTS = 15000; // Define a reasonable maximum number of data points allowed per query
+    const MAX_POINTS = 1500; // Define a reasonable maximum number of data points allowed per query
     const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
     // Define the common input classes

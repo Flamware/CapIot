@@ -165,7 +165,7 @@ const LocationManagement: React.FC = () => {
                     <p className="text-gray-500 text-lg mb-4">Aucun site n'a encore été créé.</p>
                     <button
                         onClick={openAddSiteModal}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-3 rounded-full transition-colors"
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-6 py-3 rounded-full transition-colors"
                     >
                         <Plus className="w-5 h-5" />
                         Commencez par ajouter un site

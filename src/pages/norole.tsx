@@ -25,7 +25,7 @@ const NoRolePage = () => {
                 </p>
                 <button
                     onClick={handleLogout}
-                    className="w-full sm:w-auto px-6 py-3 text-white font-medium bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    className="w-full sm:w-auto px-6 py-3 text-white font-medium bg-green-600 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 >
                     Log Out
                 </button>

@@ -203,7 +203,7 @@ const History: React.FC = () => {
                     </h2>
                 )}
                 {baseLocations.length === 0 && (
-                    <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm mb-4">
+                    <div className="bg-green-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm mb-4">
                         <p className="text-base mb-2">Aucune localisation n'est encore disponible.</p>
                         <p>Veuillez d'abord créer des localisations et y ajouter des appareils.</p>
                     </div>
@@ -283,18 +283,18 @@ const History: React.FC = () => {
 
                     <div className="mt-8 space-y-4">
                         {!selectedlocationID  && (
-                            <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
+                            <div className="bg-green-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
                                 <p className="text-base mb-2">Bienvenue sur l'historique de monitoring.</p>
                                 <p>Pour commencer, veuillez sélectionner une localisation.</p>
                             </div>
                         )}
                         {selectedlocationID && !selecteddeviceID && (
-                            <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
+                            <div className="bg-green-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
                                 <p>Veuillez sélectionner un appareil.</p>
                             </div>
                         )}
                         {selecteddeviceID && selectedComponents.length === 0 && selectedMetric.length === 0 && (
-                            <div className="bg-blue-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
+                            <div className="bg-green-50 rounded-xl p-4 text-blue-800 text-center font-medium shadow-sm text-sm">
                                 <p>Veuillez sélectionner au moins un capteur ou une métrique (courant, tension, puissance).</p>
                             </div>
                         )}

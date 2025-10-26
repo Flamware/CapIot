@@ -60,9 +60,9 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
     const formatTime = (isoString: string): string => {
         try {
             const date = new Date(isoString);
-            const utcHours = date.getUTCHours();
-            const utcMinutes = date.getUTCMinutes();
-            return `${String(utcHours).padStart(2, '0')}:${String(utcMinutes).padStart(2, '0')}`;
+            const localHours = date.getHours();
+            const localMinutes = date.getMinutes();
+            return `${String(localHours).padStart(2, '0')}:${String(localMinutes).padStart(2, '0')}`;
         } catch (e) {
             return "N/A";
         }
@@ -220,7 +220,7 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                                         if (hasMonthly && hasWeekly) {
                                             cellClass = 'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-purple-500 cursor-pointer hover:bg-purple-600';
                                         } else if (hasMonthly) {
-                                            cellClass = 'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-blue-500 cursor-pointer hover:bg-blue-600';
+                                            cellClass = 'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-green-500 cursor-pointer hover:bg-green-600';
                                         } else if (hasWeekly) {
                                             cellClass = 'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-green-500 cursor-pointer hover:bg-green-600';
                                         } else if (hasDaily) {
@@ -247,7 +247,7 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                 <div className="mt-4 space-y-2 text-sm">
                     <h5 className="font-semibold text-gray-700">Legend:</h5>
                     <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 inline-block rounded-full bg-blue-500"></span>
+                        <span className="w-4 h-4 inline-block rounded-full bg-green-500"></span>
                         <p className="text-gray-600">Monthly Schedule</p>
                     </div>
                     <div className="flex items-center space-x-2">

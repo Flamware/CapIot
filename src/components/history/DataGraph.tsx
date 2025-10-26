@@ -29,7 +29,32 @@ const COLORS = [
 ];
 
 /**
+ * Helper function to get the unit based on the component subtype (data key).
+ */
+const getUnit = (dataKey: string): string => {
+    // Clean dataKey in case it's a min/max line (e.g., "temperature_min")
+    const cleanedKey = dataKey.split('_')[0].toLowerCase();
+    switch (cleanedKey) {
+        case 'humidity':
+            return '%';
+        case 'temperature':
+            // Use the degree symbol
+            return ' °C';
+            case 'pressure':
+            return ' hPa';
+        case 'co2':
+            return ' ppm';
+        case 'voc':
+            return ' ppb';
+        // Add other subtypes and units as needed
+        default:
+            return '';
+    }
+};
+
+/**
  * Custom Tooltip component for Recharts to display full date/time and handle null values.
+ * Only the tooltip will now show the units.
  */
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -48,13 +73,30 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 <p className="font-bold text-gray-800 mb-2 border-b pb-1">{formattedDate}</p>
                 {payload.map((item: any, index: number) => {
                     // Filter out min/max lines from the main list in the tooltip body
-                    if (item.dataKey.endsWith('_min') || item.dataKey.endsWith('_max')) return null;
+                    if (item.dataKey.endsWith('_min') || item.dataKey.endsWith('_max')) {
+                        // Keep min/max lines in the tooltip only if they were explicitly named
+                        if (item.name) {
+                            const unit = getUnit(item.dataKey);
+                            return (
+                                <p key={index} style={{ color: item.color }} className="text-gray-700">
+                                    {`${item.name}: `}
+                                    <span className="font-mono font-semibold">
+                                        {item.value === null ? 'N/A' : `${item.value.toFixed(3)}${unit}`}
+                                    </span>
+                                </p>
+                            );
+                        }
+                        return null;
+                    }
+
+                    const unit = getUnit(item.dataKey);
 
                     return (
                         <p key={index} style={{ color: item.color }} className="text-gray-700">
                             {`${item.name}: `}
                             <span className="font-mono font-semibold">
-                                {item.value === null ? 'N/A' : item.value.toFixed(3)}
+                                {/* UNIT IS APPENDED HERE */}
+                                {item.value === null ? 'N/A' : `${item.value.toFixed(3)}${unit}`}
                             </span>
                         </p>
                     );
@@ -142,7 +184,9 @@ const DataGraph: React.FC<DataGraphProps> = ({ monitoringData, selectedComponent
                             minTickGap={20}
                             style={{ fontSize: '12px' }}
                         />
+                        {/* Reverted YAxis to its original state (no tickFormatter) */}
                         <YAxis style={{ fontSize: '12px' }}/>
+                        {/* Tooltip contains the unit */}
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ paddingTop: '10px' }}/>
 

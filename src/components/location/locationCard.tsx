@@ -41,7 +41,7 @@ const getStatusColorClass = (deviceStatus: string) => {
         case 'running':
         case 'online':
         case 'ok':
-            return 'bg-green-100 text-green-800 border border-green-200';
+            return 'bg-blue-100 text-green-800 border border-green-200';
         case 'running_plan':
             return 'bg-teal-100 text-teal-800 border border-teal-200';
         case 'offline':
