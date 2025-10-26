@@ -46,6 +46,8 @@ const getUnit = (dataKey: string): string => {
             return ' ppm';
         case 'voc':
             return ' ppb';
+        case 'ozone':
+            return ' ppb';
         // Add other subtypes and units as needed
         default:
             return '';
