@@ -1,11 +1,23 @@
 #!/bin/sh
+set -e
 
-# The correct path to your env-config.js file
-CONFIG_FILE="/usr/share/nginx/html/env-config.js"
+TEMPLATE_FILE=/usr/share/nginx/html/env.template.js
+OUT_FILE=/usr/share/nginx/html/env.js
 
-# Replace the placeholder values with the environment variables provided by Kubernetes
-sed -i "s|VITE_API_URL_PLACEHOLDER|${VITE_API_URL}|g" "$CONFIG_FILE"
-sed -i "s|VITE_INFLUXDB_URL_PLACEHOLDER|${VITE_INFLUXDB_URL}|g" "$CONFIG_FILE"
+echo "[entrypoint] Generating runtime env file..."
 
-# Start Nginx
-exec nginx -g "daemon off;"
+if [ -f "$TEMPLATE_FILE" ]; then
+  cp "$TEMPLATE_FILE" "$OUT_FILE"
+
+  # Replace placeholders with environment variable values
+  sed -i "s|__VITE_API_URL__|${VITE_API_URL:-}|g" "$OUT_FILE"
+  sed -i "s|__VITE_INFLUXDB_URL__|${VITE_INFLUXDB_URL:-}|g" "$OUT_FILE"
+
+  echo "[entrypoint] Environment injected successfully:"
+  cat "$OUT_FILE"
+else
+  echo "[entrypoint] WARNING: $TEMPLATE_FILE not found!"
+fi
+
+echo "[entrypoint] Starting Nginx..."
+exec "$@"

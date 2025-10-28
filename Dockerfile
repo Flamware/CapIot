@@ -1,39 +1,28 @@
-# Stage 1: Build the React application
-FROM node:18-alpine AS builder
-
-# Set the working directory inside the container
+# Stage 1: Build the Vite app
+FROM node:20 AS build
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# Copy package.json and install dependencies
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the app's source code
+# Copy the rest of the source code
 COPY . .
 
-# Build the React application without specific API URLs.
-# The `VITE_` variables will be accessed at runtime via a custom entrypoint.
+# Build for production (uses .env.production automatically)
 RUN npm run build
 
-# Stage 2: Serve the built application with Nginx
-FROM nginx:alpine
+# Stage 2: Serve with Nginx
+FROM nginx:stable-alpine
 
-# Copy the build files from the builder stage to Nginx's public directory
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy built static files
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy custom Nginx configuration
+# Copy custom Nginx config (SPA-friendly)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy the entrypoint script
-COPY entrypoint.sh /docker-entrypoint.sh
-
-# Make the entrypoint script executable
-RUN chmod +x /docker-entrypoint.sh
-
-# Expose the default HTTP port
+# Expose HTTP port
 EXPOSE 80
 
-# Run the custom entrypoint script, which will then start Nginx
-CMD ["/docker-entrypoint.sh"]
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]

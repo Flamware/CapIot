@@ -1,5 +1,5 @@
 // public/env-config.js
 window.env = {
-    VITE_API_URL: "VITE_API_URL_PLACEHOLDER",
-    VITE_INFLUXDB_URL: "VITE_INFLUXDB_URL_PLACEHOLDER"
+    VITE_API_URL: "https://api.flamware.work/api",
+    VITE_INFLUXDB_URL: "https://influxdb.flamware.work/influxdb",
 };
