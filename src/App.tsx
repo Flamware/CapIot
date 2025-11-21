@@ -1,100 +1,118 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/login";
 import Profile from "./pages/profile";
 import Dashboard from "./pages/dashboard";
 import About from "./pages/about";
 import ProtectedRoute from "./components/ProtectedRoute";
-import History from "./pages/History.tsx";
-import { SideBar } from "./components/SideBar"; // Import the SideBar component
-import { jwtDecode } from 'jwt-decode';
-import ContentHeader from "./components/header.tsx";
-import {DeviceManagement} from "./pages/admin/DeviceManagement.tsx";
-import LocationManagement from "./pages/admin/LocationManagement.tsx";
-import {UserManagement} from "./pages/admin/UserManagement.tsx";
+import History from "./pages/history";
+import { SideBar } from "./components/SideBar";
+import ContentHeader from "./components/header";
+import { DeviceManagement } from "./pages/admin/DeviceManagement";
+import LocationManagement from "./pages/admin/LocationManagement";
+import { UserManagement } from "./pages/admin/UserManagement";
+import { useAuth } from "./components/hooks/useAuth";
+import NoRolePage from "./pages/norole";
+import { AuthProvider } from "./AuthContext";
+import { useState } from "react";
+import Notifications from "./pages/notifications";
+import { useIsMobile } from "./components/hooks/useIsMobile";
+import { ApiErrorProvider } from "./provider/ApiErrorProvider";
 
+const App = () => {
+    const { isAuthenticated } = useAuth(); // ✅ works now, since App is wrapped below
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const isMobile = useIsMobile(1100);
 
-interface JwtPayload {
-    role?: string[];
-}
-
-const App: React.FC = () => {
-    const [isAdmin, setIsAdmin] = useState(false);
-    const isAuthenticated = localStorage.getItem('customJwt') !== null;
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            try {
-                const token = localStorage.getItem('customJwt')!;
-                const decodedToken = jwtDecode<JwtPayload>(token);
-                setIsAdmin(decodedToken?.role?.includes('admin') || false);
-            } catch (error) {
-                console.error("Error decoding JWT:", error);
-                setIsAdmin(false);
-            }
-        } else {
-            setIsAdmin(false);
-        }
-    }, [isAuthenticated]);
+    const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+    const closeSidebar = () => setIsSidebarOpen(false);
 
     return (
-        <BrowserRouter>
-            <div className="flex h-screen bg-gray-50">
-                {isAuthenticated && (
-                    <SideBar
-                        isAdmin={isAdmin}
-                    />
-                )}
-                <div className="flex-1 overflow-y-auto">
-                        {isAuthenticated && (
-                            <ContentHeader  />
-                        )}
-                    <main className="container mx-auto p-4">
-                        <Routes>
-                            <Route path="/" element={<Dashboard />} />
+        <div className="relative flex flex-row h-screen bg-gray-50 overflow-hidden">
+            {isAuthenticated && (
+                <SideBar
+                    isSidebarOpen={isSidebarOpen}
+                    onToggleSidebar={toggleSidebar}
+                    isMobile={isMobile}
+                />
+            )}
+
+            <div className="flex-1 overflow-y-auto">
+                <ContentHeader
+                    isSidebarOpen={isSidebarOpen}
+                    onToggleSidebar={toggleSidebar}
+                    onCloseSidebar={closeSidebar}
+                    isMobile={isMobile}
+                />
+                <main className="container mx-auto p-4">
+                    <Routes>
+                        <Route path="/no-role" element={<NoRolePage />} />
+                        <Route
+                            path="/"
+                            element={
+                                isAuthenticated ? (
+                                    <Navigate to="/dashboard" replace />
+                                ) : (
+                                    <Login />
+                                )
+                            }
+                        />
+
+                        {/* User routes */}
+                        <Route
+                            element={
+                                <ProtectedRoute
+                                    requiredRoles={["user", "admin", "operateur", "gestionnaire"]}
+                                />
+                            }
+                        >
                             <Route path="/dashboard" element={<Dashboard />} />
-                            <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+                            <Route path="/profile" element={<Profile />} />
                             <Route path="/history" element={<History />} />
-                            <Route
-                                path="/admin/users"
-                                element={
-                                    <ProtectedRoute requiredRoles={['admin']}>
-                                        <UserManagement />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/admin/devices"
-                                element={
-                                    <ProtectedRoute requiredRoles={['admin']}>
-                                        <DeviceManagement />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/admin/locations"
-                                element={
-                                    <ProtectedRoute requiredRoles={['admin']}>
-                                        <LocationManagement/>
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/profile"
-                                element={
-                                    <ProtectedRoute>
-                                        <Profile />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route path="/about" element={<About />} />
-                            <Route path="/unauthorized" element={<div className="text-center mt-10"><h1 className="text-2xl font-semibold text-red-500">Unauthorized</h1><p className="mt-2">You do not have permission to access this page.</p></div>} />
-                        </Routes>
-                    </main>
-                </div>
+                            <Route path="/notifications" element={<Notifications />} />
+
+                            <Route path="/notifications/device/:deviceId" element={<Notifications />} />                        </Route>
+
+                        {/* Admin/operateur routes */}
+                        <Route
+                            element={
+                                <ProtectedRoute requiredRoles={["admin", "operateur"]} />
+                            }
+                        >
+                            <Route path="/admin/users" element={<UserManagement />} />
+                            <Route path="/admin/devices" element={<DeviceManagement />} />
+                            <Route path="/admin/locations" element={<LocationManagement />} />
+                        </Route>
+
+                        {/* Public routes */}
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/unauthorized" element={<NoRolePage />} />
+
+                        {/* Catch-all */}
+                        <Route
+                            path="*"
+                            element={
+                                <Navigate
+                                    to={isAuthenticated ? "/dashboard" : "/login"}
+                                    replace
+                                />
+                            }
+                        />
+                    </Routes>
+                </main>
             </div>
-        </BrowserRouter>
+        </div>
     );
 };
 
-export default App;
+const AppWithProviders = () => (
+    <BrowserRouter>
+        <AuthProvider>
+            <ApiErrorProvider>
+                <App />
+            </ApiErrorProvider>
+        </AuthProvider>
+    </BrowserRouter>
+);
+
+export default AppWithProviders;

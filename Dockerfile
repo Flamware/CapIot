@@ -1,37 +1,28 @@
-# Stage 1: Build the React application
-FROM node:18-alpine AS builder
-
-# Set the working directory inside the container
+# Stage 1: Build the Vite app
+FROM node:20 AS build
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# Copy package.json and install dependencies
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the app's source code
+# Copy the rest of the source code
 COPY . .
 
-# Pass VITE_API_URL as a build argument
-ARG VITE_API_URL
-ARG VITE_INFLUXDB_URL
+# Build for production (uses .env.production automatically)
+RUN npm run build
 
-# Build the React application with the API URL
-RUN VITE_API_URL=$VITE_API_URL VITE_INFLUXDB_URL=$VITE_INFLUXDB_URL npm run build
+# Stage 2: Serve with Nginx
+FROM nginx:stable-alpine
 
-# Stage 2: Serve the built application with Nginx
-FROM nginx:alpine
+# Copy built static files
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy the build files from the builder stage to Nginx's public directory
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy custom Nginx configuration if necessary
-# Ensure you have a custom nginx.conf file in your project directory
+# Copy custom Nginx config (SPA-friendly)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose the default HTTP port
+# Expose HTTP port
 EXPOSE 80
 
-# Run Nginx in the foreground to serve the app
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]

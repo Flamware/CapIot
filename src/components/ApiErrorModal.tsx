@@ -1,8 +1,9 @@
 import React from 'react';
+import {ApiErrorType} from "./types/ApiError.ts";
 
 interface ApiErrorModalProps {
     isOpen: boolean;
-    error: any; // Or a more specific error type
+    error?: ApiErrorType|null;
     onClose: () => void;
     onRetry?: () => void;
 }
@@ -11,19 +12,17 @@ export const ApiErrorModal: React.FC<ApiErrorModalProps> = ({ isOpen, error, onC
     if (!isOpen) {
         return null;
     }
-
     let errorMessage = 'An unexpected error occurred.';
     let errorCode: string | undefined;
     let errorDetails: any;
     let formattedDetails: React.ReactNode | null = null;
 
-    if (error && typeof error === 'object' && error !== null) {
-        if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-            errorCode = error.response.data.code;
-            errorDetails = error.response.data.details;
+    if (error && typeof error === 'object') {
+        if (error?.message) {
+            errorMessage = error.message;
+            errorCode = error.code;
+            errorDetails = error.details;
 
-            // Format specific details for better readability
             if (errorDetails && typeof errorDetails === 'object') {
                 const detailItems: React.ReactNode[] = [];
                 if (errorDetails.error) {
@@ -36,7 +35,6 @@ export const ApiErrorModal: React.FC<ApiErrorModalProps> = ({ isOpen, error, onC
                         <strong className="font-semibold">Constraint:</strong> {errorDetails.constraint}
                     </p>);
                 }
-                // Add more specific detail keys here as needed
 
                 if (detailItems.length > 0) {
                     formattedDetails = <div className="mb-4 border rounded-md p-2 bg-gray-100 text-sm text-gray-800">
@@ -44,7 +42,6 @@ export const ApiErrorModal: React.FC<ApiErrorModalProps> = ({ isOpen, error, onC
                         {detailItems}
                     </div>;
                 } else if (Object.keys(errorDetails).length > 0) {
-                    // Fallback to a more generic display if specific keys aren't found
                     const genericDetails = Object.entries(errorDetails).map(([key, value]) => (
                         <p key={key} className="mb-1">
                             <strong className="font-semibold">{key}:</strong> {String(value)}
@@ -56,10 +53,6 @@ export const ApiErrorModal: React.FC<ApiErrorModalProps> = ({ isOpen, error, onC
                     </div>;
                 }
             }
-        } else if (error.response?.headers['error']) {
-            errorMessage = error.response.headers['error'];
-        } else if (error.message) {
-            errorMessage = error.message;
         } else if (typeof error === 'string') {
             errorMessage = error;
         }

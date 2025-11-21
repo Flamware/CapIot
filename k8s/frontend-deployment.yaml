@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: capiot-frontend
-          image: flamware/capiot-frontend:4 # Your specified image
+          image: flamware/capiot-frontend:v8
           ports:
             - containerPort: 80 # Assuming your frontend serves on port 80
           env: # <--- New section for environment variables

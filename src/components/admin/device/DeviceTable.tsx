@@ -1,81 +1,174 @@
-import React from 'react';
-import { DevicesWithLocation } from '../../types/device.ts';
-import { DeviceMenuDropdown } from './DeviceMenuDropdown.tsx'; // Assuming you'll move this as well
+import React, { useState } from "react";
+import { DevicesWithLocation } from "../../types/device";
+import EditDeviceModal from "./EditDeviceModal";
+import {Location} from "../../types/location.ts";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faPause, faPencilAlt, faTrashAlt, faBell } from '@fortawesome/free-solid-svg-icons';
+
+const getStatusColorClass = (deviceStatus?: string) => {
+    switch (deviceStatus?.toLowerCase()) {
+        case "running":
+        case "online":
+        case "ok":
+            return "bg-green-100 text-green-800 border border-green-200";
+        case "offline":
+        case "fault":
+        case "faulty":
+            return "bg-red-100 text-red-800 border border-red-200";
+        case "idle":
+        case "unassigned":
+            return "bg-green-100 text-blue-800 border border-blue-200";
+        case "warning":
+            return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+        case "alert":
+            return "bg-orange-100 text-orange-800 border border-orange-200";
+        default:
+            return "bg-gray-100 text-gray-700 border border-gray-200";
+    }
+};
 
 interface DeviceTableProps {
     devices: DevicesWithLocation[];
-    onDelete: (id: string) => void;
-    onAssignLocation: (id: string) => void;
-    onEdit: (device: DevicesWithLocation) => void;
+    onUpdate: (deviceID: string, location: Location | null) => void;
+    onDelete: (deviceID: string) => void;
+    onDeviceCommandSend?: (device: DevicesWithLocation, command: string) => void;
 }
 
-export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onDelete, onAssignLocation, onEdit }) => {
-    if (devices.length === 0) {
-        return (
-            <tr>
-                <td colSpan={6} className="p-4 text-center text-gray-500">
-                    No devices found.
-                </td>
-            </tr>
-        );
-    }
+export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onDelete, onDeviceCommandSend }) => {
+    const [editingDevice, setEditingDevice] = useState<DevicesWithLocation | null>(null);
+
+    const handleSave = (newLoc : Location | null) => {
+        if (editingDevice) {
+            onUpdate(editingDevice.device_id, newLoc);
+            setEditingDevice(null);
+        }
+    };
+
+    const handleCancel = () => setEditingDevice(null);
+
+    // Fonction de navigation manuelle pour les notifications
+    const handleNotificationRedirect = (deviceId: string) => {
+        const url = `/notifications/device/${deviceId}/`;
+        // Utilisation de window.location.assign pour naviguer, cohérent avec NotificationButton.jsx
+        window.location.assign(url);
+    };
 
     return (
-        <tbody>
-        {devices.map((deviceLocation) => (
-            <tr key={deviceLocation?.device_id} className="border-t">
-                <td className="p-2 font-medium">{deviceLocation?.device_id}</td>
-                <td className="p-2">
-                        <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${
-                                deviceLocation?.status === "Running"
-                                    ? "bg-green-100 text-green-700"
-                                    : deviceLocation?.status === "stopped"
-                                        ? "bg-red-100 text-red-700"
-                                        : "bg-yellow-100 text-yellow-700"
-                            }`}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {/* Table Header */}
+            <div className="bg-green-100 grid grid-cols-7 items-center px-6 py-3 font-semibold text-gray-700 text-sm border-b border-gray-200">
+                <span>ID de l'appareil</span>
+                <span>Statut</span>
+                <span>Dernière vue</span>
+                <span>Site</span>
+                <span>Lieu</span>
+                <span>Capteurs</span>
+                <span className="text-right">Actions</span>
+            </div>
+
+            {/* Table Body */}
+            {devices.length === 0 ? (
+                <div className="p-6 text-center text-gray-500 bg-white">
+                    <p className="text-lg font-medium">Aucun appareil trouvé.</p>
+                    <p className="text-sm">Commencez par ajouter de nouveaux appareils.</p>
+                </div>
+            ) : (
+                <div className="divide-y divide-gray-200">
+                    {devices.map((device) => (
+                        <div
+                            key={device.device_id}
+                            className="grid grid-cols-7 items-center px-6 py-4 hover:bg-gray-50 transition-colors duration-200"
                         >
-                            {deviceLocation?.status}
-                        </span>
-                </td>
-                <td className="p-2">{new Date(deviceLocation?.last_seen).toLocaleString()}</td>
-                <td className="p-2">
-                    {deviceLocation.location ? (
-                        <div>
-                            {deviceLocation.location.location_name}
-                        </div>
-                    ) : (
-                        <span className="text-gray-500">No location assigned</span>
-                    )}
-                </td>
-                <td className="p-2">
-                    {deviceLocation?.sensors && deviceLocation.sensors.length > 0 ? (
-                        deviceLocation.sensors.map(sensor => (
-                            <div key={sensor.sensor_id}>
-                                {sensor.sensor_type} ({sensor.sensor_id})
+                            <span className="font-medium text-gray-900 truncate">{device.device_id}</span>
+                            <div className="flex items-center space-x-2">
+                                <span
+                                    className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColorClass(
+                                        device.status
+                                    )}`}
+                                >
+                                    {device.status}
+                                </span>
+                                {onDeviceCommandSend && (device.status === 'Online' || device.status === 'Running' || device.status === 'Idle') && (
+                                    <button
+                                        onClick={() => onDeviceCommandSend(device, device.status === 'Online' ? 'Start' : 'Stop')}
+                                        className={`
+                                            w-6 h-6 flex items-center justify-center rounded-full transition-all duration-300
+                                            shadow-md hover:shadow-lg transform hover:scale-105
+                                            focus:outline-none focus:ring-2 focus:ring-opacity-50
+                                            ${device.status === 'Online'
+                                            ? 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-300'
+                                            : 'bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-300'
+                                        }
+                                        `}
+                                        title={device.status === 'Online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                        aria-label={device.status === 'Online' ? 'Démarrer l\'appareil' : 'Mettre l\'appareil en pause'}
+                                    >
+                                        <FontAwesomeIcon icon={device.status === 'Online' ? faPlay : faPause} className="text-xs" />
+                                    </button>
+                                )}
                             </div>
-                        ))
-                    ) : (
-                        <span className="text-gray-500">No sensors</span>
-                    )}
-                </td>
-                <td className="p-2">
-                    <button
-                        onClick={() => onEdit(deviceLocation)}
-                        className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-                    >
-                        Edit
-                    </button>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                    <DeviceMenuDropdown
-                        device={deviceLocation}
-                        onDelete={onDelete}
-                        onAssignLocation={onAssignLocation}
-                    />
-                </td>
-            </tr>
-        ))}
-        </tbody>
+                            <span className="text-gray-600 text-sm">
+                                {device.last_seen ? new Date(device.last_seen).toLocaleString() : "Jamais"}
+                            </span>
+                            <span className="text-gray-600 text-sm">
+                                {device.location?.site_name ?? "Non assigné"}
+                            </span>
+                            <span className="text-gray-600 text-sm">
+                                {device.location?.location_name ?? "Non assigné"}
+                            </span>
+
+                            <div className="flex flex-wrap gap-1">
+                                {device.components && device.components.length > 0 ? (
+                                    device.components.map((sensor) => (
+                                        <span
+                                            key={sensor.component_id}
+                                            className="bg-green-100 text-green-700 px-2 py-1 text-xs rounded-full font-medium"
+                                        >
+                                            {sensor.component_subtype}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-gray-500 text-xs italic">Aucun</span>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex justify-end items-center space-x-3">
+                                <button
+                                    onClick={() => setEditingDevice(device)}
+                                    title="Modifier"
+                                    className="text-gray-500 hover:text-blue-600 transition-colors duration-200"
+                                >
+                                    <FontAwesomeIcon icon={faPencilAlt} />
+                                </button>
+                                <button
+                                    onClick={() => onDelete(device.device_id)}
+                                    title="Supprimer"
+                                    className="text-gray-500 hover:text-red-600 transition-colors duration-200"
+                                >
+                                    <FontAwesomeIcon icon={faTrashAlt} />
+                                </button>
+                                <button
+                                    onClick={() => handleNotificationRedirect(device.device_id)}
+                                    title="Voir les notifications"
+                                    className="text-gray-500 hover:text-yellow-600 transition-colors duration-200"
+                                >
+                                    <FontAwesomeIcon icon={faBell} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {editingDevice && (
+                <EditDeviceModal
+                    device={editingDevice}
+                    onClose={handleCancel}
+                    onSave={handleSave}
+                />
+            )}
+        </div>
     );
 };

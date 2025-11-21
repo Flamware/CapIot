@@ -1,28 +1,45 @@
-// components/ProtectedRoute.tsx
-import React, { ReactNode, useContext } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { AuthContext, AuthContextType } from '../AuthContext'; // Importez votre contexte d'authentification
+import React from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from './hooks/useAuth'; // Assumes you have a hook to get auth context
 
 interface ProtectedRouteProps {
-    children: ReactNode;
-    requiredRoles?: string[]; // Rôle(s) requis pour accéder à cette route
+    // Defines roles needed for the route. Undefined means any role is okay.
+    requiredRoles?: string[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRoles }) => {
-    const { user } = useContext(AuthContext) as AuthContextType; // Utilisez le contexte et typez-le
-    const location = useLocation();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles }) => {
+    // Get authentication state and user data from the context
+    const { isAuthenticated, user } = useAuth();
 
-    if (!user) {
-        // L'utilisateur n'est pas connecté, redirigez vers la page de connexion
-        return <Navigate to="/login" state={{ from: location }} replace />;
+    // 1. If the user is not authenticated, redirect to the login page.
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
     }
 
-    if (requiredRoles && requiredRoles.length > 0 && (!user.roles || !requiredRoles.some(role => user.roles?.includes(role)))) {
-        // L'utilisateur est connecté mais n'a pas les rôles requis
-        return <Navigate to="/unauthorized" replace />;
+    // 2. If the user is authenticated but has no roles, redirect to the no-role page.
+    // We check if the user object exists and if the roles array is present and not empty.
+    const hasRoles = user?.roles && user.roles.length > 0;
+    console.log('User roles:', user?.roles);
+    if (!hasRoles) {
+        console.log('Redirecting to no-role page due to missing roles.');
+        return <Navigate to="/no-role" replace />;
     }
 
-    return children;
+    // 3. If requiredRoles are specified, check if the user has at least one of them.
+    if (requiredRoles && requiredRoles.length > 0) {
+        console.log('Required roles for this route:', requiredRoles);
+        // Check if there is an intersection between the user's roles and the required roles.
+        // The 'role' parameter is now explicitly typed as a string to resolve the TS7006 error.
+        const hasRequiredRole = user.roles.some((role: string) => requiredRoles.includes(role));
+
+        // If the user doesn't have the required role, redirect to the unauthorized page.
+        if (!hasRequiredRole) {
+            return <Navigate to="/unauthorized" replace />;
+        }
+    }
+
+    // If all checks pass, render the child route's content.
+    return <Outlet />;
 };
 
 export default ProtectedRoute;
