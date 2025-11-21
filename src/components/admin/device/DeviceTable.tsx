@@ -3,9 +3,7 @@ import { DevicesWithLocation } from "../../types/device";
 import EditDeviceModal from "./EditDeviceModal";
 import {Location} from "../../types/location.ts";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
-// Suppression de l'importation de 'redirect' non utilisée et source d'erreur
-// import {redirect} from "react-router-dom"; // Remplacé par une navigation manuelle
+import { faPlay, faPause, faPencilAlt, faTrashAlt, faBell } from '@fortawesome/free-solid-svg-icons';
 
 const getStatusColorClass = (deviceStatus?: string) => {
     switch (deviceStatus?.toLowerCase()) {
@@ -28,10 +26,6 @@ const getStatusColorClass = (deviceStatus?: string) => {
             return "bg-gray-100 text-gray-700 border border-gray-200";
     }
 };
-
-// Icons
-const PenIcon = () => <span>✏️</span>;
-const TrashIcon = () => <span>🗑️</span>;
 
 interface DeviceTableProps {
     devices: DevicesWithLocation[];
@@ -62,7 +56,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onD
     return (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* Table Header */}
-            <div className="bg-gray-100 grid grid-cols-7 items-center px-6 py-3 font-semibold text-gray-700 text-sm border-b border-gray-200">
+            <div className="bg-green-100 grid grid-cols-7 items-center px-6 py-3 font-semibold text-gray-700 text-sm border-b border-gray-200">
                 <span>ID de l'appareil</span>
                 <span>Statut</span>
                 <span>Dernière vue</span>
@@ -128,9 +122,9 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onD
                                     device.components.map((sensor) => (
                                         <span
                                             key={sensor.component_id}
-                                            className="bg-green-100 text-blue-700 px-2 py-1 text-xs rounded-full font-medium"
+                                            className="bg-green-100 text-green-700 px-2 py-1 text-xs rounded-full font-medium"
                                         >
-                                            {sensor.component_type}
+                                            {sensor.component_subtype}
                                         </span>
                                     ))
                                 ) : (
@@ -139,19 +133,27 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({ devices, onUpdate, onD
                             </div>
 
                             {/* Actions */}
-                            <div className="flex justify-end items-center space-x-2">
-                                <button onClick={() => setEditingDevice(device)} title="Modifier">
-                                    <PenIcon />
-                                </button>
-                                <button onClick={() => onDelete(device.device_id)} title="Supprimer">
-                                    <TrashIcon />
+                            <div className="flex justify-end items-center space-x-3">
+                                <button
+                                    onClick={() => setEditingDevice(device)}
+                                    title="Modifier"
+                                    className="text-gray-500 hover:text-blue-600 transition-colors duration-200"
+                                >
+                                    <FontAwesomeIcon icon={faPencilAlt} />
                                 </button>
                                 <button
-                                    // Utilisation du gestionnaire de redirection corrigé
+                                    onClick={() => onDelete(device.device_id)}
+                                    title="Supprimer"
+                                    className="text-gray-500 hover:text-red-600 transition-colors duration-200"
+                                >
+                                    <FontAwesomeIcon icon={faTrashAlt} />
+                                </button>
+                                <button
                                     onClick={() => handleNotificationRedirect(device.device_id)}
                                     title="Voir les notifications"
+                                    className="text-gray-500 hover:text-yellow-600 transition-colors duration-200"
                                 >
-                                    📜
+                                    <FontAwesomeIcon icon={faBell} />
                                 </button>
                             </div>
                         </div>

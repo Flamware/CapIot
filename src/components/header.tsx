@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import logo from '../assets/logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faChartLine,
     faArrowLeft,
     faBell,
     faUserCircle,
@@ -87,17 +85,17 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onCloseSidebar,
             </button>
         );
 
-    const renderHeaderTitle = (title: string, isAccent: boolean = false) => (
+    const renderHeaderTitle = (title: string) => (
         <div className="flex items-center space-x-4">
             {isMobile && renderSidebarToggle()}
             <button
-                onClick={handleGoBack} // ✅ The `handleGoBack` function now calls `onCloseSidebar()`
+                onClick={handleGoBack}
                 className="text-gray-500 hover:text-green-500 focus:outline-none transition duration-200"
                 aria-label="Go back"
             >
                 <FontAwesomeIcon icon={faArrowLeft} className="h-5 w-5" />
             </button>
-            <h1 className={`text-xl font-semibold ${isAccent ? 'text-green-600' : 'text-gray-800'}`}>
+            <h1 className="text-xl font-semibold text-green-600">
                 {title}
             </h1>
         </div>
@@ -106,33 +104,26 @@ const ContentHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onCloseSidebar,
     const totalNotifications = pagination?.totalItems || 0;
 
     const renderHeaderContent = () => {
-        switch (location.pathname) {
+        const path = location.pathname.toLowerCase(); // Normalisation pour éviter les erreurs de casse
+    console.log("Current path:", path);
+        switch (path) {
             case '/dashboard':
-                return renderHeaderTitle('Dashboard');
+                return renderHeaderTitle('Tableau de Bord');
             case '/profile':
-                return renderHeaderTitle('Your Profile');
+                return renderHeaderTitle('Votre Profil');
             case '/history':
-                return renderHeaderTitle('History');
+                return renderHeaderTitle('Historique des Données');
             case '/about':
-                return renderHeaderTitle('About Us');
-            case '/notifications':
-                return renderHeaderTitle('Notifications');
+                return renderHeaderTitle('À propos de Cap.Iot');
+            case '/notifications/':
+                return renderHeaderTitle('Toutes les Notifications');
+            case path.startsWith('/notifications/device/') ? path : '':
+                return renderHeaderTitle('Notification par appareil');
             default:
-                if (location.pathname.startsWith('/admin')) {
-                    return renderHeaderTitle('Admin Area', true);
+                if (path.startsWith('/admin')) {
+                    return renderHeaderTitle('Admin Area');
                 }
-                return (
-                    <div className="flex items-center space-x-4">
-                        {renderSidebarToggle()}
-                        <div className="flex items-center space-x-2">
-                            <img className="block h-8 w-auto" src={logo} alt="CapIot Logo" />
-                            <FontAwesomeIcon icon={faChartLine} className="text-green-500 text-2xl" />
-                            <span className="text-xl font-semibold text-gray-800">
-                                Cap<span className="text-green-500">Iot</span>
-                            </span>
-                        </div>
-                    </div>
-                );
+                return renderHeaderTitle('CapIot'); // Titre par défaut cohérent
         }
     };
 

@@ -41,10 +41,16 @@ const LocationTable: React.FC<LocationTableProps> = ({ locations, onDelete, onSa
         });
     };
 
+    const handleDelete = (id: number) => {
+        const confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer cet emplacement ? Cette action est irréversible.");
+        if (confirmDelete) {
+            onDelete(id);
+        }
+    };
     return (
-        <div className="overflow-x-auto rounded-lg shadow-md mb-8">
+        <div className="overflow-x-auto  rounded-lg shadow-md mb-8">
             <table className="min-w-full text-sm border-collapse table-auto">
-                <thead className="bg-gray-100">
+                <thead className="bg-green-100">
                 <tr>
                     <th className="px-4 py-3 text-left font-semibold text-gray-700">ID</th>
                     <th className="px-4 py-3 text-left font-semibold text-gray-700">Nom</th>
@@ -107,7 +113,7 @@ const LocationTable: React.FC<LocationTableProps> = ({ locations, onDelete, onSa
                                             <Pencil size={18} />
                                         </button>
                                         <button
-                                            onClick={() => onDelete(location.location_id)}
+                                            onClick={() => handleDelete(location.location_id)}
                                             className="text-red-600 hover:text-red-800"
                                             title="Supprimer"
                                         >

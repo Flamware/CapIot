@@ -89,7 +89,7 @@ const NotificationsPage: React.FC = () => {
                 <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                     <BellRing className="w-16 h-16 mb-6 text-green-400" />
                     <p className="text-xl font-medium">Aucune nouvelle notification.</p>
-                    {deviceId && <p className="mt-2 text-sm">pour l'appareil **{deviceId}**</p>}
+                    {deviceId && <p className="mt-2 text-sm">pour l'appareil {deviceId}</p>}
                 </div>
             );
         }

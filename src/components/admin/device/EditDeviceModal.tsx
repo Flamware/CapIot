@@ -65,24 +65,24 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
 
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-lg">
-                <h2 className="text-lg font-semibold mb-4">Modifier l'appareil {device.device_id}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300">
+            <div className="bg-white rounded-xl w-full max-w-lg p-8 shadow-2xl transform transition-all duration-300 scale-95">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Modifier l'appareil {device.device_id}</h2>
 
                 {/* Site */}
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Site</label>
+                <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Site</label>
                     <input
                         type="text"
-                        placeholder="Rechercher site..."
+                        placeholder="Rechercher un site..."
                         value={siteSearch}
                         onChange={(e) => setSiteSearch(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-1"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-sm mb-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
                     />
                     <select
                         value={selectedSiteId || ""}
                         onChange={(e) => setSelectedSiteId(e.target.value ? Number(e.target.value) : null)}
-                        className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                        className="w-full p-3 border border-gray-300 bg-green-50 text-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition hover:bg-green-100"
                     >
                         <option value="">Sélectionner un site</option>
                         {sites.map((site) => (
@@ -95,19 +95,19 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
 
                 {/* Location */}
                 {selectedSiteId && (
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Lieu</label>
+                    <div className="mb-8">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Lieu</label>
                         <input
                             type="text"
-                            placeholder="Rechercher lieu..."
+                            placeholder="Rechercher un lieu..."
                             value={locationSearch}
                             onChange={(e) => setLocationSearch(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-1"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm mb-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
                         />
                         <select
                             value={selectedlocationID || ""}
                             onChange={(e) => setSelectedlocationID(e.target.value ? Number(e.target.value) : null)}
-                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            className="w-full p-3 border border-gray-300 bg-green-200 text-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition hover:bg-green-100"
                         >
                             <option value="">Non assigné</option>
                             {locations.map((loc) => (
@@ -120,16 +120,16 @@ export const EditDeviceModal: React.FC<EditDeviceModalProps> = ({
                 )}
 
                 {/* Actions */}
-                <div className="flex justify-end space-x-2">
+                <div className="flex justify-end space-x-4">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                        className="px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
                     >
                         Annuler
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
                     >
                         Enregistrer
                     </button>

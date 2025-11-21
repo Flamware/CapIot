@@ -72,9 +72,9 @@ export const UserTable: React.FC<UserTableProps> = ({
     );
 
     return (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="bg-gray-100 grid grid-cols-5 items-center px-6 py-3 font-semibold text-gray-700 text-sm border-b border-gray-200">
-                <span>Nom de l'utilisateur</span>
+        <div className=" rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-green-100 grid grid-cols-5 items-center px-6 py-3 font-semibold text-gray-700 text-sm border-b border-gray-200">
+                <span className="border-r pr-4">Nom</span>
                 <span>Email</span>
                 <span className="col-span-2">Sites assignés</span>
                 <span className="text-right">Actions</span>
@@ -91,7 +91,7 @@ export const UserTable: React.FC<UserTableProps> = ({
             ) : (
                 <div className="divide-y divide-gray-200">
                     {users.map((user) => (
-                        <div key={user.id} className="grid grid-cols-5 items-center px-6 py-4 hover:bg-gray-50 transition-colors duration-200">
+                        <div key={user.id} className="grid grid-cols-5  items-center px-6 py-4 hover:bg-gray-50 transition-colors duration-200">
                             {/* User Name */}
                             <div className="font-medium text-gray-900 truncate" title={user.name}>
                                 {editingUserId === user.id ? (
@@ -143,7 +143,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                 ) : (
                                     user.sites?.length > 0 ? (
                                         user.sites.map((site) => (
-                                            <span key={site.site_id} className="inline-flex items-center bg-purple-100 text-purple-700 px-3 py-1 text-xs rounded-full font-medium">
+                                            <span key={site.site_id} className="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 text-xs rounded-full font-medium">
                                                 <Globe className="h-3 w-3 mr-1.5" />
                                                 {site.site_name}
                                             </span>
@@ -180,7 +180,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                         {/* Edit Button */}
                                         <button
                                             onClick={() => handleEditClick(user)}
-                                            className="p-2 rounded-full text-blue-500 hover:bg-green-100 transition-colors"
+                                            className="p-2 rounded-full  hover:bg-green-100 transition-colors"
                                             title="Modifier l'utilisateur"
                                         >
                                             <Pencil className="h-4 w-4" />

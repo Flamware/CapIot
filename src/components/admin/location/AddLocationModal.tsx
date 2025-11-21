@@ -45,7 +45,7 @@ export const AddLocationModal: React.FC<AddLocationModalProps> = ({ isOpen, onCl
                 <div className="p-6">
                     <h2 className="text-lg font-semibold mb-2">Ajouter un nouvel emplacement</h2>
                     <p className="text-gray-500 mb-4">
-                        Ajoutez un nouvel emplacement au site : **{selectedSite?.site_name}**.
+                        Ajoutez un nouvel emplacement au site : {selectedSite?.site_name}.
                     </p>
                     <div className="grid gap-4">
                         <div className="grid gap-2">

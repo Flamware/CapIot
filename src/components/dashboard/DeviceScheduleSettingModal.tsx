@@ -258,7 +258,10 @@ const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, 
                                 currentRecurrenceType === type ? 'bg-green-500 text-white' : 'bg-gray-200 text-black'
                             }`}
                         >
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                            {type === 'daily' ? 'Quotidien' :
+                             type === 'weekly' ? 'Hebdomadaire' :
+                             type === 'monthly' ? 'Mensuel' :
+                             'Spécifique'}
                         </button>
                     ))}
                 </div>
@@ -295,3 +298,4 @@ const DeviceScheduleSettingModal: React.FC<Props> = ({ isOpen, device, onClose, 
 };
 
 export default DeviceScheduleSettingModal;
+

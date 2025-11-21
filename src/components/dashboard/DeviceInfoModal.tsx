@@ -182,8 +182,7 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                             className="px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300">◀
                     </button>
                     <h4 className="font-semibold text-gray-800">
-                        Schedules
-                        for {new Date(startYear, startMonth).toLocaleString('default', {month: 'long'})} {startYear}
+                        Horaires pour {new Date(startYear, startMonth).toLocaleString('default', {month: 'long'})} {startYear}
                     </h4>
                     <button onClick={handleNextMonth}
                             className="px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300">▶
@@ -192,7 +191,7 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                 <table className="w-full text-center text-sm mt-2">
                     <thead>
                     <tr className="text-gray-500 text-xs">
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                        {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
                             <th key={day} className="py-2 font-medium">{day}</th>
                         ))}
                     </tr>
@@ -207,7 +206,6 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                                 if (schedulesForDay.length > 0) {
                                     const hasSpecific = schedulesForDay.some(s => s.recurrence_rule.includes('FREQ=ONCE'));
                                     const hasException = schedulesForDay.some(s => s.is_exception);
-                                    console.log("exception :",hasException);
                                     if (hasSpecific && !hasException) {
                                         cellClass = 'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-cyan-500 cursor-pointer hover:bg-cyan-600';
                                     } else if (hasException) {
@@ -245,26 +243,18 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                     </tbody>
                 </table>
                 <div className="mt-4 space-y-2 text-sm">
-                    <h5 className="font-semibold text-gray-700">Legend:</h5>
+                    <h5 className="font-semibold text-gray-700">Légende :</h5>
                     <div className="flex items-center space-x-2">
                         <span className="w-4 h-4 inline-block rounded-full bg-green-500"></span>
-                        <p className="text-gray-600">Monthly Schedule</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 inline-block rounded-full bg-green-500"></span>
-                        <p className="text-gray-600">Weekly Schedule</p>
+                        <p className="text-gray-600">Horaire mensuel</p>
                     </div>
                     <div className="flex items-center space-x-2">
                         <span className="w-4 h-4 inline-block rounded-full bg-orange-500"></span>
-                        <p className="text-gray-600">Daily Schedule</p>
+                        <p className="text-gray-600">Horaire quotidien</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 inline-block rounded-full bg-cyan-500"></span>
-                        <p className="text-gray-600">Specific Day Schedule</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 inline-block rounded-full bg-red-500"></span>
-                        <p className="text-gray-600">Exception Schedule</p>
+                        <span className="w-4 h-4 inline-block rounded-full bg-purple-500"></span>
+                        <p className="text-gray-600">Horaire combiné (mensuel et hebdomadaire)</p>
                     </div>
                 </div>
 
@@ -396,16 +386,16 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                 >
                     <X className="h-6 w-6" />
                 </button>
-                <h2 className="text-2xl font-bold mb-4 text-gray-800">Device Information</h2>
+                <h2 className="text-2xl font-bold mb-4 text-gray-800">Informations sur l'appareil</h2>
                 <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-700">Device: {device.device_id}</h3>
-                    <p className="text-sm text-gray-500">Last Seen: {device.last_seen ? new Date(device.last_seen).toLocaleString() : 'N/A'}</p>
-                    <p className="text-sm text-gray-500">Status: {device.status}</p>
+                    <h3 className="text-lg font-semibold text-gray-700">Appareil: {device.device_id}</h3>
+                    <p className="text-sm text-gray-500">Dernière communication: {device.last_seen ? new Date(device.last_seen).toLocaleString() : 'N/A'}</p>
+                    <p className="text-sm text-gray-500">Statut: {device.status}</p>
                 </div>
 
                 {/* Components Section */}
                 <div className="space-y-4">
-                    <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Components</h3>
+                    <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Composants</h3>
                     {device.components && device.components.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {device.components.map((component, index) => {
@@ -438,14 +428,14 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                                             {component.component_type.charAt(0).toUpperCase() + component.component_type.slice(1)} ({component.component_subtype})
                                         </h4>
                                         <ul className="text-sm text-gray-600 mt-2 list-disc list-inside">
-                                            {typeof component.min_threshold === 'number' && <li>Min Threshold: {component.min_threshold}</li>}
-                                            {typeof component.max_threshold === 'number' && <li>Max Threshold: {component.max_threshold}</li>}
-                                            {typeof component.max_running_hours === 'number' && <li>Max Running Hours: {component.max_running_hours}</li>}
-                                            {typeof component.current_running_hours === 'number' && <li>Current Running Hours: {Math.round(component.current_running_hours)}</li>}
+                                            {typeof component.min_threshold === 'number' && <li>Min déclencheur: {component.min_threshold}</li>}
+                                            {typeof component.max_threshold === 'number' && <li>Max déclencheur: {component.max_threshold}</li>}
+                                            {typeof component.max_running_hours === 'number' && <li>Max Heures Run: {Math.round(component.max_running_hours)}</li>}
+                                            {typeof component.current_running_hours === 'number' && <li>Heures Run Actuelles: {Math.round(component.current_running_hours)}</li>}
                                         </ul>
                                         {hasLifespan && (
                                             <div className="mt-4">
-                                                <p className="text-sm font-medium text-gray-700">Lifespan Remaining</p>
+                                                <p className="text-sm font-medium text-gray-700">Durée de vie restante:</p>
                                                 <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
                                                     <div
                                                         className={`h-2.5 rounded-full transition-all duration-500 ${progressBarColor}`}
@@ -454,7 +444,7 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                                                 </div>
                                                 <div className="text-right text-xs mt-1">
                                                     {lifespanExceeded ? (
-                                                        <span className="text-red-600 font-semibold">Lifespan Exceeded!</span>
+                                                        <span className="text-red-600 font-semibold">Durée de vie dépassée</span>
                                                     ) : (
                                                         <span className="text-gray-500">{Math.round(lifespanPercentage)}%</span>
                                                     )}
@@ -470,7 +460,7 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                                                                 <Loader2 className="animate-spin h-5 w-5 mr-2" /> Resetting...
                                                             </>
                                                         ) : (
-                                                            'Reset Running Hours'
+                                                            'Réinitialiser'
                                                         )}
                                                     </button>
                                                 )}
@@ -488,18 +478,18 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                 {/* Schedules Section */}
                 <div className="space-y-4 mt-6">
                     <div className="flex justify-between items-center border-b pb-2">
-                        <h3 className="text-xl font-bold text-gray-800">Schedules</h3>
+                        <h3 className="text-xl font-bold text-gray-800">Planning des horaires</h3>
                         <button
                             onClick={() => setShowAllSchedules(!showAllSchedules)}
                             className="px-4 py-2 text-sm text-white bg-gray-600 rounded-md hover:bg-gray-700 flex items-center gap-1"
                         >
                             {showAllSchedules ? (
                                 <>
-                                    <CalendarDays size={16} /> Show Calendar
+                                    <CalendarDays size={16} /> Montrer le calendrier
                                 </>
                             ) : (
                                 <>
-                                    <List size={16} /> Show All
+                                    <List size={16} /> Montrer tous les horaires
                                 </>
                             )}
                         </button>
@@ -507,7 +497,7 @@ const DeviceInfoModal: React.FC<DeviceInfoModalProps> = ({ isOpen, device, onClo
                     {loading ? (
                         <div className="flex justify-center items-center py-4">
                             <Loader2 className="animate-spin h-6 w-6 text-gray-500" />
-                            <p className="ml-2 text-gray-500">Loading schedules...</p>
+                            <p className="ml-2 text-gray-500">Chargement des horaires...</p>
                         </div>
                     ) : showAllSchedules ? (
                         renderAllSchedulesList()
