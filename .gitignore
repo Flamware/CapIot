@@ -32,3 +32,4 @@ dist-ssr
 
 # Kubernetes deployment files (if they contain secrets or are auto generated)
 .fronten*
+.env.development
